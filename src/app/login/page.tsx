@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useFormState, useFormStatus } from "react-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,37 +17,26 @@ const initialState: LoginState = {
   success: undefined,
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "Ingresando..." : "Ingresar"}
-    </Button>
-  );
+async function loginAction(prevState: LoginState, formData: FormData): Promise<LoginState> {
+  return login(prevState, formData);
 }
 
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction] = useFormState(
-    async (prevState: LoginState, formData: FormData) => {
-      const result = await login(prevState, formData);
-      
-      if (result.success) {
-        toast.success("Bienvenido al panel de admin");
-        router.push("/admin");
-        router.refresh();
-      }
-      
-      if (result.error) {
-        toast.error(result.error);
-      }
-      
-      return result;
-    },
-    initialState
-  );
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Bienvenido al panel de admin");
+      router.push("/admin");
+      router.refresh();
+    }
+    
+    if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state, router]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
@@ -109,7 +97,9 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <SubmitButton />
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Ingresando..." : "Ingresar"}
+              </Button>
             </form>
           </CardContent>
         </Card>

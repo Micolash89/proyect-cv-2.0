@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Settings as SettingsIcon, Key, MessageCircle, Mail, Bot, CheckCircle, XCircle } from "lucide-react";
 import type { IAType, Settings } from "@/types";
+import { getSettingsAction, saveSettingsAction } from "@/app/actions/settings";
+import { improveTextAction } from "@/app/actions/ia";
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings>({
     whatsappNumber: "",
     geminiApiKey: "",
     claudeApiKey: "",
+    groqApiKey: "",
     activeIA: "gemini",
     emailHost: "",
     emailPort: "",
@@ -28,9 +30,10 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingIA, setTestingIA] = useState(false);
-  const [iaStatus, setIaStatus] = useState<{ gemini: boolean; claude: boolean }>({
+  const [iaStatus, setIaStatus] = useState<{ gemini: boolean; claude: boolean; groq: boolean }>({
     gemini: false,
     claude: false,
+    groq: false,
   });
 
   useEffect(() => {
@@ -39,8 +42,10 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await axios.get("/api/settings");
-      setSettings(data.settings);
+      const { settings } = await getSettingsAction();
+      if (settings) {
+        setSettings(settings);
+      }
     } catch (error) {
       console.error("Error fetching settings:", error);
     } finally {
@@ -51,8 +56,12 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put("/api/settings", settings);
-      toast.success("Configuración guardada");
+      const result = await saveSettingsAction(settings);
+      if (result.success) {
+        toast.success("Configuración guardada");
+      } else {
+        toast.error(result.error || "Error al guardar");
+      }
     } catch (error) {
       toast.error("Error al guardar");
     } finally {
@@ -63,9 +72,9 @@ export default function AdminSettingsPage() {
   const testIA = async (ia: IAType) => {
     setTestingIA(true);
     try {
-      const { data } = await axios.post("/api/ia/test", { provider: ia });
-      setIaStatus((prev) => ({ ...prev, [ia]: data.success }));
-      if (data.success) {
+      const result = await improveTextAction("test");
+      setIaStatus((prev) => ({ ...prev, [ia]: result.success }));
+      if (result.success) {
         toast.success(`${ia === "gemini" ? "Gemini" : "Claude"} configurado correctamente`);
       } else {
         toast.error("Error al conectar con la IA");
@@ -151,10 +160,39 @@ export default function AdminSettingsPage() {
                   value={settings.activeIA}
                   onChange={(e) => updateSetting("activeIA", e.target.value)}
                   options={[
+                    { value: "groq", label: "Groq (Gratis - Rápido)" },
                     { value: "gemini", label: "Gemini (Google)" },
                     { value: "claude", label: "Claude (Anthropic)" },
                   ]}
                 />
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Groq API Key</Label>
+                  <div className="flex items-center gap-2">
+                    {iaStatus.groq ? (
+                      <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1" /> OK</Badge>
+                    ) : settings.groqApiKey ? (
+                      <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Error</Badge>
+                    ) : null}
+                  </div>
+                </div>
+                <Input
+                  type="password"
+                  placeholder="gsk_..."
+                  value={settings.groqApiKey}
+                  onChange={(e) => updateSetting("groqApiKey", e.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => testIA("groq")}
+                  disabled={testingIA || !settings.groqApiKey}
+                >
+                  {testingIA ? "Probando..." : "Probar conexión"}
+                </Button>
               </div>
 
               <div className="pt-4 border-t">

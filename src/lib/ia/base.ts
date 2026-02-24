@@ -6,9 +6,12 @@ export interface IAConfig {
   apiKey: string;
 }
 
-export function createIAProvider(type: "gemini" | "claude", config: IAConfig): IAProvider {
+export function createIAProvider(type: "gemini" | "claude" | "groq", config: IAConfig): IAProvider {
   if (type === "gemini") {
     return new GeminiProvider(config.apiKey);
+  }
+  if (type === "groq") {
+    return new GroqProvider(config.apiKey);
   }
   return new ClaudeProvider(config.apiKey);
 }
@@ -234,5 +237,90 @@ El resultado debe:
 
   async extractFromCV(file: File): Promise<Partial<CVFormData>> {
     throw new Error("Claude does not support file vision in the free tier");
+  }
+}
+
+class GroqProvider implements IAProvider {
+  name = "Groq";
+  private client: any;
+
+  constructor(private apiKey: string) {
+    const Groq = require("groq-sdk");
+    this.client = new Groq({ apiKey: this.apiKey });
+  }
+
+  async generateProfile(
+    experience: Experience[],
+    skills: string[],
+    targetJob?: string
+  ): Promise<string> {
+    const experienceText = experience
+      .map((e) => `${e.position} en ${e.company}: ${e.description}`)
+      .join("\n");
+
+    const prompt = `
+Eres un experto en currículums y perfiles profesionales. Basándote en la siguiente experiencia laboral y skills, 
+genera un perfil profesional atractivo y conciso para un CV.
+
+${targetJob ? `Aspiración profesional: ${targetJob}` : ""}
+
+Experiencia laboral:
+${experienceText}
+
+Skills: ${skills.join(", ")}
+
+El perfil debe:
+- Ser de 3-4 oraciones
+- Destacar fortalezas y logros
+- Ser profesional pero atractivo
+- Estar en español
+- No incluir datos personales adicionales
+`;
+
+    const result = await this.client.chat.completions.create({
+      // Modelo más nuevo y capaz
+      model: "llama-3.3-70b-versatile",
+      // Alternativas si no funciona:
+      // model: "mixtral-8x7b-32768",
+      // model: "llama3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+    });
+
+    return result.choices[0]?.message?.content || "";
+  }
+
+  async improveText(text: string): Promise<string> {
+    const prompt = `
+Mejora la siguiente descripción de funciones laborales para un CV. 
+Hazla más profesional, impactante y orientada a logros. 
+Mantén el mismo significado pero usa mejor vocabulario y estructura.
+
+Descripción actual:
+${text}
+
+El resultado debe:
+- Estar en español
+- Ser más conciso pero con más impacto
+- Usar verbos de acción
+- Destacar logros y responsabilidades
+- Mantener 2-3 oraciones máximo
+`;
+
+    const result = await this.client.chat.completions.create({
+      // Modelo más nuevo y capaz
+      model: "llama-3.3-70b-versatile",
+      // Alternativas si no funciona:
+      // model: "mixtral-8x7b-32768",
+      // model: "llama3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+    });
+
+    return result.choices[0]?.message?.content || "";
+  }
+
+  async extractFromCV(file: File): Promise<Partial<CVFormData>> {
+    throw new Error("Groq no soporta extracción de CV desde archivo. Usá Gemini para esta función.");
   }
 }

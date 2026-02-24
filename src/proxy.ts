@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
 
 const protectedRoutes = ["/admin"];
-const publicRoutes = ["/login", "/registro", "/success", "/api/auth"];
+const publicRoutes = ["/login", "/registro", "/success"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -44,20 +44,6 @@ export async function proxy(request: NextRequest) {
       const adminUrl = new URL("/admin", request.url);
       return NextResponse.redirect(adminUrl);
     }
-  }
-
-  if (pathname.startsWith("/api/")) {
-    const response = NextResponse.next();
-    
-    if (token) {
-      const payload = await verifyToken(token);
-      if (payload) {
-        response.headers.set("x-admin-id", payload.adminId || "");
-        response.headers.set("x-admin-email", payload.email || "");
-      }
-    }
-    
-    return response;
   }
 
   return NextResponse.next();

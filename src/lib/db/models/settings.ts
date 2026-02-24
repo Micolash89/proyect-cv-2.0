@@ -5,6 +5,7 @@ const defaultSettings: Settings = {
   whatsappNumber: "",
   geminiApiKey: "",
   claudeApiKey: "",
+  groqApiKey: "",
   activeIA: "gemini",
   emailHost: "",
   emailPort: "",

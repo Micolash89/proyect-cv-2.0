@@ -2,7 +2,7 @@ export type CVStatus = "pending" | "reviewed" | "completed";
 export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional";
 export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
-export type IAType = "gemini" | "claude";
+export type IAType = "gemini" | "claude" | "groq";
 
 export interface Experience {
   id: string;
@@ -89,6 +89,7 @@ export interface Settings {
   whatsappNumber: string;
   geminiApiKey: string;
   claudeApiKey: string;
+  groqApiKey: string;
   activeIA: IAType;
   emailHost: string;
   emailPort: string;
@@ -132,6 +133,7 @@ export interface CVFormData {
 export interface IASettings {
   geminiApiKey: string;
   claudeApiKey: string;
+  groqApiKey: string;
   activeIA: IAType;
 }
 

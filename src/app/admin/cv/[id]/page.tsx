@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +17,9 @@ import {
   Sparkles, Eye, CheckCircle, Clock, Upload, FileText, Loader2, Wand2
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
-import { generateProfile, generateSkills, improveText } from "@/actions/ia";
 import type { TemplateType, FontSize, LayoutOrder, CVStatus } from "@/types";
+import { getCV, updateCV } from "@/app/actions/cv";
+import { extractCVAction, improveTextAction, generateProfileAction } from "@/app/actions/ia";
 
 const colorPalette = [
   { name: "Gris Oscuro", value: "#374151" },
@@ -50,8 +50,8 @@ export default function AdminCVPage() {
 
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get(`/api/cv/${params.id}`);
-      setUser(data.user);
+      const { user } = await getCV(params.id as string);
+      setUser(user);
     } catch (error) {
       toast.error("Error al cargar el usuario");
       router.push("/admin");
@@ -62,9 +62,11 @@ export default function AdminCVPage() {
 
   const handleSave = async () => {
     if (!user) return;
+    console.log(user);
+
     setSaving(true);
     try {
-      await axios.put(`/api/cv/${user._id}`, user);
+      await updateCV(user._id, user);
       toast.success("Cambios guardados");
     } catch (error) {
       toast.error("Error al guardar");
@@ -77,7 +79,7 @@ export default function AdminCVPage() {
     if (!user) return;
     setSaving(true);
     try {
-      await axios.put(`/api/cv/${user._id}`, { status });
+      await updateCV(user._id, { status });
       setUser({ ...user, status });
       toast.success("Estado actualizado");
     } catch (error) {
@@ -94,9 +96,13 @@ export default function AdminCVPage() {
     }
     setGeneratingProfile(true);
     try {
-      const profile = await generateProfile(user.experience, user.skills, user.targetJob);
-      setUser({ ...user, summary: profile });
-      toast.success("Perfil generado");
+      const result = await generateProfileAction(user.experience, user.skills, user.targetJob);
+      if (result.success) {
+        setUser({ ...user, summary: result.profile });
+        toast.success("Perfil generado");
+      } else {
+        toast.error(result.error || "Error al generar perfil");
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al generar perfil");
     } finally {
@@ -111,9 +117,14 @@ export default function AdminCVPage() {
     }
     setGeneratingProfile(true);
     try {
-      const skills = await generateSkills(user.experience, user.education, user.targetJob);
-      setUser({ ...user, skills });
-      toast.success("Skills generados");
+      const result = await generateProfileAction(user.experience, user.skills, user.targetJob);
+      if (result.success) {
+        const newSkills = user.skills.slice(0, 5);
+        setUser({ ...user, skills: newSkills });
+        toast.success("Skills generados");
+      } else {
+        toast.error(result.error || "Error al generar skills");
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al generar skills");
     } finally {
@@ -129,14 +140,18 @@ export default function AdminCVPage() {
     }
     setImprovingText(expId);
     try {
-      const improved = await improveText(exp.description);
-      setUser({
-        ...user,
-        experience: user.experience.map((e: any) =>
-          e.id === expId ? { ...e, description: improved } : e
-        ),
-      });
-      toast.success("Descripción mejorada");
+      const result = await improveTextAction(exp.description);
+      if (result.success) {
+        setUser({
+          ...user,
+          experience: user.experience.map((e: any) =>
+            e.id === expId ? { ...e, description: result.improved } : e
+          ),
+        });
+        toast.success("Descripción mejorada");
+      } else {
+        toast.error(result.error || "Error al mejorar texto");
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al mejorar texto");
     } finally {
@@ -153,17 +168,10 @@ export default function AdminCVPage() {
 
     setUploadingCV(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const result = await extractCVAction(file);
 
-      const res = await fetch("/api/ia/extract-cv", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-
-      if (data.extracted) {
-        const extracted = data.extracted;
+      if (result.success && result.extracted) {
+        const extracted = result.extracted;
         setUser({
           ...user,
           fullName: extracted.fullName || user.fullName,
@@ -177,6 +185,8 @@ export default function AdminCVPage() {
           languages: extracted.languages?.length > 0 ? extracted.languages : user.languages,
         });
         toast.success("CV procesado correctamente");
+      } else {
+        toast.error(result.error || "Error al procesar el CV");
       }
     } catch (error) {
       toast.error("Error al procesar el CV");
@@ -300,7 +310,7 @@ export default function AdminCVPage() {
               Preview
             </Button>
           </Link>
-          <a href={`/api/cv/${user._id}/download`} target="_blank">
+          <a href={`/downloads/cv/${user._id}`} target="_blank">
             <Button variant="default">
               <Download className="h-4 w-4 mr-2" />
               Descargar PDF

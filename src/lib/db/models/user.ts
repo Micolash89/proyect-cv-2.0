@@ -119,17 +119,30 @@ export async function updateUser(
   data: Partial<CVFormData & { status?: CVStatus; viewed?: boolean }>
 ): Promise<UserCVResponse | null> {
   const collection = await getUsersCollection();
-  const updateData = {
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
+  
+  const allowedFields = [
+    'phone', 'fullName', 'email', 'photo', 'location', 'linkedin', 'github',
+    'summary', 'experience', 'education', 'skills', 'languages', 
+    'projects', 'certifications', 'selectedTemplate', 'templateSettings',
+    'dni', 'links', 'targetJob'
+  ];
+  
+  const filteredData: Record<string, any> = {};
+  for (const key of allowedFields) {
+    if (key in data) {
+      filteredData[key] = (data as any)[key];
+    }
+  }
+  
+  filteredData.updatedAt = new Date().toISOString();
 
   try {
     await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: updateData }
+      { $set: filteredData }
     );
-  } catch {
+  } catch (error) {
+    console.error("Error updating user:", error);
     return null;
   }
 

@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, MessageCircle, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { getWhatsAppLink } from "@/lib/utils/cn";
-import axios from "axios";
+import { getWhatsAppNumberAction } from "@/app/actions/settings";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -18,8 +18,12 @@ function SuccessContent() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    axios.get("/api/settings/whatsapp").then((res) => {
-      setWhatsappNumber(res.data.number || "5491112345678");
+    getWhatsAppNumberAction().then((res) => {
+      if (res.success) {
+        setWhatsappNumber(res.number || "5491112345678");
+      } else {
+        setWhatsappNumber("5491112345678");
+      }
     }).catch(() => {
       setWhatsappNumber("5491112345678");
     });

@@ -15,6 +15,8 @@ import {
 } from "@/lib/db/models/user";
 import { sendNewCVNotification } from "@/lib/email/nodemailer";
 import type { CVFormData, CVStatus } from "@/types";
+import { renderToStream } from "@react-pdf/renderer";
+import { CVTemplate } from "@/components/cv/templates/CVTemplate";
 
 export async function getCVs(search?: string, status?: string) {
   const admin = await getCurrentAdmin();
@@ -113,4 +115,26 @@ export async function deleteCV(id: string) {
   }
 
   return { success: true };
+}
+
+export async function downloadCV(id: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) {
+    throw new Error("No autorizado");
+  }
+
+  const user = await getUserById(id);
+  if (!user) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  const stream = await renderToStream(
+    <CVTemplate user={user} />
+  );
+
+  return {
+    stream,
+    filename: `CV-${user.fullName.replace(/\s+/g, "-")}.pdf`,
+    contentType: "application/pdf",
+  };
 }

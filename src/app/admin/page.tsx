@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useDebounce } from "use-debounce";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatPhone, cn } from "@/lib/utils/cn";
 import type { UserCV, CVStatus } from "@/types";
+import { getCVs } from "@/app/actions/cv";
 
 const statusConfig: Record<CVStatus, { label: string; variant: "warning" | "info" | "success"; icon: any }> = {
   pending: { label: "Pendiente", variant: "warning", icon: Clock },
@@ -36,12 +36,8 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-
-      const { data } = await axios.get(`/api/cv?${params.toString()}`);
-      setUsers(data.users || []);
+      const { users } = await getCVs(debouncedSearch, statusFilter);
+      setUsers(users as unknown as UserCV[]);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {

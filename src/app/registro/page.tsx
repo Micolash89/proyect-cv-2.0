@@ -20,7 +20,8 @@ import {
   CheckCircle, AlertCircle
 } from "lucide-react";
 import { cn, generateId } from "@/lib/utils/cn";
-import { createCV } from "@/actions/cv";
+import { createCV } from "@/app/actions/cv";
+import { uploadImage } from "@/app/actions/upload";
 import type { TemplateType, FontSize, LayoutOrder, Experience, Education, Language } from "@/types";
 
 const steps = [
@@ -293,19 +294,15 @@ export default function RegistroPage() {
   };
 
   const uploadPhotoToCloudinary = async (file: File): Promise<string> => {
-    const formDataUpload = new FormData();
-    formDataUpload.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formDataUpload,
-    });
-    const data = await res.json();
+    const result = await uploadImage(formData);
     
-    if (data.url) {
-      return data.url;
+    if (result.success && result.url) {
+      return result.url;
     }
-    throw new Error("Error al subir la foto");
+    throw new Error(result.error || "Error al subir la foto");
   };
 
   const onSubmit = async () => {
@@ -317,7 +314,7 @@ export default function RegistroPage() {
         photoUrl = await uploadPhotoToCloudinary(photoFile);
       }
 
-      await createCV({ ...formData, photo: photoUrl });
+      await createCV({ ...formData, photo: photoUrl, email: formData.email || "" } as any);
       window.location.href = `/success?phone=${encodeURIComponent(formData.phone)}&name=${encodeURIComponent(formData.fullName)}`;
     } catch (error: any) {
       toast.error(error.message || "Error al enviar el formulario");

@@ -1,11 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { getCurrentAdmin, removeAuthCookie } from "@/lib/auth/jwt";
-import axios from "axios";
+import { getSession, logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -18,40 +14,21 @@ import {
 import { formatDate } from "@/lib/utils/cn";
 import type { UserCV, CVStatus } from "@/types";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [admin, setAdmin] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const admin = await getSession();
 
-  useEffect(() => {
-    getCurrentAdmin().then((data) => {
-      if (!data) {
-        router.push("/login");
-      } else {
-        setAdmin(data);
-      }
-      setLoading(false);
-    });
-  }, [router]);
-
-  const handleLogout = async () => {
-    await removeAuthCookie();
-    router.push("/login");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+  if (!admin) {
+    redirect("/login");
   }
 
-  if (!admin) return null;
+  const handleLogout = async () => {
+    "use server";
+    await logout();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,9 +46,11 @@ export default function AdminLayout({
               </Button>
             </Link>
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+            <form action={handleLogout}>
+              <Button variant="ghost" size="icon" type="submit">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </form>
           </nav>
         </div>
       </header>
