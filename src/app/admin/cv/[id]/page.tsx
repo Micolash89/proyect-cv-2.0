@@ -41,6 +41,8 @@ export default function AdminCVPage() {
   const [generatingProfile, setGeneratingProfile] = useState(false);
   const [improvingText, setImprovingText] = useState<string | null>(null);
   const [uploadingCV, setUploadingCV] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -67,6 +69,7 @@ export default function AdminCVPage() {
     setSaving(true);
     try {
       await updateCV(user._id, user);
+      setPreviewKey(prev => prev + 1);
       toast.success("Cambios guardados");
     } catch (error) {
       toast.error("Error al guardar");
@@ -286,8 +289,26 @@ export default function AdminCVPage() {
 
   if (!user) return null;
 
+  const previewUrl = `/downloads/cv/${user._id}?t=${previewKey}`;
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {showPreview && (
+        <div className="fixed bottom-4 right-4 w-[400px] h-[500px] bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col">
+          <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+            <span className="text-sm font-medium">Vista Previa</span>
+            <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <iframe
+            src={previewUrl}
+            className="flex-1 w-full"
+            title="Vista Previa del CV"
+          />
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => router.push("/admin")}>
@@ -304,13 +325,11 @@ export default function AdminCVPage() {
             <Save className="h-4 w-4 mr-2" />
             Guardar
           </Button>
-          <Link href={`/admin/cv/${user._id}/preview`}>
-            <Button variant="outline">
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
-          </Link>
-          <a href={`/downloads/cv/${user._id}`} target="_blank">
+          <Button variant="outline" onClick={() => { setShowPreview(!showPreview); setPreviewKey(prev => prev + 1); }}>
+            <Eye className="h-4 w-4 mr-2" />
+            {showPreview ? "Ocultar" : "Preview"}
+          </Button>
+          <a href={previewUrl} target="_blank">
             <Button variant="default">
               <Download className="h-4 w-4 mr-2" />
               Descargar PDF
