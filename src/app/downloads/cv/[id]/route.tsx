@@ -4,13 +4,24 @@ import { getUserById } from "@/lib/db/models/user";
 import { getCurrentAdmin } from "@/lib/auth/jwt";
 import { CVTemplate } from "@/components/cv/templates/CVTemplate";
 
+function isInternalRequest(request: NextRequest): boolean {
+  const referer = request.headers.get("referer") || "";
+  const host = request.headers.get("host") || "";
+  
+  return referer.includes(host) || referer.includes("localhost");
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return new Response("No autorizado", { status: 401 });
+  const isInternal = isInternalRequest(request);
+  
+  if (!isInternal) {
+    const admin = await getCurrentAdmin();
+    if (!admin) {
+      return new Response("No autorizado", { status: 401 });
+    }
   }
 
   const { id } = await params;
@@ -24,10 +35,14 @@ export async function GET(
     <CVTemplate user={user} />
   );
 
+  const contentDisposition = isInternal 
+    ? `inline; filename="CV-${user.fullName.replace(/\s+/g, "-")}.pdf"`
+    : `attachment; filename="CV-${user.fullName.replace(/\s+/g, "-")}.pdf"`;
+
   return new Response(stream as any, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="CV-${user.fullName.replace(/\s+/g, "-")}.pdf"`,
+      "Content-Disposition": contentDisposition,
     },
   });
 }
