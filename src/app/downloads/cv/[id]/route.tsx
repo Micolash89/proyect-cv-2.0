@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { renderToStream } from "@react-pdf/renderer";
 import { getUserById } from "@/lib/db/models/user";
 import { getCurrentAdmin } from "@/lib/auth/jwt";
-import { CVTemplate } from "@/components/cv/templates/CVTemplate";
+import CVTemplate from "@/components/cv/templates/CVTemplate";
 
 function isInternalRequest(request: NextRequest): boolean {
   const referer = request.headers.get("referer") || "";

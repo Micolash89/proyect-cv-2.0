@@ -20,6 +20,7 @@ import { generateId, cn } from "@/lib/utils/cn";
 import type { TemplateType, FontSize, LayoutOrder, CVStatus } from "@/types";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { extractCVAction, improveTextAction, generateProfileAction } from "@/app/actions/ia";
+import { generateSkills } from "@/lib/ia/factory";
 
 const colorPalette = [
   { name: "Gris Oscuro", value: "#374151" },
@@ -120,14 +121,9 @@ export default function AdminCVPage() {
     }
     setGeneratingProfile(true);
     try {
-      const result = await generateProfileAction(user.experience, user.skills, user.targetJob);
-      if (result.success) {
-        const newSkills = user.skills.slice(0, 5);
-        setUser({ ...user, skills: newSkills });
-        toast.success("Skills generados");
-      } else {
-        toast.error(result.error || "Error al generar skills");
-      }
+      const newSkills = await generateSkills(user.experience, user.education, user.targetJob);
+      setUser({ ...user, skills: newSkills });
+      toast.success("Skills generados");
     } catch (error: any) {
       toast.error(error.message || "Error al generar skills");
     } finally {
@@ -638,16 +634,35 @@ export default function AdminCVPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>Plantilla</Label>
-                <Select
-                  value={user.selectedTemplate}
-                  onChange={(e) => updateField("selectedTemplate", e.target.value)}
-                  options={[
-                    { value: "harvard", label: "Clásico Harvard" },
-                    { value: "modern", label: "Moderno" },
-                    { value: "classic", label: "Tradicional" },
-                    { value: "minimal", label: "Minimalista" },
-                  ]}
-                />
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {[
+                    { id: "harvard", name: "Harvard", img: "/templates/template-0.png" },
+                    { id: "modern", name: "Moderno", img: "/templates/template-1.png" },
+                    { id: "classic", name: "Clásico", img: "/templates/template-2.png" },
+                    { id: "creative", name: "Creativo", img: "/templates/template-3.png" },
+                    { id: "minimal", name: "Minimal", img: "/templates/template-4.png" },
+                    { id: "professional", name: "Profesional", img: "/templates/template-5.png" },
+                    { id: "layout6", name: "Elegante", img: "/templates/template-6.jpg" },
+                    { id: "layout7", name: "Moderno", img: "/templates/template-7.png" },
+                  ].map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => updateField("selectedTemplate", template.id)}
+                      className={cn(
+                        "p-1 border-2 rounded-lg transition-all",
+                        user.selectedTemplate === template.id
+                          ? "border-foreground scale-105"
+                          : "border-transparent hover:border-muted-foreground"
+                      )}
+                    >
+                      <div className="aspect-[3/4] bg-muted rounded overflow-hidden">
+                        <img src={template.img} alt={template.name} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-xs text-center mt-1">{template.name}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

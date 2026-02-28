@@ -26,6 +26,16 @@ export default function AdminSettingsPage() {
     emailUser: "",
     emailPassword: "",
     emailFrom: "",
+    defaultFontSize: "medium",
+    defaultLayout: "descending",
+    defaultPadding: 40,
+    defaultMargin: 20,
+    showPhoto: true,
+    showSummary: true,
+    showSkills: true,
+    showLanguages: true,
+    showProjects: false,
+    showCertifications: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -87,7 +97,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const updateSetting = (field: string, value: string) => {
+  const updateSetting = (field: string, value: any) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -310,6 +320,91 @@ export default function AdminSettingsPage() {
                   value={settings.emailFrom}
                   onChange={(e) => updateSetting("emailFrom", e.target.value)}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuración de PDF</CardTitle>
+              <CardDescription>
+                Opciones predeterminadas para los CVs generados
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tamaño de fuente</Label>
+                  <Select
+                    value={settings.defaultFontSize}
+                    onChange={(e) => updateSetting("defaultFontSize", e.target.value)}
+                    options={[
+                      { value: "small", label: "Pequeño" },
+                      { value: "medium", label: "Mediano" },
+                      { value: "large", label: "Grande" },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <Label>Orden de experiencias</Label>
+                  <Select
+                    value={settings.defaultLayout}
+                    onChange={(e) => updateSetting("defaultLayout", e.target.value)}
+                    options={[
+                      { value: "descending", label: "Más reciente primero" },
+                      { value: "ascending", label: "Más antiguo primero" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Padding: {settings.defaultPadding}px</Label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="50"
+                    value={settings.defaultPadding}
+                    onChange={(e) => updateSetting("defaultPadding", parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Label>Margin: {settings.defaultMargin}px</Label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="40"
+                    value={settings.defaultMargin}
+                    onChange={(e) => updateSetting("defaultMargin", parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <Label className="mb-2 block">Secciones a mostrar por defecto</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: "showPhoto", label: "Foto de perfil" },
+                    { key: "showSummary", label: "Resumen/Perfil" },
+                    { key: "showSkills", label: "Habilidades" },
+                    { key: "showLanguages", label: "Idiomas" },
+                    { key: "showProjects", label: "Proyectos" },
+                    { key: "showCertifications", label: "Certificaciones" },
+                  ].map((item) => (
+                    <label key={item.key} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={settings[item.key as keyof typeof settings] as boolean}
+                        onChange={(e) => updateSetting(item.key, e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{item.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

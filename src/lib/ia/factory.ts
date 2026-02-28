@@ -1,3 +1,5 @@
+"use server";
+
 import { getActiveIA, getIAApiKey } from "@/lib/db/models/settings";
 import { createIAProvider, type IAProvider } from "./base";
 
@@ -48,4 +50,14 @@ export async function extractFromCV(file: File): Promise<any> {
   const provider = await getIAProvider();
   if (!provider) throw new Error("No IA provider configured");
   return provider.extractFromCV(file);
+}
+
+export async function generateSkills(
+  experience: any[],
+  education: any[],
+  targetJob?: string
+): Promise<string[]> {
+  const provider = await getIAProvider();
+  if (!provider) throw new Error("No IA provider configured");
+  return provider.generateSkills(experience, education, targetJob);
 }

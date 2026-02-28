@@ -12,6 +12,16 @@ const defaultSettings: Settings = {
   emailUser: "",
   emailPassword: "",
   emailFrom: "",
+  defaultFontSize: "medium",
+  defaultLayout: "descending",
+  defaultPadding: 40,
+  defaultMargin: 20,
+  showPhoto: true,
+  showSummary: true,
+  showSkills: true,
+  showLanguages: true,
+  showProjects: false,
+  showCertifications: false,
 };
 
 export async function getSettingsCollection() {

@@ -1,5 +1,5 @@
 export type CVStatus = "pending" | "reviewed" | "completed";
-export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional";
+export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional" | "layout6" | "layout7";
 export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";
@@ -96,6 +96,16 @@ export interface Settings {
   emailUser: string;
   emailPassword: string;
   emailFrom: string;
+  defaultFontSize: FontSize;
+  defaultLayout: LayoutOrder;
+  defaultPadding: number;
+  defaultMargin: number;
+  showPhoto: boolean;
+  showSummary: boolean;
+  showSkills: boolean;
+  showLanguages: boolean;
+  showProjects: boolean;
+  showCertifications: boolean;
 }
 
 export interface JWTPayload {
@@ -142,6 +152,7 @@ export interface IAProvider {
   generateProfile(experience: Experience[], skills: string[], targetJob?: string): Promise<string>;
   improveText(text: string): Promise<string>;
   extractFromCV(file: File): Promise<Partial<CVFormData>>;
+  generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]>;
 }
 
 export interface Theme {

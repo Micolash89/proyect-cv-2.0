@@ -1,6 +1,6 @@
 import { getDatabase } from "@/lib/db/mongodb";
 import { ObjectId } from "mongodb";
-import type { CVFormData, CVStatus } from "@/types";
+import type { CVFormData, CVStatus, TemplateType, TemplateSettings } from "@/types";
 
 interface UserCVDoc {
   _id: ObjectId;
@@ -18,8 +18,8 @@ interface UserCVDoc {
   languages: any[];
   projects?: any[];
   certifications?: any[];
-  selectedTemplate: string;
-  templateSettings: any;
+  selectedTemplate: TemplateType;
+  templateSettings: TemplateSettings;
   status: CVStatus;
   viewed: boolean;
   createdAt: string;
@@ -42,8 +42,8 @@ interface UserCVResponse {
   languages: any[];
   projects?: any[];
   certifications?: any[];
-  selectedTemplate: string;
-  templateSettings: any;
+  selectedTemplate: TemplateType;
+  templateSettings: TemplateSettings;
   status: CVStatus;
   viewed: boolean;
   createdAt: string;

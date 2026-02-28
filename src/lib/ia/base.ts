@@ -1,9 +1,30 @@
-import type { IAProvider, Experience, CVFormData } from "@/types";
+import type { IAProvider, Experience, Education, CVFormData } from "@/types";
 
 export type { IAProvider };
 
 export interface IAConfig {
   apiKey: string;
+}
+
+const IMPROVE_TEXT_PROMPT = `
+Mejora la siguiente descripción de funciones laborales para un CV. 
+Hazla más profesional, impactante y orientada a logros. 
+Mantén el mismo significado pero usa mejor vocabulario y estructura.
+
+Descripción actual:
+{description}
+
+El resultado debe:
+- Estar en español
+- Ser más conciso pero con más impacto
+- Usar verbos de acción
+- Destacar logros y responsabilidades
+- Mantener 2-3 oraciones máximo
+- Devuelve SOLO la descripción mejorada, sin texto adicional, sin comillas, sin introducciones ni conclusiones.
+`;
+
+function buildImproveTextPrompt(text: string): string {
+  return IMPROVE_TEXT_PROMPT.replace("{description}", text);
 }
 
 export function createIAProvider(type: "gemini" | "claude" | "groq", config: IAConfig): IAProvider {
@@ -71,21 +92,7 @@ El perfil debe:
   async improveText(text: string): Promise<string> {
     if (!this.client) throw new Error("Gemini not configured");
 
-    const prompt = `
-Mejora la siguiente descripción de funciones laborales para un CV. 
-Hazla más profesional, impactante y orientada a logros. 
-Mantén el mismo significado pero usa mejor vocabulario y estructura.
-
-Descripción actual:
-${text}
-
-El resultado debe:
-- Estar en español
-- Ser más conciso pero con más impacto
-- Usar verbos de acción
-- Destacar logros y responsabilidades
-- Mantener 2-3 oraciones máximo
-`;
+    const prompt = buildImproveTextPrompt(text);
 
     const result = await this.client.generateContent(prompt);
     return result.response.text();
@@ -150,6 +157,41 @@ Responde SOLO con el JSON, sin texto adicional.
     }
     throw new Error("Could not extract data from CV");
   }
+
+  async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {
+    const experienceText = experience.map((e) => `${e.position} en ${e.company}`).join("\n");
+    const educationText = education.map((e) => `${e.degree} en ${e.institution}`).join("\n");
+
+    const prompt = `
+Eres un experto en recursos humanos. Basándote en la siguiente experiencia laboral y educación,
+genera una lista de 5-6 skills genéricos y relevantes para un CV.
+
+${targetJob ? `El puesto aspirado es: ${targetJob}` : ""}
+
+Experiencia laboral:
+${experienceText}
+
+Educación:
+${educationText}
+
+Responde SOLO con un array JSON de strings, sin texto adicional.
+Ejemplo: ["Gestión de proyectos", "Trabajo en equipo", "Comunicación", "Análisis de datos", "Liderazgo", "Planificación"]
+`;
+
+    const result = await this.client.generateContent(prompt);
+    const text = result.response.text();
+    
+    try {
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch {
+      return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+    }
+    
+    return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+  }
 }
 
 class ClaudeProvider implements IAProvider {
@@ -210,21 +252,7 @@ El perfil debe:
   async improveText(text: string): Promise<string> {
     if (!this.client) throw new Error("Claude not configured");
 
-    const prompt = `
-Mejora la siguiente descripción de funciones laborales para un CV. 
-Hazla más profesional, impactante y orientada a logros. 
-Mantén el mismo significado pero usa mejor vocabulario y estructura.
-
-Descripción actual:
-${text}
-
-El resultado debe:
-- Estar en español
-- Ser más conciso pero con más impacto
-- Usar verbos de acción
-- Destacar logros y responsabilidades
-- Mantener 2-3 oraciones máximo
-`;
+    const prompt = buildImproveTextPrompt(text);
 
     const result = await this.client.messages.create({
       model: "claude-3-haiku-20240307",
@@ -237,6 +265,46 @@ El resultado debe:
 
   async extractFromCV(file: File): Promise<Partial<CVFormData>> {
     throw new Error("Claude does not support file vision in the free tier");
+  }
+
+  async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {
+    const experienceText = experience.map((e) => `${e.position} en ${e.company}`).join("\n");
+    const educationText = education.map((e) => `${e.degree} en ${e.institution}`).join("\n");
+
+    const prompt = `
+Eres un experto en recursos humanos. Basándote en la siguiente experiencia laboral y educación,
+genera una lista de 5-6 skills genéricos y relevantes para un CV.
+
+${targetJob ? `El puesto aspirado es: ${targetJob}` : ""}
+
+Experiencia laboral:
+${experienceText}
+
+Educación:
+${educationText}
+
+Responde SOLO con un array JSON de strings, sin texto adicional.
+Ejemplo: ["Gestión de proyectos", "Trabajo en equipo", "Comunicación", "Análisis de datos", "Liderazgo", "Planificación"]
+`;
+
+    const result = await this.client.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 500,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = result.content[0].type === "text" ? result.content[0].text : "";
+    
+    try {
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch {
+      return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+    }
+    
+    return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
   }
 }
 
@@ -291,28 +359,10 @@ El perfil debe:
   }
 
   async improveText(text: string): Promise<string> {
-    const prompt = `
-Mejora la siguiente descripción de funciones laborales para un CV. 
-Hazla más profesional, impactante y orientada a logros. 
-Mantén el mismo significado pero usa mejor vocabulario y estructura.
-
-Descripción actual:
-${text}
-
-El resultado debe:
-- Estar en español
-- Ser más conciso pero con más impacto
-- Usar verbos de acción
-- Destacar logros y responsabilidades
-- Mantener 2-3 oraciones máximo
-`;
+    const prompt = buildImproveTextPrompt(text);
 
     const result = await this.client.chat.completions.create({
-      // Modelo más nuevo y capaz
       model: "llama-3.3-70b-versatile",
-      // Alternativas si no funciona:
-      // model: "mixtral-8x7b-32768",
-      // model: "llama3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
     });
@@ -322,5 +372,45 @@ El resultado debe:
 
   async extractFromCV(file: File): Promise<Partial<CVFormData>> {
     throw new Error("Groq no soporta extracción de CV desde archivo. Usá Gemini para esta función.");
+  }
+
+  async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {
+    const experienceText = experience.map((e) => `${e.position} en ${e.company}`).join("\n");
+    const educationText = education.map((e) => `${e.degree} en ${e.institution}`).join("\n");
+
+    const prompt = `
+Eres un experto en recursos humanos. Basándote en la siguiente experiencia laboral y educación,
+genera una lista de 5-6 skills genéricos y relevantes para un CV.
+
+${targetJob ? `El puesto aspirado es: ${targetJob}` : ""}
+
+Experiencia laboral:
+${experienceText}
+
+Educación:
+${educationText}
+
+Responde SOLO con un array JSON de strings, sin texto adicional.
+Ejemplo: ["Gestión de proyectos", "Trabajo en equipo", "Comunicación", "Análisis de datos", "Liderazgo", "Planificación"]
+`;
+
+    const result = await this.client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 500,
+    });
+
+    const text = result.choices[0]?.message?.content || "";
+    
+    try {
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch {
+      return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+    }
+    
+    return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
   }
 }

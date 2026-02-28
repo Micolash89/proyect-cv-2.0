@@ -16,7 +16,7 @@ import {
 import { sendNewCVNotification } from "@/lib/email/nodemailer";
 import type { CVFormData, CVStatus } from "@/types";
 import { renderToStream } from "@react-pdf/renderer";
-import { CVTemplate } from "@/components/cv/templates/CVTemplate";
+import CVTemplate from "@/components/cv/templates/CVTemplate";
 
 export async function getCVs(search?: string, status?: string) {
   const admin = await getCurrentAdmin();

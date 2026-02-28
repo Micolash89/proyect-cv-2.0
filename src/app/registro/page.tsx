@@ -30,7 +30,8 @@ const steps = [
   { id: 3, title: "Experiencia", icon: Briefcase },
   { id: 4, title: "Educación", icon: GraduationCap },
   { id: 5, title: "Habilidades", icon: FileText },
-  { id: 6, title: "Confirmar", icon: CheckCircle },
+  { id: 6, title: "Diseño & Color", icon: CheckCircle },
+  { id: 7, title: "Confirmar", icon: CheckCircle },
 ];
 
 const colorPalette = [
@@ -909,38 +910,34 @@ export default function RegistroPage() {
                 >
                   <div>
                     <Label>Elige el diseño de tu CV</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                       {[
-                        { id: "harvard", name: "Clásico", desc: "Diseño tradicional", color: "#111827" },
-                        { id: "modern", name: "Moderno", desc: "Actual y dinámico", color: "#374151" },
-                        { id: "minimal", name: "Minimalista", desc: "Limpio y moderno", color: "#6b7280" },
+                        { id: "harvard", name: "Harvard", img: "/templates/template-0.png" },
+                        { id: "modern", name: "Moderno", img: "/templates/template-1.png" },
+                        { id: "classic", name: "Clásico", img: "/templates/template-2.png" },
+                        { id: "creative", name: "Creativo", img: "/templates/template-3.png" },
+                        { id: "minimal", name: "Minimalista", img: "/templates/template-4.png" },
+                        { id: "professional", name: "Profesional", img: "/templates/template-5.png" },
+                        { id: "layout6", name: "Elegante", img: "/templates/template-6.jpg" },
+                        { id: "layout7", name: "Contemporáneo", img: "/templates/template-7.png" },
                       ].map((template) => (
                         <button
                           key={template.id}
                           type="button"
                           onClick={() => updateFormData({ 
                             selectedTemplate: template.id as TemplateType,
-                            templateSettings: { ...formData.templateSettings, primaryColor: template.color }
                           })}
                           className={cn(
-                            "p-4 border-2 rounded-lg text-left transition-all",
+                            "p-2 border-2 rounded-lg transition-all",
                             formData.selectedTemplate === template.id
                               ? "border-foreground bg-muted"
                               : "border-border hover:border-muted-foreground"
                           )}
                         >
-                          <div className="aspect-[3/4] bg-muted rounded mb-2 flex items-center justify-center overflow-hidden">
-                            <div className="w-full h-full flex">
-                              <div className="w-1/3 bg-white"></div>
-                              <div className="w-2/3 p-2">
-                                <div className="h-2 bg-gray-300 rounded mb-1"></div>
-                                <div className="h-1 bg-gray-200 rounded mb-1"></div>
-                                <div className="h-1 bg-gray-200 rounded"></div>
-                              </div>
-                            </div>
+                          <div className="aspect-[3/4] bg-muted rounded mb-2 overflow-hidden">
+                            <img src={template.img} alt={template.name} className="w-full h-full object-cover" />
                           </div>
-                          <p className="font-medium text-sm">{template.name}</p>
-                          <p className="text-xs text-muted-foreground">{template.desc}</p>
+                          <p className="font-medium text-sm text-center">{template.name}</p>
                         </button>
                       ))}
                     </div>
@@ -968,7 +965,17 @@ export default function RegistroPage() {
                       ))}
                     </div>
                   </div>
+                </motion.div>
+              )}
 
+              {currentStep === 7 && (
+                <motion.div
+                  key="step7"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
                   <div className="border-t pt-4">
                     <h3 className="font-medium mb-4">Resumen de tus datos</h3>
                     <div className="space-y-3 text-sm">
