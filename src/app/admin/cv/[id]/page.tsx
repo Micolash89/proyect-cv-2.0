@@ -29,7 +29,16 @@ import {
   Wand2,
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
-import type { TemplateType, FontSize, LayoutOrder, CVStatus, UserCV, Experience, Education, Language } from "@/types";
+import type {
+  TemplateType,
+  FontSize,
+  LayoutOrder,
+  CVStatus,
+  UserCV,
+  Experience,
+  Education,
+  Language,
+} from "@/types";
 import { getCV, updateCV } from "@/app/actions/cv";
 import {
   extractCVAction,
@@ -75,7 +84,6 @@ export default function AdminCVPage() {
       setHasUnsavedChanges(isDifferent);
     }
   }, [user, originalUser]);
-
 
   const fetchUser = async () => {
     try {
@@ -229,7 +237,10 @@ export default function AdminCVPage() {
             extracted.education && extracted.education.length > 0
               ? extracted.education
               : user.education,
-          skills: extracted.skills && extracted.skills.length > 0 ? extracted.skills : user.skills,
+          skills:
+            extracted.skills && extracted.skills.length > 0
+              ? extracted.skills
+              : user.skills,
           languages:
             extracted.languages && extracted.languages.length > 0
               ? extracted.languages
@@ -394,8 +405,8 @@ export default function AdminCVPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center flex-col gap-5 md:gap-0 md:justify-between md:flex-row mb-8 ">
+        <div className="flex items-center  md:gap-4 w-full md:w-fit justify-between md:justify-items-normal">
           <Button variant="ghost" onClick={() => router.push("/admin")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
@@ -405,9 +416,14 @@ export default function AdminCVPage() {
             <p className="text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSave} className={`${hasUnsavedChanges && "border-2 border-red-500"}`} loading={saving}>
+        <div className="flex flex-col gap-2 w-full md:w-fit ">
+          <div className="flex gap-2 ">
+            <Button
+              variant="outline"
+              onClick={handleSave}
+              className={`${hasUnsavedChanges && "border-2 border-red-500"}`}
+              loading={saving}
+            >
               <Save className="h-4 w-4 mr-2" />
               Guardar
             </Button>
@@ -585,16 +601,35 @@ export default function AdminCVPage() {
                       disabled={exp.current}
                     />
                   </div>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={exp.current}
-                      onChange={(e) =>
-                        updateExperience(exp.id, "current", e.target.checked)
-                      }
-                    />
-                    <span className="text-sm">Trabajo actual</span>
-                  </label>
+                  <div className="flex justify-between ">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={exp.current}
+                        onChange={(e) =>
+                          updateExperience(exp.id, "current", e.target.checked)
+                        }
+                      />
+                      <span className="text-sm">Trabajo actual</span>
+                    </label>
+
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={() => improveDescription(exp.id)}
+                      disabled={improvingText === exp.id}
+                      title="Mejorar descripción con IA"
+                      className="gap-2 flex"
+                    >
+                      {improvingText === exp.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-4 w-4" />
+                      )}
+
+                      <span className="hidden md:block">Mejorar descripción con IA</span>
+                    </Button>
+                  </div>
                   <div className="flex gap-2">
                     <Textarea
                       placeholder="Funciones y logros"
@@ -604,19 +639,7 @@ export default function AdminCVPage() {
                       }
                       className="flex-1"
                     />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => improveDescription(exp.id)}
-                      disabled={improvingText === exp.id}
-                      title="Mejorar descripción con IA"
-                    >
-                      {improvingText === exp.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Wand2 className="h-4 w-4" />
-                      )}
-                    </Button>
+                    
                   </div>
                 </div>
               ))}
@@ -697,19 +720,33 @@ export default function AdminCVPage() {
               <CardTitle>Habilidades</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 mb-4">
-                <Input placeholder="Agregar habilidad" id="newSkill" />
+              <div className="flex justify-between mb-4">
+                <div className="flex gap-2">
+                  <Input placeholder="Agregar habilidad" id="newSkill" />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById(
+                        "newSkill",
+                      ) as HTMLInputElement;
+                      addSkill(input.value);
+                      input.value = "";
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById(
-                      "newSkill",
-                    ) as HTMLInputElement;
-                    addSkill(input.value);
-                    input.value = "";
-                  }}
+                  variant="outline"
+                  onClick={generateSkillsWithAI}
+                  disabled={generatingProfile}
                 >
-                  <Plus className="h-4 w-4" />
+                  {generatingProfile ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  <span className="hidden md:block">Generar skills con IA</span>
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
@@ -724,18 +761,6 @@ export default function AdminCVPage() {
                   </Badge>
                 ))}
               </div>
-              <Button
-                variant="outline"
-                onClick={generateSkillsWithAI}
-                disabled={generatingProfile}
-              >
-                {generatingProfile ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                Generar skills con IA
-              </Button>
             </CardContent>
           </Card>
 
@@ -744,7 +769,7 @@ export default function AdminCVPage() {
               <CardTitle>Perfil / Resumen</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 mb-2">
+              <div className="flex mb-2 justify-between">
                 <Input
                   placeholder="Puesto aspirado (para generar perfil ATS)"
                   value={user.targetJob || ""}
@@ -752,23 +777,24 @@ export default function AdminCVPage() {
                   className="flex-1"
                 />
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   onClick={generateProfileWithAI}
                   disabled={generatingProfile || user.experience.length === 0}
+                  title="Generar perfil con IA"
                 >
                   {generatingProfile ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Sparkles className="h-4 w-4 mr-2" />
                   )}
-                  Generar perfil ATS
+                  <span className="hidden md:block">Generar perfil con IA</span>
                 </Button>
               </div>
               <Textarea
                 value={user.summary || ""}
                 onChange={(e) => updateField("summary", e.target.value)}
                 placeholder="Resumen del perfil profesional..."
-                className="min-h-[100px]"
+                className="min-h-25"
               />
             </CardContent>
           </Card>
