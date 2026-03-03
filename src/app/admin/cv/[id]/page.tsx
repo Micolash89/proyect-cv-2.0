@@ -407,13 +407,16 @@ export default function AdminCVPage() {
 
       <div className="flex items-center flex-col gap-5 md:gap-0 md:justify-between md:flex-row mb-8 ">
         <div className="flex items-center  md:gap-4 w-full md:w-fit justify-between md:justify-items-normal">
-          <Button variant="ghost" onClick={() => router.push("/admin")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <Button variant="ghost" className="self-start md:self-auto" onClick={() => router.push("/admin")}>
+            <ArrowLeft className="size-6 md:size-4 mr-2" />
+            <span className="hidden md:block">
+
             Volver
+            </span>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{user.fullName}</h1>
-            <p className="text-muted-foreground">{user.email}</p>
+            <h1 className="text-xl md:text-2xl font-bold">{user.fullName}</h1>
+            <p className="text-muted-foreground text-xs md:text-base">{user.email}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 w-full md:w-fit ">
@@ -424,8 +427,11 @@ export default function AdminCVPage() {
               className={`${hasUnsavedChanges && "border-2 border-red-500"}`}
               loading={saving}
             >
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="size-6 md:size-4 md:mr-2" />
+              <span className="hidden md:block">
               Guardar
+
+              </span>
             </Button>
             <Button
               variant="outline"
@@ -434,13 +440,19 @@ export default function AdminCVPage() {
                 setPreviewKey((prev) => prev + 1);
               }}
             >
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="size-6 md:size-4 md:mr-2" />
+              <span className="hidden md:block">
+
               {showPreview ? "Ocultar" : "Preview"}
+              </span>
             </Button>
             <a href={previewUrl} target="_blank">
               <Button variant="default">
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="size-6 md:size-4 md:mr-2 " />
+                <span className="hidden md:block">
                 Descargar PDF
+
+                </span>
               </Button>
             </a>
           </div>
