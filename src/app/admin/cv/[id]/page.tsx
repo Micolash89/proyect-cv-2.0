@@ -13,13 +13,29 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ArrowLeft, Save, Download, Trash2, Plus, X,
-  Sparkles, Eye, CheckCircle, Clock, Upload, FileText, Loader2, Wand2
+  ArrowLeft,
+  Save,
+  Download,
+  Trash2,
+  Plus,
+  X,
+  Sparkles,
+  Eye,
+  CheckCircle,
+  Clock,
+  Upload,
+  FileText,
+  Loader2,
+  Wand2,
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
-import type { TemplateType, FontSize, LayoutOrder, CVStatus } from "@/types";
+import type { TemplateType, FontSize, LayoutOrder, CVStatus, UserCV, Experience, Education, Language } from "@/types";
 import { getCV, updateCV } from "@/app/actions/cv";
-import { extractCVAction, improveTextAction, generateProfileAction } from "@/app/actions/ia";
+import {
+  extractCVAction,
+  improveTextAction,
+  generateProfileAction,
+} from "@/app/actions/ia";
 import { generateSkills } from "@/lib/ia/factory";
 
 const colorPalette = [
@@ -36,7 +52,9 @@ const colorPalette = [
 export default function AdminCVPage() {
   const params = useParams();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserCV | null>(null);
+  const [originalUser, setOriginalUser] = useState<UserCV | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingProfile, setGeneratingProfile] = useState(false);
@@ -51,12 +69,21 @@ export default function AdminCVPage() {
     }
   }, [params.id]);
 
+  useEffect(() => {
+    if (user && originalUser) {
+      const isDifferent = JSON.stringify(user) !== JSON.stringify(originalUser);
+      setHasUnsavedChanges(isDifferent);
+    }
+  }, [user, originalUser]);
+
+
   const fetchUser = async () => {
     try {
       const { user } = await getCV(params.id as string);
       setUser(user);
+      setOriginalUser(JSON.parse(JSON.stringify(user)));
     } catch (error) {
-      toast.error("Error al cargar el usuario");
+      console.error("Error fetching user:", error);
       router.push("/admin");
     } finally {
       setLoading(false);
@@ -65,14 +92,16 @@ export default function AdminCVPage() {
 
   const handleSave = async () => {
     if (!user) return;
-    console.log(user);
 
     setSaving(true);
     try {
       await updateCV(user._id, user);
-      setPreviewKey(prev => prev + 1);
+      setOriginalUser(JSON.parse(JSON.stringify(user)));
+      setHasUnsavedChanges(false);
+      setPreviewKey((prev) => prev + 1);
       toast.success("Cambios guardados");
     } catch (error) {
+      console.error("Error saving:", error);
       toast.error("Error al guardar");
     } finally {
       setSaving(false);
@@ -100,7 +129,11 @@ export default function AdminCVPage() {
     }
     setGeneratingProfile(true);
     try {
-      const result = await generateProfileAction(user.experience, user.skills, user.targetJob);
+      const result = await generateProfileAction(
+        user.experience,
+        user.skills,
+        user.targetJob,
+      );
       if (result.success) {
         setUser({ ...user, summary: result.profile });
         toast.success("Perfil generado");
@@ -115,13 +148,20 @@ export default function AdminCVPage() {
   };
 
   const generateSkillsWithAI = async () => {
-    if (!user || (user.experience.length === 0 && user.education.length === 0)) {
+    if (
+      !user ||
+      (user.experience.length === 0 && user.education.length === 0)
+    ) {
       toast.error("Agrega experiencia o educación");
       return;
     }
     setGeneratingProfile(true);
     try {
-      const newSkills = await generateSkills(user.experience, user.education, user.targetJob);
+      const newSkills = await generateSkills(
+        user.experience,
+        user.education,
+        user.targetJob,
+      );
       setUser({ ...user, skills: newSkills });
       toast.success("Skills generados");
     } catch (error: any) {
@@ -132,7 +172,8 @@ export default function AdminCVPage() {
   };
 
   const improveDescription = async (expId: string) => {
-    const exp = user.experience.find((e: any) => e.id === expId);
+    if (!user) return;
+    const exp = user.experience.find((e: Experience) => e.id === expId);
     if (!exp?.description) {
       toast.error("Agrega una descripción primero");
       return;
@@ -143,16 +184,17 @@ export default function AdminCVPage() {
       if (result.success) {
         setUser({
           ...user,
-          experience: user.experience.map((e: any) =>
-            e.id === expId ? { ...e, description: result.improved } : e
+          experience: user.experience.map((e: Experience) =>
+            e.id === expId ? { ...e, description: result.improved || "" } : e,
           ),
         });
         toast.success("Descripción mejorada");
       } else {
         toast.error(result.error || "Error al mejorar texto");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Error al mejorar texto");
+    } catch (error) {
+      console.error("Error improving text:", error);
+      toast.error("Error al mejorar texto");
     } finally {
       setImprovingText(null);
     }
@@ -165,6 +207,7 @@ export default function AdminCVPage() {
       return;
     }
 
+    if (!user) return;
     setUploadingCV(true);
     try {
       const result = await extractCVAction(file);
@@ -178,10 +221,19 @@ export default function AdminCVPage() {
           phone: extracted.phone || user.phone,
           location: extracted.location || user.location,
           summary: extracted.summary || user.summary,
-          experience: extracted.experience?.length > 0 ? extracted.experience : user.experience,
-          education: extracted.education?.length > 0 ? extracted.education : user.education,
-          skills: extracted.skills?.length > 0 ? extracted.skills : user.skills,
-          languages: extracted.languages?.length > 0 ? extracted.languages : user.languages,
+          experience:
+            extracted.experience && extracted.experience.length > 0
+              ? extracted.experience
+              : user.experience,
+          education:
+            extracted.education && extracted.education.length > 0
+              ? extracted.education
+              : user.education,
+          skills: extracted.skills && extracted.skills.length > 0 ? extracted.skills : user.skills,
+          languages:
+            extracted.languages && extracted.languages.length > 0
+              ? extracted.languages
+              : user.languages,
         });
         toast.success("CV procesado correctamente");
       } else {
@@ -197,7 +249,10 @@ export default function AdminCVPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
+    if (
+      file &&
+      (file.type === "application/pdf" || file.type.startsWith("image/"))
+    ) {
       handleCVUpload(file);
     }
   };
@@ -221,21 +276,34 @@ export default function AdminCVPage() {
       ...user,
       experience: [
         ...user.experience,
-        { id: generateId(), company: "", position: "", startDate: "", endDate: "", current: false, description: "" },
+        {
+          id: generateId(),
+          company: "",
+          position: "",
+          startDate: "",
+          endDate: "",
+          current: false,
+          description: "",
+        },
       ],
     });
   };
 
   const removeExperience = (id: string) => {
     if (!user) return;
-    setUser({ ...user, experience: user.experience.filter((e: any) => e.id !== id) });
+    setUser({
+      ...user,
+      experience: user.experience.filter((e: any) => e.id !== id),
+    });
   };
 
   const updateExperience = (id: string, field: string, value: any) => {
     if (!user) return;
     setUser({
       ...user,
-      experience: user.experience.map((e: any) => (e.id === id ? { ...e, [field]: value } : e)),
+      experience: user.experience.map((e: any) =>
+        e.id === id ? { ...e, [field]: value } : e,
+      ),
     });
   };
 
@@ -245,21 +313,34 @@ export default function AdminCVPage() {
       ...user,
       education: [
         ...user.education,
-        { id: generateId(), institution: "", degree: "", field: "", startDate: "", endDate: "", current: false },
+        {
+          id: generateId(),
+          institution: "",
+          degree: "",
+          field: "",
+          startDate: "",
+          endDate: "",
+          current: false,
+        },
       ],
     });
   };
 
   const removeEducation = (id: string) => {
     if (!user) return;
-    setUser({ ...user, education: user.education.filter((e: any) => e.id !== id) });
+    setUser({
+      ...user,
+      education: user.education.filter((e: any) => e.id !== id),
+    });
   };
 
   const updateEducation = (id: string, field: string, value: any) => {
     if (!user) return;
     setUser({
       ...user,
-      education: user.education.map((e: any) => (e.id === id ? { ...e, [field]: value } : e)),
+      education: user.education.map((e: any) =>
+        e.id === id ? { ...e, [field]: value } : e,
+      ),
     });
   };
 
@@ -272,7 +353,10 @@ export default function AdminCVPage() {
 
   const removeSkill = (skill: string) => {
     if (!user) return;
-    setUser({ ...user, skills: user.skills.filter((s: string) => s !== skill) });
+    setUser({
+      ...user,
+      skills: user.skills.filter((s: string) => s !== skill),
+    });
   };
 
   if (loading) {
@@ -290,16 +374,21 @@ export default function AdminCVPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {showPreview && (
-        <div className="fixed bottom-4 right-4 w-[400px] h-[500px] bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col">
+        <div className="fixed bottom-4 right-4 w-100 h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between p-2 border-b bg-gray-50">
-            <span className="text-sm font-medium">Vista Previa</span>
-            <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
-              <X className="h-4 w-4" />
+            <span className="text-sm font-medium text-black">Vista Previa</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className=" shadow-sm  dark:bg-black hover:dark:bg-black/50"
+              onClick={() => setShowPreview(false)}
+            >
+              <X className="h-4 w-4 text-white " />
             </Button>
           </div>
           <iframe
             src={previewUrl}
-            className="flex-1 w-full"
+            className="flex-1 w-full rounded-md"
             title="Vista Previa del CV"
           />
         </div>
@@ -316,21 +405,36 @@ export default function AdminCVPage() {
             <p className="text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSave} loading={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            Guardar
-          </Button>
-          <Button variant="outline" onClick={() => { setShowPreview(!showPreview); setPreviewKey(prev => prev + 1); }}>
-            <Eye className="h-4 w-4 mr-2" />
-            {showPreview ? "Ocultar" : "Preview"}
-          </Button>
-          <a href={previewUrl} target="_blank">
-            <Button variant="default">
-              <Download className="h-4 w-4 mr-2" />
-              Descargar PDF
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSave} className={`${hasUnsavedChanges && "border-2 border-red-500"}`} loading={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              Guardar
             </Button>
-          </a>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPreview(!showPreview);
+                setPreviewKey((prev) => prev + 1);
+              }}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              {showPreview ? "Ocultar" : "Preview"}
+            </Button>
+            <a href={previewUrl} target="_blank">
+              <Button variant="default">
+                <Download className="h-4 w-4 mr-2" />
+                Descargar PDF
+              </Button>
+            </a>
+          </div>
+          {hasUnsavedChanges && (
+            <div>
+              <Badge variant={"destructive"} className=" bg-red-500/70">
+                Guardar cambios
+              </Badge>
+            </div>
+          )}
         </div>
       </div>
 
@@ -342,7 +446,9 @@ export default function AdminCVPage() {
       >
         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          {uploadingCV ? "Procesando CV..." : "Arrastra un CV anterior (PDF o imagen) para auto-completar"}
+          {uploadingCV
+            ? "Procesando CV..."
+            : "Arrastra un CV anterior (PDF o imagen) para auto-completar"}
         </p>
         <input
           id="cv-upload"
@@ -442,28 +548,40 @@ export default function AdminCVPage() {
                     <Input
                       placeholder="Empresa"
                       value={exp.company}
-                      onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "company", e.target.value)
+                      }
                       className="w-1/2"
                     />
-                    <Button variant="ghost" size="icon" onClick={() => removeExperience(exp.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeExperience(exp.id)}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                   <Input
                     placeholder="Puesto"
                     value={exp.position}
-                    onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
+                    onChange={(e) =>
+                      updateExperience(exp.id, "position", e.target.value)
+                    }
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
                       value={exp.startDate}
-                      onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "startDate", e.target.value)
+                      }
                     />
                     <Input
                       type="date"
                       value={exp.endDate}
-                      onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "endDate", e.target.value)
+                      }
                       disabled={exp.current}
                     />
                   </div>
@@ -471,7 +589,9 @@ export default function AdminCVPage() {
                     <input
                       type="checkbox"
                       checked={exp.current}
-                      onChange={(e) => updateExperience(exp.id, "current", e.target.checked)}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "current", e.target.checked)
+                      }
                     />
                     <span className="text-sm">Trabajo actual</span>
                   </label>
@@ -479,7 +599,9 @@ export default function AdminCVPage() {
                     <Textarea
                       placeholder="Funciones y logros"
                       value={exp.description}
-                      onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "description", e.target.value)
+                      }
                       className="flex-1"
                     />
                     <Button
@@ -516,10 +638,16 @@ export default function AdminCVPage() {
                     <Input
                       placeholder="Institución"
                       value={edu.institution}
-                      onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "institution", e.target.value)
+                      }
                       className="w-1/2"
                     />
-                    <Button variant="ghost" size="icon" onClick={() => removeEducation(edu.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeEducation(edu.id)}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -527,24 +655,32 @@ export default function AdminCVPage() {
                     <Input
                       placeholder="Título"
                       value={edu.degree}
-                      onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "degree", e.target.value)
+                      }
                     />
                     <Input
                       placeholder="Campo de estudio"
                       value={edu.field || ""}
-                      onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "field", e.target.value)
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
                       value={edu.startDate}
-                      onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "startDate", e.target.value)
+                      }
                     />
                     <Input
                       type="date"
                       value={edu.endDate}
-                      onChange={(e) => updateEducation(edu.id, "endDate", e.target.value)}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "endDate", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -562,14 +698,13 @@ export default function AdminCVPage() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 mb-4">
-                <Input
-                  placeholder="Agregar habilidad"
-                  id="newSkill"
-                />
+                <Input placeholder="Agregar habilidad" id="newSkill" />
                 <Button
                   type="button"
                   onClick={() => {
-                    const input = document.getElementById("newSkill") as HTMLInputElement;
+                    const input = document.getElementById(
+                      "newSkill",
+                    ) as HTMLInputElement;
                     addSkill(input.value);
                     input.value = "";
                   }}
@@ -579,7 +714,12 @@ export default function AdminCVPage() {
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 {user.skills.map((skill: string) => (
-                  <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
+                  <Badge
+                    key={skill}
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => removeSkill(skill)}
+                  >
                     {skill} <X className="h-3 w-3 ml-1" />
                   </Badge>
                 ))}
@@ -589,7 +729,11 @@ export default function AdminCVPage() {
                 onClick={generateSkillsWithAI}
                 disabled={generatingProfile}
               >
-                {generatingProfile ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {generatingProfile ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
                 Generar skills con IA
               </Button>
             </CardContent>
@@ -612,7 +756,11 @@ export default function AdminCVPage() {
                   onClick={generateProfileWithAI}
                   disabled={generatingProfile || user.experience.length === 0}
                 >
-                  {generatingProfile ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  {generatingProfile ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
                   Generar perfil ATS
                 </Button>
               </div>
@@ -636,30 +784,70 @@ export default function AdminCVPage() {
                 <Label>Plantilla</Label>
                 <div className="grid grid-cols-4 gap-2 mt-2">
                   {[
-                    { id: "harvard", name: "Harvard", img: "/templates/template-0.png" },
-                    { id: "modern", name: "Moderno", img: "/templates/template-1.png" },
-                    { id: "classic", name: "Clásico", img: "/templates/template-2.png" },
-                    { id: "creative", name: "Creativo", img: "/templates/template-3.png" },
-                    { id: "minimal", name: "Minimal", img: "/templates/template-4.png" },
-                    { id: "professional", name: "Profesional", img: "/templates/template-5.png" },
-                    { id: "layout6", name: "Elegante", img: "/templates/template-6.jpg" },
-                    { id: "layout7", name: "Moderno", img: "/templates/template-7.png" },
+                    {
+                      id: "harvard",
+                      name: "Harvard",
+                      img: "/templates/template-0.png",
+                    },
+                    {
+                      id: "modern",
+                      name: "Moderno",
+                      img: "/templates/template-1.png",
+                    },
+                    {
+                      id: "classic",
+                      name: "Clásico",
+                      img: "/templates/template-2.png",
+                    },
+                    {
+                      id: "creative",
+                      name: "Creativo",
+                      img: "/templates/template-3.png",
+                    },
+                    {
+                      id: "minimal",
+                      name: "Minimal",
+                      img: "/templates/template-4.png",
+                    },
+                    {
+                      id: "professional",
+                      name: "Profesional",
+                      img: "/templates/template-5.png",
+                    },
+                    {
+                      id: "layout6",
+                      name: "Elegante",
+                      img: "/templates/template-6.jpg",
+                    },
+                    {
+                      id: "layout7",
+                      name: "Moderno",
+                      img: "/templates/template-7.png",
+                    },
                   ].map((template) => (
                     <button
                       key={template.id}
                       type="button"
-                      onClick={() => updateField("selectedTemplate", template.id)}
+                      onClick={() =>
+                        updateField("selectedTemplate", template.id)
+                      }
                       className={cn(
                         "p-1 border-2 rounded-lg transition-all",
                         user.selectedTemplate === template.id
                           ? "border-foreground scale-105"
-                          : "border-transparent hover:border-muted-foreground"
+                          : "border-transparent hover:border-muted-foreground",
                       )}
                     >
-                      <div className="aspect-[3/4] bg-muted rounded overflow-hidden">
-                        <img src={template.img} alt={template.name} className="w-full h-full object-cover" />
+                      <div className="aspect-3/4 bg-muted rounded overflow-hidden">
+                        <img
+                          src={template.img}
+                          alt={template.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <p className="text-xs text-center mt-1">{template.name}</p>
+                      <p className="text-xs text-center mt-1">
+                        {template.name}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -672,12 +860,14 @@ export default function AdminCVPage() {
                     <button
                       key={color.value}
                       type="button"
-                      onClick={() => updateTemplateSettings("primaryColor", color.value)}
+                      onClick={() =>
+                        updateTemplateSettings("primaryColor", color.value)
+                      }
                       className={cn(
                         "h-10 rounded-lg border-2 transition-all",
                         user.templateSettings.primaryColor === color.value
                           ? "border-foreground scale-110"
-                          : "border-transparent hover:scale-105"
+                          : "border-transparent hover:scale-105",
                       )}
                       style={{ backgroundColor: color.value }}
                       title={color.name}
@@ -690,7 +880,9 @@ export default function AdminCVPage() {
                 <Label>Tamaño de fuente</Label>
                 <Select
                   value={user.templateSettings.fontSize}
-                  onChange={(e) => updateTemplateSettings("fontSize", e.target.value)}
+                  onChange={(e) =>
+                    updateTemplateSettings("fontSize", e.target.value)
+                  }
                   options={[
                     { value: "small", label: "Pequeño" },
                     { value: "medium", label: "Mediano" },
@@ -703,7 +895,9 @@ export default function AdminCVPage() {
                 <Label>Orden de experiencia</Label>
                 <Select
                   value={user.templateSettings.layout}
-                  onChange={(e) => updateTemplateSettings("layout", e.target.value)}
+                  onChange={(e) =>
+                    updateTemplateSettings("layout", e.target.value)
+                  }
                   options={[
                     { value: "descending", label: "Más reciente primero" },
                     { value: "ascending", label: "Más antiguo primero" },
@@ -718,7 +912,9 @@ export default function AdminCVPage() {
                   min="10"
                   max="40"
                   value={user.templateSettings.padding}
-                  onChange={(e) => updateTemplateSettings("padding", parseInt(e.target.value))}
+                  onChange={(e) =>
+                    updateTemplateSettings("padding", parseInt(e.target.value))
+                  }
                   className="w-full"
                 />
               </div>
@@ -730,16 +926,25 @@ export default function AdminCVPage() {
                   min="10"
                   max="30"
                   value={user.templateSettings.margin}
-                  onChange={(e) => updateTemplateSettings("margin", parseInt(e.target.value))}
+                  onChange={(e) =>
+                    updateTemplateSettings("margin", parseInt(e.target.value))
+                  }
                   className="w-full"
                 />
               </div>
 
-              <div className="p-4 rounded-lg" style={{ backgroundColor: user.templateSettings.primaryColor + "20" }}>
+              <div
+                className="p-4 rounded-lg"
+                style={{
+                  backgroundColor: user.templateSettings.primaryColor + "20",
+                }}
+              >
                 <p className="text-sm font-medium mb-2">Preview color</p>
                 <div
                   className="h-8 rounded"
-                  style={{ backgroundColor: user.templateSettings.primaryColor }}
+                  style={{
+                    backgroundColor: user.templateSettings.primaryColor,
+                  }}
                 />
               </div>
             </CardContent>

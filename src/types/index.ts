@@ -4,6 +4,29 @@ export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";
 
+export interface Settings {
+  whatsappNumber: string;
+  geminiApiKey: string;
+  claudeApiKey: string;
+  groqApiKey: string;
+  activeIA: IAType;
+  emailHost: string;
+  emailPort: string;
+  emailUser: string;
+  emailPassword: string;
+  emailFrom: string;
+  defaultFontSize: FontSize;
+  defaultLayout: LayoutOrder;
+  defaultPadding: number;
+  defaultMargin: number;
+  showPhoto: boolean;
+  showSummary: boolean;
+  showSkills: boolean;
+  showLanguages: boolean;
+  showProjects: boolean;
+  showCertifications: boolean;
+}
+
 export interface Experience {
   id: string;
   company: string;
@@ -75,6 +98,15 @@ export interface UserCV {
   viewed: boolean;
   createdAt: string;
   updatedAt: string;
+  targetJob?: string;
+  dni?: string;
+  fechaNacimiento?: string;
+  licencia?: string;
+  movilidad?: boolean;
+  incorporacion?: string;
+  disponibilidad?: string;
+  office?: boolean;
+  links?: string;
 }
 
 export interface Admin {
@@ -83,29 +115,6 @@ export interface Admin {
   password: string;
   name: string;
   createdAt: string;
-}
-
-export interface Settings {
-  whatsappNumber: string;
-  geminiApiKey: string;
-  claudeApiKey: string;
-  groqApiKey: string;
-  activeIA: IAType;
-  emailHost: string;
-  emailPort: string;
-  emailUser: string;
-  emailPassword: string;
-  emailFrom: string;
-  defaultFontSize: FontSize;
-  defaultLayout: LayoutOrder;
-  defaultPadding: number;
-  defaultMargin: number;
-  showPhoto: boolean;
-  showSummary: boolean;
-  showSkills: boolean;
-  showLanguages: boolean;
-  showProjects: boolean;
-  showCertifications: boolean;
 }
 
 export interface JWTPayload {
@@ -118,33 +127,29 @@ export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
-  message?: string;
 }
 
 export interface CVFormData {
-  phone: string;
   fullName: string;
-  email: string;
-  photo?: string;
+  phone: string;
+  email?: string;
   location?: string;
-  linkedin?: string;
-  github?: string;
   summary?: string;
-  experience: Omit<Experience, "id">[];
-  education: Omit<Education, "id">[];
+  photo?: string;
+  experience: Experience[];
+  education: Education[];
   skills: string[];
-  languages: Omit<Language, "id">[];
-  projects?: Omit<Project, "id">[];
-  certifications?: Omit<Certification, "id">[];
+  languages: Language[];
+  projects?: Project[];
+  certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
+  targetJob?: string;
 }
 
-export interface IASettings {
-  geminiApiKey: string;
-  claudeApiKey: string;
-  groqApiKey: string;
-  activeIA: IAType;
+export interface Theme {
+  mode: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
 }
 
 export interface IAProvider {
@@ -153,9 +158,4 @@ export interface IAProvider {
   improveText(text: string): Promise<string>;
   extractFromCV(file: File): Promise<Partial<CVFormData>>;
   generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]>;
-}
-
-export interface Theme {
-  mode: "light" | "dark";
-  setTheme: (theme: "light" | "dark") => void;
 }

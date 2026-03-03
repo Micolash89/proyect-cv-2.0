@@ -33,7 +33,7 @@ export async function getIAProvider(): Promise<IAProvider | null> {
 export async function generateProfile(
   experience: any[],
   skills: string[],
-  targetJob?: string
+  targetJob?: string,
 ): Promise<string> {
   const provider = await getIAProvider();
   if (!provider) throw new Error("No IA provider configured");
@@ -55,7 +55,7 @@ export async function extractFromCV(file: File): Promise<any> {
 export async function generateSkills(
   experience: any[],
   education: any[],
-  targetJob?: string
+  targetJob?: string,
 ): Promise<string[]> {
   const provider = await getIAProvider();
   if (!provider) throw new Error("No IA provider configured");

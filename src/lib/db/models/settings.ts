@@ -1,28 +1,10 @@
 import { getDatabase } from "@/lib/db/mongodb";
 import type { Settings, IAType } from "@/types";
+import { DEFAULT_SETTINGS } from "@/types/definitionsMongoDB";
 
-const defaultSettings: Settings = {
-  whatsappNumber: "",
-  geminiApiKey: "",
-  claudeApiKey: "",
-  groqApiKey: "",
-  activeIA: "gemini",
-  emailHost: "",
-  emailPort: "",
-  emailUser: "",
-  emailPassword: "",
-  emailFrom: "",
-  defaultFontSize: "medium",
-  defaultLayout: "descending",
-  defaultPadding: 40,
-  defaultMargin: 20,
-  showPhoto: true,
-  showSummary: true,
-  showSkills: true,
-  showLanguages: true,
-  showProjects: false,
-  showCertifications: false,
-};
+const defaultSettings: Settings = DEFAULT_SETTINGS;
+
+export type { Settings };
 
 export async function getSettingsCollection() {
   const db = await getDatabase();
@@ -33,7 +15,7 @@ export async function getSettings(): Promise<Settings> {
   const collection = await getSettingsCollection();
   const settings = await collection.find({}).toArray();
   
-  const result: Record<string, string> = {};
+  const result: Record<string, string | boolean | number> = {};
   settings.forEach((s) => {
     result[s.key] = s.value;
   });
@@ -41,7 +23,7 @@ export async function getSettings(): Promise<Settings> {
   return {
     ...defaultSettings,
     ...result,
-    activeIA: (result.activeIA as IAType) || "gemini",
+    activeIA: (result.activeIA as IAType) || "groq",
   };
 }
 
@@ -64,7 +46,7 @@ export async function setSettings(settings: Partial<Settings>): Promise<void> {
   const updates = Object.entries(settings).filter(([, v]) => v !== undefined);
   
   for (const [key, value] of updates) {
-    await setSetting(key, value as string);
+    await setSetting(key, String(value));
   }
 }
 
@@ -73,7 +55,7 @@ export async function getWhatsAppNumber(): Promise<string> {
 }
 
 export async function getActiveIA(): Promise<IAType> {
-  return ((await getSetting("activeIA")) as IAType) || "gemini";
+  return ((await getSetting("activeIA")) as IAType) || "groq";
 }
 
 export async function getIAApiKey(ia: IAType): Promise<string> {

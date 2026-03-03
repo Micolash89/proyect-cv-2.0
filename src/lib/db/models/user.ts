@@ -1,6 +1,6 @@
 import { getDatabase } from "@/lib/db/mongodb";
 import { ObjectId } from "mongodb";
-import type { CVFormData, CVStatus, TemplateType, TemplateSettings } from "@/types";
+import type { Experience, Education, Language, Project, Certification, CVStatus, TemplateType, TemplateSettings, CVFormData } from "@/types";
 
 interface UserCVDoc {
   _id: ObjectId;
@@ -12,12 +12,12 @@ interface UserCVDoc {
   linkedin?: string;
   github?: string;
   summary?: string;
-  experience: any[];
-  education: any[];
+  experience: Experience[];
+  education: Education[];
   skills: string[];
-  languages: any[];
-  projects?: any[];
-  certifications?: any[];
+  languages: Language[];
+  projects?: Project[];
+  certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
   status: CVStatus;
@@ -36,12 +36,12 @@ interface UserCVResponse {
   linkedin?: string;
   github?: string;
   summary?: string;
-  experience: any[];
-  education: any[];
+  experience: Experience[];
+  education: Education[];
   skills: string[];
-  languages: any[];
-  projects?: any[];
-  certifications?: any[];
+  languages: Language[];
+  projects?: Project[];
+  certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
   status: CVStatus;
@@ -49,6 +49,8 @@ interface UserCVResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+export type { UserCVDoc, UserCVResponse };
 
 export async function getUsersCollection() {
   const db = await getDatabase();
@@ -63,31 +65,38 @@ export async function createUser(data: CVFormData): Promise<UserCVResponse> {
   const collection = await getUsersCollection();
   const now = new Date().toISOString();
   
-  const user: Omit<UserCVDoc, "_id"> = {
+  const doc: Omit<UserCVDoc, "_id"> = {
     phone: data.phone,
     fullName: data.fullName,
-    email: data.email,
+    email: data.email || "",
     photo: data.photo,
     location: data.location,
-    linkedin: data.linkedin,
-    github: data.github,
+    linkedin: "",
+    github: "",
     summary: data.summary,
-    experience: data.experience.map((exp, i) => ({ ...exp, id: `exp-${i}` })),
-    education: data.education.map((edu, i) => ({ ...edu, id: `edu-${i}` })),
-    skills: data.skills,
-    languages: data.languages.map((lang, i) => ({ ...lang, id: `lang-${i}` })),
-    projects: data.projects?.map((proj, i) => ({ ...proj, id: `proj-${i}` })),
-    certifications: data.certifications?.map((cert, i) => ({ ...cert, id: `cert-${i}` })),
-    selectedTemplate: data.selectedTemplate,
-    templateSettings: data.templateSettings,
+    experience: data.experience || [],
+    education: data.education || [],
+    skills: data.skills || [],
+    languages: data.languages || [],
+    projects: data.projects,
+    certifications: data.certifications,
+    selectedTemplate: data.selectedTemplate || "harvard",
+    templateSettings: data.templateSettings || {
+      primaryColor: "#1e3a5f",
+      fontSize: "medium",
+      fontFamily: "Helvetica",
+      layout: "descending",
+      padding: 40,
+      margin: 20,
+    },
     status: "pending",
     viewed: false,
     createdAt: now,
     updatedAt: now,
   };
 
-  const result = await collection.insertOne(user as UserCVDoc);
-  return { ...user, _id: result.insertedId.toString() };
+  const result = await collection.insertOne(doc as UserCVDoc);
+  return { ...doc, _id: result.insertedId.toString() } as UserCVResponse;
 }
 
 export async function getAllUsers(): Promise<UserCVResponse[]> {
@@ -98,55 +107,30 @@ export async function getAllUsers(): Promise<UserCVResponse[]> {
 
 export async function getUserById(id: string): Promise<UserCVResponse | null> {
   const collection = await getUsersCollection();
-  try {
-    const user = await collection.findOne({ _id: new ObjectId(id) });
-    if (!user) return null;
-    return toResponse(user);
-  } catch {
-    return null;
-  }
+  const user = await collection.findOne({ _id: new ObjectId(id) });
+  return user ? toResponse(user) : null;
 }
 
 export async function getUserByPhone(phone: string): Promise<UserCVResponse | null> {
   const collection = await getUsersCollection();
   const user = await collection.findOne({ phone });
-  if (!user) return null;
-  return toResponse(user);
+  return user ? toResponse(user) : null;
 }
 
 export async function updateUser(
   id: string,
-  data: Partial<CVFormData & { status?: CVStatus; viewed?: boolean }>
+  data: Partial<UserCVResponse>
 ): Promise<UserCVResponse | null> {
   const collection = await getUsersCollection();
+  const { _id, ...updateData } = data;
   
-  const allowedFields = [
-    'phone', 'fullName', 'email', 'photo', 'location', 'linkedin', 'github',
-    'summary', 'experience', 'education', 'skills', 'languages', 
-    'projects', 'certifications', 'selectedTemplate', 'templateSettings',
-    'dni', 'links', 'targetJob'
-  ];
+  const result = await collection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: { ...updateData, updatedAt: new Date().toISOString() } },
+    { returnDocument: "after" }
+  );
   
-  const filteredData: Record<string, any> = {};
-  for (const key of allowedFields) {
-    if (key in data) {
-      filteredData[key] = (data as any)[key];
-    }
-  }
-  
-  filteredData.updatedAt = new Date().toISOString();
-
-  try {
-    await collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: filteredData }
-    );
-  } catch (error) {
-    console.error("Error updating user:", error);
-    return null;
-  }
-
-  return getUserById(id);
+  return result ? toResponse(result) : null;
 }
 
 export async function deleteUser(id: string): Promise<boolean> {
@@ -155,20 +139,9 @@ export async function deleteUser(id: string): Promise<boolean> {
   return result.deletedCount === 1;
 }
 
-export async function markUserAsViewed(id: string): Promise<void> {
-  const collection = await getUsersCollection();
-  await collection.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: { viewed: true } }
-  );
-}
-
 export async function getUsersByStatus(status: CVStatus): Promise<UserCVResponse[]> {
   const collection = await getUsersCollection();
-  const users = await collection
-    .find({ status })
-    .sort({ createdAt: -1 })
-    .toArray();
+  const users = await collection.find({ status }).sort({ createdAt: -1 }).toArray();
   return users.map(toResponse);
 }
 
@@ -185,4 +158,12 @@ export async function searchUsers(query: string): Promise<UserCVResponse[]> {
     .sort({ createdAt: -1 })
     .toArray();
   return users.map(toResponse);
+}
+
+export async function markUserAsViewed(id: string): Promise<void> {
+  const collection = await getUsersCollection();
+  await collection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { viewed: true, updatedAt: new Date().toISOString() } }
+  );
 }
