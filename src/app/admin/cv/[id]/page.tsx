@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -79,8 +79,19 @@ export default function AdminCVPage() {
   }, [params.id]);
 
   useEffect(() => {
+    if (user && user?.status == "pending") {
+      handleStatusChange("reviewed");
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (user && originalUser) {
-      const isDifferent = JSON.stringify(user) !== JSON.stringify(originalUser);
+      const { status, ...userWithoutStatus } = user;
+      const { status: originalStatus, ...originalUserWithoutStatus } =
+        originalUser;
+      const isDifferent =
+        JSON.stringify(userWithoutStatus) !==
+        JSON.stringify(originalUserWithoutStatus);
       setHasUnsavedChanges(isDifferent);
     }
   }, [user, originalUser]);
@@ -407,16 +418,19 @@ export default function AdminCVPage() {
 
       <div className="flex items-center flex-col gap-5 md:gap-0 md:justify-between md:flex-row mb-8 ">
         <div className="flex items-center  md:gap-4 w-full md:w-fit justify-between md:justify-items-normal">
-          <Button variant="ghost" className="self-start md:self-auto" onClick={() => router.push("/admin")}>
+          <Button
+            variant="ghost"
+            className="self-start md:self-auto"
+            onClick={() => router.push("/admin")}
+          >
             <ArrowLeft className="size-6 md:size-4 mr-2" />
-            <span className="hidden md:block">
-
-            Volver
-            </span>
+            <span className="hidden md:block">Volver</span>
           </Button>
           <div>
             <h1 className="text-xl md:text-2xl font-bold">{user.fullName}</h1>
-            <p className="text-muted-foreground text-xs md:text-base">{user.email}</p>
+            <p className="text-muted-foreground text-xs md:text-base">
+              {user.email}
+            </p>
           </div>
         </div>
         <div className="flex flex-col gap-2 w-full md:w-fit ">
@@ -427,11 +441,8 @@ export default function AdminCVPage() {
               className={`${hasUnsavedChanges && "border-2 border-red-500"}`}
               loading={saving}
             >
-              <Save className="size-6 md:size-4 md:mr-2" />
-              <span className="hidden md:block">
-              Guardar
-
-              </span>
+              <Save className="size-6 md:size-4 mr-2" />
+              <span className="">Guardar</span>
             </Button>
             <Button
               variant="outline"
@@ -439,20 +450,17 @@ export default function AdminCVPage() {
                 setShowPreview(!showPreview);
                 setPreviewKey((prev) => prev + 1);
               }}
+              className="hidden md:flex"
             >
               <Eye className="size-6 md:size-4 md:mr-2" />
               <span className="hidden md:block">
-
-              {showPreview ? "Ocultar" : "Preview"}
+                {showPreview ? "Ocultar" : "Preview"}
               </span>
             </Button>
             <a href={previewUrl} target="_blank">
               <Button variant="default">
-                <Download className="size-6 md:size-4 md:mr-2 " />
-                <span className="hidden md:block">
-                Descargar PDF
-
-                </span>
+                <Download className="size-6 md:size-4 mr-2 " />
+                <span className="">Descargar PDF</span>
               </Button>
             </a>
           </div>
@@ -489,14 +497,6 @@ export default function AdminCVPage() {
       </div>
 
       <div className="flex gap-2 mb-6">
-        <Button
-          variant={user.status === "pending" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusChange("pending")}
-        >
-          <Clock className="h-4 w-4 mr-1" />
-          Pendiente
-        </Button>
         <Button
           variant={user.status === "reviewed" ? "default" : "outline"}
           size="sm"
@@ -639,7 +639,9 @@ export default function AdminCVPage() {
                         <Wand2 className="h-4 w-4" />
                       )}
 
-                      <span className="hidden md:block">Mejorar descripción con IA</span>
+                      <span className="hidden md:block">
+                        Mejorar descripción con IA
+                      </span>
                     </Button>
                   </div>
                   <div className="flex gap-2">
@@ -651,7 +653,6 @@ export default function AdminCVPage() {
                       }
                       className="flex-1"
                     />
-                    
                   </div>
                 </div>
               ))}
