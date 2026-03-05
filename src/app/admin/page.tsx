@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
@@ -10,19 +11,15 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Search, Filter, Eye, CheckCircle, Clock, XCircle,
-  FileText, Users
+  FileText, Users, Plus
 } from "lucide-react";
 import { formatDate, formatPhone, cn } from "@/lib/utils/cn";
 import type { UserCV, CVStatus } from "@/types";
 import { getCVs } from "@/app/actions/cv";
-
-const statusConfig: Record<CVStatus, { label: string; variant: "warning" | "info" | "success"; icon: any }> = {
-  pending: { label: "Pendiente", variant: "warning", icon: Clock },
-  reviewed: { label: "Revisando", variant: "info", icon: Eye },
-  completed: { label: "Completado", variant: "success", icon: CheckCircle },
-};
+import { statusConfig } from "@/lib/constants";
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [users, setUsers] = useState<UserCV[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -59,10 +56,18 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold mb-2">Panel de Administración</h1>
-        <p className="text-muted-foreground">
-          Gestiona los currículums registrados
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Panel de Administración</h1>
+            <p className="text-muted-foreground">
+              Gestiona los currículums registrados
+            </p>
+          </div>
+          <Button onClick={() => router.push("/admin/cv/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo CV
+          </Button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

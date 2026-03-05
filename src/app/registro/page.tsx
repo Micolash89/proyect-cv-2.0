@@ -354,7 +354,7 @@ export default function RegistroPage() {
                 <button
                   onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-medium",
+                    "flex items-center gap-2 px-2 py-2 rounded-lg transition-all text-sm font-medium flex-col",
                     currentStep === step.id
                       ? "bg-foreground text-background"
                       : step.id < currentStep
@@ -364,9 +364,9 @@ export default function RegistroPage() {
                   disabled={step.id > currentStep}
                 >
                   {step.id < currentStep ? (
-                    <Check className="h-4 w-4" />
+                    <Check className="md:size-4 size-7" />
                   ) : (
-                    <step.icon className="h-4 w-4" />
+                    <step.icon  className="md:size-4 size-7" />
                   )}
                   <span>{step.title}</span>
                 </button>
