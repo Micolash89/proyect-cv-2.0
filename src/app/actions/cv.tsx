@@ -54,7 +54,7 @@ export async function getCV(id: string) {
 const cvSchema = z.object({
   phone: z.string().min(1, "Teléfono requerido"),
   fullName: z.string().min(1, "Nombre requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   photo: z.string().optional(),
   location: z.string().optional(),
   linkedin: z.string().optional(),
@@ -75,11 +75,6 @@ export async function createCV(data: CVFormData) {
   
   if (!validated.success) {
     throw new Error(validated.error.issues[0].message);
-  }
-
-  const existingUser = await getUserByPhone(validated.data.phone);
-  if (existingUser) {
-    throw new Error("Ya existe un CV registrado con este teléfono");
   }
 
   const user = await createUser(validated.data as CVFormData);

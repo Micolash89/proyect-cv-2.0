@@ -1,98 +1,100 @@
-const BASE_URL = "https://apis.datos.gob.ar/georef/api";
+const BASE_URL = "https://apis.datos.gob.ar/georef/api/v2.0";
 
 export interface Provincia {
   id: string;
   nombre: string;
-  centroide?: {
-    lat: number;
-    lon: number;
-  };
 }
 
-export interface Departamento {
+export interface Municipio {
   id: string;
   nombre: string;
-  provincia_id: string;
-  centroide?: {
-    lat: number;
-    lon: number;
-  };
 }
 
 export interface Localidad {
   id: string;
   nombre: string;
-  provincia_id: string;
-  departamento_id: string;
-  centroide?: {
-    lat: number;
-    lon: number;
-  };
 }
 
-interface GeorefResponse<T> {
+interface GeorefProvinciasResponse {
   cantidad: number;
   total: number;
   inicio: number;
-  parametros: Record<string, string>;
-  resultados: T[];
+  provincias: Provincia[];
 }
 
-async function fetchGeoref<T>(endpoint: string, params: Record<string, string> = {}): Promise<T[]> {
-  const url = new URL(`${BASE_URL}${endpoint}`);
-  
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) {
-      url.searchParams.append(key, value);
-    }
-  });
-  
-  url.searchParams.append("campos", "id,nombre");
-  url.searchParams.append("max", "100");
-  
-  const response = await fetch(url.toString());
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching ${endpoint}: ${response.statusText}`);
-  }
-  
-  const data: GeorefResponse<T> = await response.json();
-  return data.resultados;
+interface GeorefMunicipiosResponse {
+  cantidad: number;
+  total: number;
+  inicio: number;
+  municipios: Municipio[];
+}
+
+interface GeorefLocalidadesResponse {
+  cantidad: number;
+  total: number;
+  inicio: number;
+  localidades: Localidad[];
 }
 
 export async function getProvincias(): Promise<Provincia[]> {
-  return fetchGeoref<Provincia>("/provincias");
+  try {
+    const url = new URL(`${BASE_URL}/provincias`);
+    url.searchParams.append("campos", "id,nombre");
+    url.searchParams.append("max", "100");
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`Error fetching provincias: ${response.statusText}`);
+    }
+
+    const data: GeorefProvinciasResponse = await response.json();
+    return (data.provincias || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  } catch (error) {
+    console.error("Error fetching provincias:", error);
+    return [];
+  }
 }
 
-export async function getDepartamentos(provinciaId: string): Promise<Departamento[]> {
+export async function getMunicipios(provinciaId: string): Promise<Municipio[]> {
   if (!provinciaId) return [];
-  return fetchGeoref<Departamento>("/departamentos", { provincia: provinciaId });
-}
-
-export async function getMunicipios(provinciaId: string): Promise<Departamento[]> {
-  if (!provinciaId) return [];
-  return fetchGeoref<Departamento>("/municipios", { provincia: provinciaId });
-}
-
-export async function getLocalidades(departamentoId: string): Promise<Localidad[]> {
-  if (!departamentoId) return [];
-  return fetchGeoref<Localidad>("/localidades", { departamento: departamentoId });
-}
-
-export async function searchUbicacion(query: string): Promise<{
-  provincias: Provincia[];
-  departamentos: Departamento[];
-  localidades: Localidad[];
-}> {
-  const results = await Promise.all([
-    fetchGeoref<Provincia>("/provincias", { nombre: query }),
-    fetchGeoref<Departamento>("/departamentos", { nombre: query }),
-    fetchGeoref<Localidad>("/localidades", { nombre: query }),
-  ]);
   
-  return {
-    provincias: results[0],
-    departamentos: results[1],
-    localidades: results[2],
-  };
+  try {
+    const url = new URL(`${BASE_URL}/municipios`);
+    url.searchParams.append("provincia", provinciaId);
+    url.searchParams.append("campos", "id,nombre");
+    url.searchParams.append("max", "500");
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`Error fetching municipios: ${response.statusText}`);
+    }
+
+    const data: GeorefMunicipiosResponse = await response.json();
+    return (data.municipios || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  } catch (error) {
+    console.error("Error fetching municipios:", error);
+    return [];
+  }
+}
+
+export async function getLocalidades(provinciaId: string): Promise<Localidad[]> {
+  if (!provinciaId) return [];
+  
+  try {
+    const url = new URL(`${BASE_URL}/localidades`);
+    url.searchParams.append("provincia", provinciaId);
+    url.searchParams.append("campos", "id,nombre");
+    url.searchParams.append("max", "2000");
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`Error fetching localidades: ${response.statusText}`);
+    }
+
+    const data: GeorefLocalidadesResponse = await response.json();
+    return (data.localidades || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  } catch (error) {
+    console.error("Error fetching localidades:", error);
+    return [];
+  }
 }

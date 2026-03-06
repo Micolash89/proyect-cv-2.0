@@ -19,6 +19,10 @@ import {
   X,
   FileText,
   CheckCircle,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
 } from "lucide-react";
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
@@ -32,6 +36,7 @@ import {
   registroSteps,
 } from "@/lib/constants";
 import { templateOptions } from "@/lib/constants/templates";
+import { getProvincias, getMunicipios, getLocalidades, type Provincia, type Municipio, type Localidad } from "@/lib/api/georef";
 import type { TemplateType, Experience, Education, Language } from "@/types";
 
 const DEFAULT_TEMPLATE_SETTINGS = {
@@ -48,6 +53,8 @@ export default function AdminNewCVPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [templateCarouselIndex, setTemplateCarouselIndex] = useState(0);
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -64,6 +71,13 @@ export default function AdminNewCVPage() {
     targetJob: "",
   });
 
+  const [provincias, setProvincias] = useState<Provincia[]>([]);
+  const [municipios, setMunicipios] = useState<Municipio[]>([]);
+  const [localidades, setLocalidades] = useState<Localidad[]>([]);
+  const [selectedProvincia, setSelectedProvincia] = useState<string>("");
+  const [selectedMunicipio, setSelectedMunicipio] = useState<string>("");
+  const [selectedLocalidad, setSelectedLocalidad] = useState<string>("");
+
   const updateFormData = (data: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
   };
@@ -71,14 +85,36 @@ export default function AdminNewCVPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    await processPhotoFile(file);
+  };
 
+  const processPhotoFile = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    
+
     const result = await uploadImage(formData);
     if (result.success && result.url) {
       updateFormData({ photo: result.url });
       setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      await processPhotoFile(file);
     }
   };
 
@@ -108,7 +144,7 @@ export default function AdminNewCVPage() {
   const updateExperience = (id: string, field: string, value: any) => {
     updateFormData({
       experience: formData.experience.map((e) =>
-        e.id === id ? { ...e, [field]: value } : e
+        e.id === id ? { ...e, [field]: value } : e,
       ),
     });
   };
@@ -138,7 +174,7 @@ export default function AdminNewCVPage() {
   const updateEducation = (id: string, field: string, value: any) => {
     updateFormData({
       education: formData.education.map((e) =>
-        e.id === id ? { ...e, [field]: value } : e
+        e.id === id ? { ...e, [field]: value } : e,
       ),
     });
   };
@@ -156,18 +192,23 @@ export default function AdminNewCVPage() {
 
   const addLanguage = () => {
     updateFormData({
-      languages: [...formData.languages, { id: generateId(), language: "Español", level: "Intermedio" }],
+      languages: [
+        ...formData.languages,
+        { id: generateId(), language: "Español", level: "Intermedio" },
+      ],
     });
   };
 
   const removeLanguage = (id: string) => {
-    updateFormData({ languages: formData.languages.filter((l) => l.id !== id) });
+    updateFormData({
+      languages: formData.languages.filter((l) => l.id !== id),
+    });
   };
 
   const updateLanguage = (id: string, field: string, value: string) => {
     updateFormData({
       languages: formData.languages.map((l) =>
-        l.id === id ? { ...l, [field]: value } : l
+        l.id === id ? { ...l, [field]: value } : l,
       ),
     });
   };
@@ -180,18 +221,19 @@ export default function AdminNewCVPage() {
       email: data.email || prev.email,
       location: data.location || prev.location,
       summary: data.summary || prev.summary,
-      experience: data.experience.length > 0 ? data.experience : prev.experience,
+      experience:
+        data.experience.length > 0 ? data.experience : prev.experience,
       education: data.education.length > 0 ? data.education : prev.education,
       skills: data.skills.length > 0 ? data.skills : prev.skills,
       languages: data.languages.length > 0 ? data.languages : prev.languages,
     }));
-    toast.success("Datos importados del CV");
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const result: { success: boolean; id?: string; error?: string } = await createCV(formData);
+      const result: { success: boolean; id?: string; error?: string } =
+        await createCV(formData);
       if (result.success && result.id) {
         toast.success("CV creado correctamente");
         router.push(`/admin/cv/${result.id}`);
@@ -227,10 +269,78 @@ export default function AdminNewCVPage() {
     }
   };
 
+  useEffect(() => {
+    const loadProvincias = async () => {
+      try {
+        const data = await getProvincias();
+        setProvincias(data);
+      } catch (error) {
+        console.error("Error loading provincias:", error);
+      }
+    };
+    loadProvincias();
+  }, []);
+
+  useEffect(() => {
+    const loadMunicipios = async () => {
+      if (!selectedProvincia) {
+setMunicipios([]);
+        setLocalidades([]);
+        setSelectedMunicipio("");
+        setSelectedLocalidad("");
+        return;
+      }
+      try {
+        const data = await getMunicipios(selectedProvincia);
+        setMunicipios(data);
+        setLocalidades([]);
+        setSelectedMunicipio("");
+        setSelectedLocalidad("");
+      } catch (error) {
+        console.error("Error loading municipios:", error);
+      }
+    };
+    loadMunicipios();
+  }, [selectedProvincia]);
+
+  useEffect(() => {
+    const loadLocalidades = async () => {
+      if (!selectedProvincia) {
+        setLocalidades([]);
+        return;
+      }
+      try {
+        const data = await getLocalidades(selectedProvincia);
+        setLocalidades(data);
+        setSelectedLocalidad("");
+      } catch (error) {
+        console.error("Error loading localidades:", error);
+      }
+    };
+    loadLocalidades();
+  }, [selectedProvincia]);
+
+  const updateLocation = () => {
+    const provinciaNombre = selectedProvincia ? provincias.find(p => p.id === selectedProvincia)?.nombre : "";
+    const parts = [
+      selectedLocalidad || selectedMunicipio,
+      provinciaNombre
+    ].filter(Boolean);
+    updateFormData({ location: parts.join(", ") });
+  };
+
+  useEffect(() => {
+    updateLocation();
+  }, [selectedProvincia, selectedMunicipio, selectedLocalidad]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => router.push("/admin")} className="mb-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/admin")}
+          className="mb-4"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver al panel
         </Button>
@@ -250,7 +360,7 @@ export default function AdminNewCVPage() {
                 "flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap text-sm",
                 currentStep === step.id && "bg-primary text-primary-foreground",
                 currentStep > step.id && "bg-green-100 text-green-700",
-                currentStep < step.id && "bg-muted text-muted-foreground"
+                currentStep < step.id && "bg-muted text-muted-foreground",
               )}
             >
               {currentStep > step.id ? (
@@ -283,8 +393,12 @@ export default function AdminNewCVPage() {
                         <Label>Nombre completo *</Label>
                         <Input
                           value={formData.fullName}
-                          onChange={(e) => updateFormData({ fullName: e.target.value })}
+                          onChange={(e) =>
+                            updateFormData({ fullName: e.target.value })
+                          }
                           placeholder="Juan Pérez"
+                          autoComplete="name"
+                          inputMode="text"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -292,8 +406,12 @@ export default function AdminNewCVPage() {
                           <Label>Teléfono *</Label>
                           <Input
                             value={formData.phone}
-                            onChange={(e) => updateFormData({ phone: e.target.value })}
+                            onChange={(e) =>
+                              updateFormData({ phone: e.target.value })
+                            }
                             placeholder="+54 11 1234 5678"
+                            autoComplete="tel"
+                            inputMode="numeric"
                           />
                         </div>
                         <div>
@@ -301,18 +419,65 @@ export default function AdminNewCVPage() {
                           <Input
                             type="email"
                             value={formData.email}
-                            onChange={(e) => updateFormData({ email: e.target.value })}
+                            onChange={(e) =>
+                              updateFormData({ email: e.target.value })
+                            }
                             placeholder="juan@email.com"
+                            autoComplete="email"
+                            inputMode="email"
                           />
                         </div>
                       </div>
                       <div>
                         <Label>Ubicación</Label>
-                        <Input
-                          value={formData.location}
-                          onChange={(e) => updateFormData({ location: e.target.value })}
-                          placeholder="Buenos Aires, Argentina"
-                        />
+                        <div className="space-y-2 mt-2">
+                          <select
+                            value={selectedProvincia}
+                            onChange={(e) => setSelectedProvincia(e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Seleccioná una provincia</option>
+                            {provincias.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.nombre}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          {municipios.length > 0 && (
+                            <select
+                              value={selectedMunicipio}
+                              onChange={(e) => setSelectedMunicipio(e.target.value)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value="">Seleccioná un municipio</option>
+                              {municipios.map((m) => (
+                                <option key={m.id} value={m.nombre}>
+                                  {m.nombre}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          
+                          <select
+                            value={selectedLocalidad}
+                            onChange={(e) => setSelectedLocalidad(e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Seleccioná una localidad</option>
+                            {localidades.map((l) => (
+                              <option key={l.id} value={l.nombre}>
+                                {l.nombre}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          {formData.location && (
+                            <p className="text-sm text-muted-foreground">
+                              {formData.location}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -331,19 +496,44 @@ export default function AdminNewCVPage() {
                       <CardTitle>Foto de Perfil</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center gap-4">
-                        {photoPreview || formData.photo ? (
-                          <img
-                            src={photoPreview || formData.photo}
-                            alt="Foto"
-                            className="w-24 h-24 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-muted-foreground">Sin foto</span>
+                      <div className="flex flex-col items-center gap-4">
+                        <div
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          className={cn(
+                            "relative w-32 h-32 rounded-full overflow-hidden border-2 transition-all cursor-pointer",
+                            isDraggingPhoto
+                              ? "border-primary border-dashed scale-105"
+                              : "border-transparent",
+                          )}
+                        >
+                          {photoPreview || formData.photo ? (
+                            <img
+                              src={photoPreview || formData.photo}
+                              alt="Foto"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                              <span className="text-muted-foreground text-xs text-center p-2">
+                                Sin foto
+                              </span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload className="h-8 w-8 text-white" />
                           </div>
-                        )}
-                        <Input type="file" accept="image/*" onChange={handlePhotoUpload} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Arrastra una imagen o haz clic para seleccionar
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -361,40 +551,77 @@ export default function AdminNewCVPage() {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle>Experiencia Laboral</CardTitle>
-                      <Button variant="outline" size="sm" onClick={addExperience}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addExperience}
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar
                       </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {formData.experience.map((exp) => (
-                        <div key={exp.id} className="p-4 border rounded-lg space-y-3">
+                        <div
+                          key={exp.id}
+                          className="p-4 border rounded-lg space-y-3"
+                        >
                           <div className="flex justify-between">
-                            <Label className="text-xs text-muted-foreground">Empresa</Label>
-                            <Button variant="ghost" size="sm" onClick={() => removeExperience(exp.id)}>
+                            <Label className="text-xs text-muted-foreground">
+                              Empresa
+                            </Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeExperience(exp.id)}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
                           <Input
                             value={exp.company}
-                            onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
+                            onChange={(e) =>
+                              updateExperience(
+                                exp.id,
+                                "company",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Nombre de la empresa"
                           />
                           <Input
                             value={exp.position}
-                            onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
+                            onChange={(e) =>
+                              updateExperience(
+                                exp.id,
+                                "position",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Puesto"
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <Input
                               type="date"
                               value={exp.startDate}
-                              onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "startDate",
+                                  e.target.value,
+                                )
+                              }
                             />
                             <Input
                               type="date"
                               value={exp.endDate}
-                              onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "endDate",
+                                  e.target.value,
+                                )
+                              }
                               disabled={exp.current}
                             />
                           </div>
@@ -402,13 +629,25 @@ export default function AdminNewCVPage() {
                             <input
                               type="checkbox"
                               checked={exp.current}
-                              onChange={(e) => updateExperience(exp.id, "current", e.target.checked)}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "current",
+                                  e.target.checked,
+                                )
+                              }
                             />
                             <span className="text-sm">Trabajo actual</span>
                           </label>
                           <Textarea
                             value={exp.description}
-                            onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
+                            onChange={(e) =>
+                              updateExperience(
+                                exp.id,
+                                "description",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Descripción de funciones..."
                             className="h-20"
                           />
@@ -435,40 +674,73 @@ export default function AdminNewCVPage() {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle>Educación</CardTitle>
-                      <Button variant="outline" size="sm" onClick={addEducation}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addEducation}
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar
                       </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {formData.education.map((edu) => (
-                        <div key={edu.id} className="p-4 border rounded-lg space-y-3">
+                        <div
+                          key={edu.id}
+                          className="p-4 border rounded-lg space-y-3"
+                        >
                           <div className="flex justify-between">
-                            <Label className="text-xs text-muted-foreground">Institución</Label>
-                            <Button variant="ghost" size="sm" onClick={() => removeEducation(edu.id)}>
+                            <Label className="text-xs text-muted-foreground">
+                              Institución
+                            </Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeEducation(edu.id)}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
                           <Input
                             value={edu.institution}
-                            onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
+                            onChange={(e) =>
+                              updateEducation(
+                                edu.id,
+                                "institution",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Universidad/Instituto"
                           />
                           <Input
                             value={edu.degree}
-                            onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                            onChange={(e) =>
+                              updateEducation(edu.id, "degree", e.target.value)
+                            }
                             placeholder="Carrera/Título"
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <Input
                               type="date"
                               value={edu.startDate}
-                              onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "startDate",
+                                  e.target.value,
+                                )
+                              }
                             />
                             <Input
                               type="date"
                               value={edu.endDate}
-                              onChange={(e) => updateEducation(edu.id, "endDate", e.target.value)}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "endDate",
+                                  e.target.value,
+                                )
+                              }
                               disabled={edu.current}
                             />
                           </div>
@@ -476,7 +748,13 @@ export default function AdminNewCVPage() {
                             <input
                               type="checkbox"
                               checked={edu.current}
-                              onChange={(e) => updateEducation(edu.id, "current", e.target.checked)}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "current",
+                                  e.target.checked,
+                                )
+                              }
                             />
                             <span className="text-sm">Estudio actual</span>
                           </label>
@@ -518,7 +796,12 @@ export default function AdminNewCVPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {formData.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
+                          <Badge
+                            key={skill}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={() => removeSkill(skill)}
+                          >
                             {skill} <X className="h-3 w-3 ml-1" />
                           </Badge>
                         ))}
@@ -539,15 +822,37 @@ export default function AdminNewCVPage() {
                         <div key={lang.id} className="flex gap-2 items-center">
                           <Select
                             value={lang.language}
-                            onChange={(e) => updateLanguage(lang.id, "language", e.target.value)}
-                            options={languageOptions as unknown as { value: string; label: string }[]}
+                            onChange={(e) =>
+                              updateLanguage(
+                                lang.id,
+                                "language",
+                                e.target.value,
+                              )
+                            }
+                            options={
+                              languageOptions as unknown as {
+                                value: string;
+                                label: string;
+                              }[]
+                            }
                           />
                           <Select
                             value={lang.level}
-                            onChange={(e) => updateLanguage(lang.id, "level", e.target.value)}
-                            options={levelOptions as unknown as { value: string; label: string }[]}
+                            onChange={(e) =>
+                              updateLanguage(lang.id, "level", e.target.value)
+                            }
+                            options={
+                              levelOptions as unknown as {
+                                value: string;
+                                label: string;
+                              }[]
+                            }
                           />
-                          <Button variant="ghost" size="sm" onClick={() => removeLanguage(lang.id)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeLanguage(lang.id)}
+                          >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -572,25 +877,92 @@ export default function AdminNewCVPage() {
                     <CardContent className="space-y-4">
                       <div>
                         <Label>Plantilla</Label>
-                        <div className="grid grid-cols-4 gap-2 mt-2">
-                          {templateOptions.map((template) => (
-                            <button
-                              key={template.id}
-                              type="button"
-                              onClick={() => updateFormData({ selectedTemplate: template.id as TemplateType })}
-                              className={cn(
-                                "p-1 border-2 rounded-lg transition-all",
-                                formData.selectedTemplate === template.id
-                                  ? "border-foreground scale-105"
-                                  : "border-transparent hover:border-muted-foreground"
-                              )}
+                        <div className="relative mt-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                setTemplateCarouselIndex((prev) =>
+                                  Math.max(0, prev - 4),
+                                )
+                              }
+                              disabled={templateCarouselIndex === 0}
+                              className="shrink-0 hidden lg:flex"
                             >
-                              <div className="aspect-[3/4] bg-muted rounded overflow-hidden">
-                                <img src={template.img} alt={template.name} className="w-full h-full object-cover" />
-                              </div>
-                              <p className="text-xs text-center mt-1">{template.name}</p>
-                            </button>
-                          ))}
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 flex-1">
+                              {templateOptions
+                                .slice(templateCarouselIndex, templateCarouselIndex + 4)
+                                .map((template) => (
+                                  <button
+                                    key={template.id}
+                                    type="button"
+                                    onClick={() =>
+                                      updateFormData({
+                                        selectedTemplate: template.id as TemplateType,
+                                      })
+                                    }
+                                    className={cn(
+                                      "p-1 border-2 rounded-lg transition-all",
+                                      formData.selectedTemplate === template.id
+                                        ? "border-foreground scale-105"
+                                        : "border-transparent hover:border-muted-foreground",
+                                    )}
+                                  >
+                                    <div className="aspect-3/4 bg-muted rounded overflow-hidden">
+                                      <img
+                                        src={template.img}
+                                        alt={template.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <p className="text-xs text-center mt-1">
+                                      {template.name}
+                                    </p>
+                                  </button>
+                                ))}
+                            </div>
+
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                setTemplateCarouselIndex((prev) =>
+                                  Math.min(
+                                    templateOptions.length - 4,
+                                    prev + 4,
+                                  ),
+                                )
+                              }
+                              disabled={
+                                templateCarouselIndex >=
+                                templateOptions.length - 4
+                              }
+                              className="shrink-0 hidden lg:flex"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-center mt-2 gap-1 hidden lg:flex">
+                            {Array.from({
+                              length: Math.ceil(templateOptions.length / 4),
+                            }).map((_, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => setTemplateCarouselIndex(i * 4)}
+                                className={cn(
+                                  "w-2 h-2 rounded-full transition-all",
+                                  templateCarouselIndex === i * 4
+                                    ? "bg-foreground"
+                                    : "bg-muted-foreground/30",
+                                )}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
 
@@ -603,14 +975,18 @@ export default function AdminNewCVPage() {
                               type="button"
                               onClick={() =>
                                 updateFormData({
-                                  templateSettings: { ...formData.templateSettings, primaryColor: color.value },
+                                  templateSettings: {
+                                    ...formData.templateSettings,
+                                    primaryColor: color.value,
+                                  },
                                 })
                               }
                               className={cn(
                                 "h-10 rounded-lg border-2 transition-all",
-                                formData.templateSettings.primaryColor === color.value
+                                formData.templateSettings.primaryColor ===
+                                  color.value
                                   ? "border-foreground scale-110"
-                                  : "border-transparent hover:scale-105"
+                                  : "border-transparent hover:scale-105",
                               )}
                               style={{ backgroundColor: color.value }}
                               title={color.name}
@@ -641,7 +1017,9 @@ export default function AdminNewCVPage() {
                           <span>{formData.fullName || "No especificado"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Teléfono:</span>
+                          <span className="text-muted-foreground">
+                            Teléfono:
+                          </span>
                           <span>{formData.phone}</span>
                         </div>
                         <div className="flex justify-between">
@@ -649,19 +1027,27 @@ export default function AdminNewCVPage() {
                           <span>{formData.email || "No especificado"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Experiencias:</span>
+                          <span className="text-muted-foreground">
+                            Experiencias:
+                          </span>
                           <span>{formData.experience.length}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Educación:</span>
+                          <span className="text-muted-foreground">
+                            Educación:
+                          </span>
                           <span>{formData.education.length}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Habilidades:</span>
+                          <span className="text-muted-foreground">
+                            Habilidades:
+                          </span>
                           <span>{formData.skills.length}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Idiomas:</span>
+                          <span className="text-muted-foreground">
+                            Idiomas:
+                          </span>
                           <span>{formData.languages.length}</span>
                         </div>
                       </div>
@@ -676,13 +1062,24 @@ export default function AdminNewCVPage() {
                 variant="outline"
                 onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
                 disabled={currentStep === 1}
+                className="flex gap-2"
               >
-                Anterior
+                <ArrowLeft className="w-4 h-4 " />
+                <span>Anterior</span>
               </Button>
 
               {currentStep < registroSteps.length ? (
-                <Button onClick={() => setCurrentStep((prev) => Math.min(registroSteps.length - 1, prev + 1))} disabled={!canProceed()}>
-                  Siguiente
+                <Button
+                  onClick={() =>
+                    setCurrentStep((prev) =>
+                      Math.min(registroSteps.length, prev + 1),
+                    )
+                  }
+                  disabled={!canProceed()}
+                  className="flex gap-2"
+                >
+                  <span>Siguiente</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} loading={loading}>
