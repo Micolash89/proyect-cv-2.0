@@ -40,6 +40,7 @@ import type {
   Language,
 } from "@/types";
 import { getCV, updateCV } from "@/app/actions/cv";
+import { uploadImage } from "@/app/actions/upload";
 import {
   extractCVAction,
   improveTextAction,
@@ -69,6 +70,9 @@ export default function AdminCVPage() {
   const [generatingProfile, setGeneratingProfile] = useState(false);
   const [improvingText, setImprovingText] = useState<string | null>(null);
   const [uploadingCV, setUploadingCV] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -277,6 +281,70 @@ export default function AdminCVPage() {
     ) {
       handleCVUpload(file);
     }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processPhotoFile(file);
+  };
+
+  const processPhotoFile = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("El archivo debe ser una imagen");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 5MB");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await uploadImage(formData);
+      if (result.success && result.url) {
+        setPhotoPreview(URL.createObjectURL(file));
+        setUser({ ...user, photo: result.url });
+        toast.success("Foto actualizada");
+      } else {
+        toast.error(result.error || "Error al subir la foto");
+      }
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      toast.error("Error al subir la foto");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handlePhotoDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      await processPhotoFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+  };
+
+  const removePhoto = () => {
+    if (!user) return;
+    setUser({ ...user, photo: "" });
+    setPhotoPreview(null);
+    toast.success("Foto eliminada");
   };
 
   const updateField = (field: string, value: any) => {
@@ -989,20 +1057,70 @@ export default function AdminCVPage() {
             </CardContent>
           </Card>
 
-          {user.photo && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Foto</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <img
-                  src={user.photo}
-                  alt={user.fullName}
-                  className="w-32 h-32 rounded-full object-cover mx-auto"
-                />
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Foto de perfil</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center gap-4">
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handlePhotoDrop}
+                  className={cn(
+                    "relative w-32 h-32 rounded-full overflow-hidden border-2 transition-all cursor-pointer",
+                    isDraggingPhoto
+                      ? "border-primary border-dashed scale-105"
+                      : "border-transparent",
+                  )}
+                >
+                  {photoPreview || user.photo ? (
+                    <img
+                      src={photoPreview || user.photo}
+                      alt={user.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <span className="text-muted-foreground text-xs text-center p-2">
+                        Sin foto
+                      </span>
+                    </div>
+                  )}
+                  {uploadingPhoto ? (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 text-white animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-white" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    disabled={uploadingPhoto}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Arrastra una imagen o haz clic para seleccionar
+                </p>
+                {(user.photo || photoPreview) && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={removePhoto}
+                    disabled={uploadingPhoto}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar foto
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

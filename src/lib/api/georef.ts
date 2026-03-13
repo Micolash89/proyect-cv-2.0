@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 const BASE_URL = "https://apis.datos.gob.ar/georef/api/v2.0";
 
 export interface Provincia {
@@ -36,7 +38,7 @@ interface GeorefLocalidadesResponse {
   localidades: Localidad[];
 }
 
-export async function getProvincias(): Promise<Provincia[]> {
+export const getProvincias = cache(async (): Promise<Provincia[]> => {
   try {
     const url = new URL(`${BASE_URL}/provincias`);
     url.searchParams.append("campos", "id,nombre");
@@ -53,9 +55,9 @@ export async function getProvincias(): Promise<Provincia[]> {
     console.error("Error fetching provincias:", error);
     return [];
   }
-}
+});
 
-export async function getMunicipios(provinciaId: string): Promise<Municipio[]> {
+export const getMunicipios = cache(async (provinciaId: string): Promise<Municipio[]> => {
   if (!provinciaId) return [];
   
   try {
@@ -75,9 +77,9 @@ export async function getMunicipios(provinciaId: string): Promise<Municipio[]> {
     console.error("Error fetching municipios:", error);
     return [];
   }
-}
+});
 
-export async function getLocalidades(provinciaId: string): Promise<Localidad[]> {
+export const getLocalidades = cache(async (provinciaId: string): Promise<Localidad[]> => {
   if (!provinciaId) return [];
   
   try {
@@ -97,4 +99,4 @@ export async function getLocalidades(provinciaId: string): Promise<Localidad[]> 
     console.error("Error fetching localidades:", error);
     return [];
   }
-}
+});
