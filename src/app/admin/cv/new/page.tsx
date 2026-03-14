@@ -37,15 +37,22 @@ import {
 } from "@/lib/constants";
 import { templateOptions } from "@/lib/constants/templates";
 import { getProvincias, getMunicipios, getLocalidades, type Provincia, type Municipio, type Localidad } from "@/lib/api/georef";
-import type { TemplateType, Experience, Education, Language } from "@/types";
+import type { TemplateType, Experience, Education, Language, TemplateSettings, FontSize } from "@/types";
 
-const DEFAULT_TEMPLATE_SETTINGS = {
+const DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
   primaryColor: "#1e3a5f",
-  fontSize: "medium" as const,
+  fontSize: "medium",
   fontFamily: "Helvetica",
-  layout: "descending" as const,
+  layout: "descending",
   padding: 40,
   margin: 20,
+  fullName: true,
+  showPhoto: true,
+  showSummary: true,
+  showSkills: true,
+  showLanguages: true,
+  reverseExperience: false,
+  reverseEducation: false,
 };
 
 export default function AdminNewCVPage() {
@@ -232,8 +239,27 @@ export default function AdminNewCVPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const finalTemplateSettings = {
+        primaryColor: formData.templateSettings.primaryColor || "#1e3a5f",
+        fontSize: formData.templateSettings.fontSize || "medium",
+        fontFamily: formData.templateSettings.fontFamily || "Helvetica",
+        layout: formData.templateSettings.layout || "descending",
+        padding: formData.templateSettings.padding || 40,
+        margin: formData.templateSettings.margin || 20,
+        fullName: formData.templateSettings.fullName !== false,
+        showPhoto: formData.templateSettings.showPhoto !== false,
+        showSummary: formData.templateSettings.showSummary !== false,
+        showSkills: formData.templateSettings.showSkills !== false,
+        showLanguages: formData.templateSettings.showLanguages !== false,
+        reverseExperience: formData.templateSettings.reverseExperience || false,
+        reverseEducation: formData.templateSettings.reverseEducation || false,
+      };
+      
       const result: { success: boolean; id?: string; error?: string } =
-        await createCV(formData);
+        await createCV({
+          ...formData,
+          templateSettings: finalTemplateSettings,
+        });
       if (result.success && result.id) {
         toast.success("CV creado correctamente");
         router.push(`/admin/cv/${result.id}`);
@@ -993,6 +1019,106 @@ setMunicipios([]);
                             />
                           ))}
                         </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <Label className="text-base font-semibold">Configuración Avanzada</Label>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm">Tamaño de fuente</Label>
+                          <Select
+                            value={formData.templateSettings.fontSize || "medium"}
+                            onChange={(e) =>
+                              updateFormData({
+                                templateSettings: {
+                                  ...formData.templateSettings,
+                                  fontSize: e.target.value as FontSize,
+                                },
+                              })
+                            }
+                            options={[
+                              { value: "small", label: "Pequeño" },
+                              { value: "medium", label: "Mediano" },
+                              { value: "large", label: "Grande" },
+                            ]}
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm">Padding</Label>
+                          <Select
+                            value={String(formData.templateSettings.padding || 40)}
+                            onChange={(e) =>
+                              updateFormData({
+                                templateSettings: {
+                                  ...formData.templateSettings,
+                                  padding: parseInt(e.target.value),
+                                },
+                              })
+                            }
+                            options={[
+                              { value: "30", label: "Compact (30px)" },
+                              { value: "40", label: "Normal (40px)" },
+                              { value: "50", label: "Espacioso (50px)" },
+                            ]}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={formData.templateSettings.fullName !== false}
+                            onChange={(e) =>
+                              updateFormData({
+                                templateSettings: {
+                                  ...formData.templateSettings,
+                                  fullName: e.target.checked,
+                                },
+                              })
+                            }
+                            className="w-4 h-4"
+                          />
+                          Mostrar nombre completo
+                        </Label>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <Label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={formData.templateSettings.showPhoto !== false}
+                            onChange={(e) =>
+                              updateFormData({
+                                templateSettings: {
+                                  ...formData.templateSettings,
+                                  showPhoto: e.target.checked,
+                                },
+                              })
+                            }
+                            className="w-4 h-4"
+                          />
+                          Mostrar foto
+                        </Label>
+                        <Label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={formData.templateSettings.showSummary !== false}
+                            onChange={(e) =>
+                              updateFormData({
+                                templateSettings: {
+                                  ...formData.templateSettings,
+                                  showSummary: e.target.checked,
+                                },
+                              })
+                            }
+                            className="w-4 h-4"
+                          />
+                          Mostrar resumen
+                        </Label>
                       </div>
                     </CardContent>
                   </Card>

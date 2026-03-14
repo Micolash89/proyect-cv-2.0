@@ -1,21 +1,11 @@
 import { StyleSheet } from "@react-pdf/renderer";
 
-const getBaseFontSize = (size: "small" | "medium" | "large") => {
-  switch (size) {
-    case "small": return 8;
-    case "large": return 11;
-    default: return 9.5;
-  }
-};
-
-export const createBaseStyles = (primaryColor: string, fontSize: "small" | "medium" | "large" = "medium") => {
-  const size = getBaseFontSize(fontSize);
-  
+export const createBaseStyles = (primaryColor: string, fontSize: number = 10) => {
   return StyleSheet.create({
     page: {
       padding: 40,
       fontFamily: "Helvetica",
-      fontSize: size,
+      fontSize: fontSize,
       color: "#1a1a1a",
       backgroundColor: "#ffffff",
     },
@@ -23,13 +13,13 @@ export const createBaseStyles = (primaryColor: string, fontSize: "small" | "medi
       marginBottom: 15,
     },
     name: {
-      fontSize: size * 2.2,
+      fontSize: fontSize * 2.2,
       fontWeight: 700,
       color: primaryColor,
       marginBottom: 4,
     },
     subtitle: {
-      fontSize: size + 1,
+      fontSize: fontSize + 1,
       color: "#666666",
       marginBottom: 8,
     },
@@ -43,14 +33,14 @@ export const createBaseStyles = (primaryColor: string, fontSize: "small" | "medi
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
-      fontSize: size - 0.5,
+      fontSize: fontSize - 0.5,
       color: "#555555",
     },
     section: {
       marginTop: 12,
     },
     sectionTitle: {
-      fontSize: size + 2.5,
+      fontSize: fontSize + 2.5,
       fontWeight: 700,
       color: primaryColor,
       marginBottom: 8,
@@ -75,20 +65,20 @@ export const createBaseStyles = (primaryColor: string, fontSize: "small" | "medi
     },
     jobTitle: {
       fontWeight: 600,
-      fontSize: size + 0.5,
+      fontSize: fontSize + 0.5,
       color: "#1a1a1a",
     },
     company: {
       color: "#555555",
-      fontSize: size,
+      fontSize: fontSize,
     },
     date: {
-      fontSize: size - 0.5,
+      fontSize: fontSize - 0.5,
       color: "#666666",
       fontStyle: "italic",
     },
     location: {
-      fontSize: size - 0.5,
+      fontSize: fontSize - 0.5,
       color: "#666666",
     },
     description: {
@@ -107,16 +97,16 @@ export const createBaseStyles = (primaryColor: string, fontSize: "small" | "medi
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 4,
-      fontSize: size - 0.5,
+      fontSize: fontSize - 0.5,
       color: "#374151",
     },
     degree: {
       fontWeight: 600,
-      fontSize: size + 0.5,
+      fontSize: fontSize + 0.5,
     },
     institution: {
       color: "#555555",
-      fontSize: size,
+      fontSize: fontSize,
     },
     summary: {
       color: "#444444",

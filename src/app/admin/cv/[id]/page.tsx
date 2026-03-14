@@ -1040,6 +1040,140 @@ export default function AdminCVPage() {
                 />
               </div>
 
+              <div className="border-t pt-4 mt-4">
+                <Label className="text-base font-semibold">Configuración Avanzada</Label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tamaño fuente título</Label>
+                  <Select
+                    value={user.templateSettings.fontSize || "medium"}
+                    onChange={(e) =>
+                      updateTemplateSettings("fontSize", e.target.value)
+                    }
+                    options={[
+                      { value: "small", label: "Pequeño (20px)" },
+                      { value: "medium", label: "Mediano (24px)" },
+                      { value: "large", label: "Grande (28px)" },
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <Label>Padding general</Label>
+                  <Select
+                    value={String(user.templateSettings.padding || 40)}
+                    onChange={(e) =>
+                      updateTemplateSettings("padding", parseInt(e.target.value))
+                    }
+                    options={[
+                      { value: "30", label: "Compact (30px)" },
+                      { value: "40", label: "Normal (40px)" },
+                      { value: "50", label: "Espacioso (50px)" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={user.templateSettings.fullName !== false}
+                    onChange={(e) =>
+                      updateTemplateSettings("fullName", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  Mostrar nombre completo
+                </Label>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <Label className="text-base font-semibold">Orden de contenido</Label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={user.templateSettings.reverseExperience || false}
+                      onChange={(e) =>
+                        updateTemplateSettings("reverseExperience", e.target.checked)
+                      }
+                      className="w-4 h-4"
+                    />
+                    Invertir experiencia
+                  </Label>
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={user.templateSettings.reverseEducation || false}
+                      onChange={(e) =>
+                        updateTemplateSettings("reverseEducation", e.target.checked)
+                      }
+                      className="w-4 h-4"
+                    />
+                    Invertir educación
+                  </Label>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <Label className="text-base font-semibold">Mostrar secciones</Label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={user.templateSettings.showPhoto !== false}
+                    onChange={(e) =>
+                      updateTemplateSettings("showPhoto", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  Foto
+                </Label>
+                <Label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={user.templateSettings.showSummary !== false}
+                    onChange={(e) =>
+                      updateTemplateSettings("showSummary", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  Resumen
+                </Label>
+                <Label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={user.templateSettings.showSkills !== false}
+                    onChange={(e) =>
+                      updateTemplateSettings("showSkills", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  Habilidades
+                </Label>
+                <Label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={user.templateSettings.showLanguages !== false}
+                    onChange={(e) =>
+                      updateTemplateSettings("showLanguages", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  Idiomas
+                </Label>
+              </div>
+
               <div
                 className="p-4 rounded-lg"
                 style={{

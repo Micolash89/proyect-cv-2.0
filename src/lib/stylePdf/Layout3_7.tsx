@@ -21,7 +21,7 @@ const parseDate = (dateStr: string | undefined) => {
 
 export const Layout3: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
 
   return (
     <Document title={`CV - ${user.fullName}`}>
@@ -84,7 +84,7 @@ export const Layout3: React.FC<LayoutProps> = ({ user, options }) => {
 
 export const Layout4: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
 
   return (
     <Document title={`CV - ${user.fullName}`}>
@@ -142,7 +142,7 @@ export const Layout4: React.FC<LayoutProps> = ({ user, options }) => {
 
 export const Layout5: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
 
   return (
     <Document title={`CV - ${user.fullName}`}>
@@ -184,7 +184,7 @@ export const Layout5: React.FC<LayoutProps> = ({ user, options }) => {
 
 export const Layout6: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
 
   return (
     <Document title={`CV - ${user.fullName}`}>
@@ -237,7 +237,7 @@ export const Layout6: React.FC<LayoutProps> = ({ user, options }) => {
 
 export const Layout7: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
 
   return (
     <Document title={`CV - ${user.fullName}`}>

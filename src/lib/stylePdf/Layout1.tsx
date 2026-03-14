@@ -21,7 +21,7 @@ const parseDate = (dateStr: string | undefined) => {
 
 export const Layout1: React.FC<LayoutProps> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.fontSize);
+  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
   const sidebarWidth = 180;
 
   return (

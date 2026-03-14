@@ -1,10 +1,10 @@
 import React from "react";
-import { Document, Image, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
-import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "./definitions";
-import { createBaseStyles } from "./baseStyles";
+import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
+import { createLayout2Styles } from "./styles";
 
-interface LayoutProps {
+interface Layout2Props {
   user: UserCV;
   options?: Partial<OptionsPDF>;
 }
@@ -19,52 +19,61 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-export const Layout0: React.FC<LayoutProps> = ({ user, options }) => {
+export const Layout2: React.FC<Layout2Props> = ({ user, options }) => {
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
-  const styles = createBaseStyles(opts.primaryColor, opts.bodyFontSize);
+  const styles = createLayout2Styles(opts);
 
-  const experience = user.experience.map((exp, index) => (
+  const fullNameText = options?.fullName 
+    ? user.fullName 
+    : user.fullName.split(" ").slice(0, 2).join(" ");
+
+  const experienceEntries = user.experience.map((exp, index) => (
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
-        <Text style={[styles.company, { fontWeight: 600 }]}>{exp.company}</Text>
-        <Text style={styles.date}>
+        <Text style={styles.institution}>{exp.company}</Text>
+        <Text style={styles.dates}>
           {parseDate(exp.startDate)} - {exp.current ? "Actualidad" : parseDate(exp.endDate)}
         </Text>
       </View>
-      <Text style={styles.jobTitle}>{exp.position}</Text>
-      {exp.description && (
-        <Text style={styles.description}>{exp.description}</Text>
-      )}
+      <Text style={styles.degree}>{exp.position}</Text>
+      {exp.description && <Text style={styles.description}>{exp.description}</Text>}
     </View>
   ));
 
-  const education = user.education.map((edu, index) => (
+  const educationEntries = user.education.map((edu, index) => (
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
-        <Text style={[styles.institution, { fontWeight: 600 }]}>{edu.institution}</Text>
-        <Text style={styles.date}>
-          {parseDate(edu.startDate)} - {edu.current ? "Actualidad" : parseDate(edu.endDate)}
+        <Text style={styles.institution}>{edu.institution}</Text>
+        <Text style={styles.dates}>
+          {parseDate(edu.startDate)} - {parseDate(edu.endDate)}
         </Text>
       </View>
       <Text style={styles.degree}>{edu.degree}</Text>
     </View>
   ));
 
+  const orderedExperience = opts.reverseExperience 
+    ? [...experienceEntries].reverse() 
+    : experienceEntries;
+
+  const orderedEducation = opts.reverseEducation 
+    ? [...educationEntries].reverse() 
+    : educationEntries;
+
   return (
     <Document title={`CV - ${user.fullName}`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.name}>{user.fullName}</Text>
+          <Text style={styles.name}>{fullNameText}</Text>
           <View style={styles.contactInfo}>
-            {user.location && <Text style={styles.contactItem}>{user.location}</Text>}
-            {user.phone && <Text style={styles.contactItem}>{user.phone}</Text>}
-            {user.email && <Text style={styles.contactItem}>{user.email}</Text>}
-            {user.linkedin && <Text style={styles.contactItem}>LinkedIn</Text>}
+            {user.location && <Text>{user.location}</Text>}
+            {user.phone && <Text>{user.phone}</Text>}
+            {user.email && <Text>{user.email}</Text>}
           </View>
         </View>
 
         {opts.showPhoto && user.photo && (
-          <View style={{ position: "absolute", top: 30, right: 30 }}>
+          <View style={styles.photoContainer}>
             <Image src={user.photo} style={styles.photo} />
           </View>
         )}
@@ -79,18 +88,14 @@ export const Layout0: React.FC<LayoutProps> = ({ user, options }) => {
         {user.experience.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>EXPERIENCIA LABORAL</Text>
-            <View style={styles.sectionContent}>
-              {opts.layout === "descending" ? experience : [...experience].reverse()}
-            </View>
+            {orderedExperience}
           </View>
         )}
 
         {user.education.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>FORMACIÓN ACADÉMICA</Text>
-            <View style={styles.sectionContent}>
-              {opts.layout === "descending" ? education : [...education].reverse()}
-            </View>
+            {orderedEducation}
           </View>
         )}
 
@@ -104,19 +109,9 @@ export const Layout0: React.FC<LayoutProps> = ({ user, options }) => {
             </View>
           </View>
         )}
-
-        {opts.showLanguages && user.languages.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>IDIOMAS</Text>
-            {user.languages.map((lang, index) => (
-              <View key={index} style={styles.languageItem}>
-                <Text>{lang.language}</Text>
-                <Text style={styles.date}>{lang.level}</Text>
-              </View>
-            ))}
-          </View>
-        )}
       </Page>
     </Document>
   );
 };
+
+export default Layout2;
