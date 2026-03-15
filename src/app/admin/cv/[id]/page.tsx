@@ -75,6 +75,41 @@ export default function AdminCVPage() {
   const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [previewPosition, setPreviewPosition] = useState({ x: 16, y: 16 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - previewPosition.x,
+      y: e.clientY - previewPosition.y,
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPreviewPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove as any);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove as any);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
 
   useEffect(() => {
     if (params.id) {
@@ -464,16 +499,24 @@ export default function AdminCVPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {showPreview && (
-        <div className="fixed bottom-4 right-4 w-100 h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+        <div 
+          className="fixed w-100 h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden"
+          style={{ 
+            left: previewPosition.x, 
+            top: previewPosition.y,
+            cursor: isDragging ? 'grabbing' : 'grab',
+          }}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="flex items-center justify-between p-2 border-b bg-gray-50 cursor-grab">
             <span className="text-sm font-medium text-black">Vista Previa</span>
             <Button
               variant="ghost"
               size="sm"
-              className=" shadow-sm  dark:bg-black hover:dark:bg-black/50"
+              className="shadow-sm dark:bg-black hover:dark:bg-black/50"
               onClick={() => setShowPreview(false)}
             >
-              <X className="h-4 w-4 text-white " />
+              <X className="h-4 w-4 text-white" />
             </Button>
           </div>
           <iframe

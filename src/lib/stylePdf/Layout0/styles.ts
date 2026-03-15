@@ -1,5 +1,15 @@
-import { StyleSheet } from "@react-pdf/renderer";
+import { StyleSheet, Font } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
+
+Font.register({
+  family: "Times",
+  fonts: [
+    { src: "/fonts/TimesNewRoman.ttf" },
+    { src: "/fonts/TimesNewRoman.ttf", fontWeight: "normal" },
+    { src: "/fonts/TimesNewRomanBold.ttf", fontWeight: "bold" },
+    { src: "/fonts/TimesNewRomanItalic.ttf", fontStyle: "italic" },
+  ],
+});
 
 export const createLayout0Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({

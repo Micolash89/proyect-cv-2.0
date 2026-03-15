@@ -1,5 +1,9 @@
-export { Layout0 } from "./Layout0";
-export { Layout1 } from "./Layout1";
-export { Layout2 } from "./Layout2";
-export { Layout3, Layout4, Layout5, Layout6, Layout7 } from "./Layout3_7";
+export { Layout0 } from "./Layout0/index";
+export { Layout1 } from "./Layout1/index";
+export { Layout2 } from "./Layout2/index";
+export { Layout3 } from "./Layout3/index";
+export { Layout4 } from "./Layout4/index";
+export { Layout5 } from "./Layout5/index";
+export { Layout6 } from "./Layout6/index";
+export { Layout7 } from "./Layout7/index";
 export { DEFAULT_OPTIONS_PDF, type OptionsPDF } from "./definitions";

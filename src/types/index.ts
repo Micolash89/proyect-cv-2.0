@@ -1,5 +1,5 @@
 export type CVStatus = "pending" | "reviewed" | "completed";
-export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional" | "layout6" | "layout7";
+export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional" | "elegant" | "modernPlus";
 export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";

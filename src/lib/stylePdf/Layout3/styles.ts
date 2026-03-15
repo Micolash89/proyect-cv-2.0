@@ -1,5 +1,14 @@
-import { StyleSheet } from "@react-pdf/renderer";
+import { StyleSheet, Font } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
+
+Font.register({
+  family: "Montserrat",
+  fonts: [
+    { src: "/fonts/Montserrat-Regular.ttf" },
+    { src: "/fonts/Montserrat-Regular.ttf", fontWeight: "normal" },
+    { src: "/fonts/Montserrat-Bold.ttf", fontWeight: "bold" },
+  ],
+});
 
 export const createLayout3Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({

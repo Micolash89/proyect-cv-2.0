@@ -1,58 +1,14 @@
 import React from "react";
-import { Font } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
-import { Layout0 } from "@/lib/stylePdf/Layout0";
-import { Layout1 } from "@/lib/stylePdf/Layout1";
-import { Layout2 } from "@/lib/stylePdf/Layout2";
-import { Layout3 } from "@/lib/stylePdf/Layout3";
-import { Layout4 } from "@/lib/stylePdf/Layout4";
-import { Layout5 } from "@/lib/stylePdf/Layout5";
-import { Layout6 } from "@/lib/stylePdf/Layout6";
-import { Layout7 } from "@/lib/stylePdf/Layout7";
+import { Layout0 } from "@/lib/stylePdf/Layout0/index";
+import { Layout1 } from "@/lib/stylePdf/Layout1/index";
+import { Layout2 } from "@/lib/stylePdf/Layout2/index";
+import { Layout3 } from "@/lib/stylePdf/Layout3/index";
+import { Layout4 } from "@/lib/stylePdf/Layout4/index";
+import { Layout5 } from "@/lib/stylePdf/Layout5/index";
+import { Layout6 } from "@/lib/stylePdf/Layout6/index";
+import { Layout7 } from "@/lib/stylePdf/Layout7/index";
 import { DEFAULT_OPTIONS_PDF } from "@/lib/stylePdf/definitions";
-
-Font.register({
-  family: "Roboto",
-  fonts: [
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf", fontWeight: 300 },
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf", fontWeight: 400 },
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf", fontWeight: 500 },
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf", fontWeight: 700 },
-  ],
-});
-
-Font.register({
-  family: "Montserrat",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg69CK48gW7PXoo9WlhyyTh89Y.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1Y6h0JZqefjh1V94Kt3BkU.woff2", fontWeight: 600 },
-    { src: "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1Y6h0JZqefjt1V94Kt3BkU.woff2", fontWeight: 700 },
-  ],
-});
-
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc9AMP6lQ.woff2", fontWeight: 700 },
-  ],
-});
-
-Font.register({
-  family: "Inter",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hjp-Ek-_EeA.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hjp-Ek-_EeA.woff2", fontWeight: 700 },
-  ],
-});
-
-Font.register({
-  family: "Times",
-  fonts: [
-    { src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc9AMP6lQ.woff2", fontWeight: 700 },
-  ],
-});
 
 interface CVTemplateProps {
   user: UserCV;

@@ -1,5 +1,17 @@
-import { StyleSheet } from "@react-pdf/renderer";
+import { StyleSheet, Font } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
+
+Font.register({
+  family: "Helvetica",
+  fonts: [
+    { src: "/fonts/Helvetica-Regular.ttf" },
+    { src: "/fonts/Helvetica-Regular.ttf", fontWeight: "normal" },
+    { src: "/fonts/Helvetica-Bold.ttf", fontWeight: "bold" },
+    { src: "/fonts/Helvetica-Oblique.ttf", fontStyle: "italic" },
+    { src: "/fonts/Helvetica-Light.ttf", fontWeight: "light" },
+    { src: "/fonts/Helvetica-Medium.ttf", fontWeight: "medium" },
+  ],
+});
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({

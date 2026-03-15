@@ -1,5 +1,16 @@
-import { StyleSheet } from "@react-pdf/renderer";
+import { StyleSheet, Font } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
+
+Font.register({
+  family: "Inter",
+  fonts: [
+    { src: "/fonts/Inter-Regular.ttf" },
+    { src: "/fonts/Inter-Regular.ttf", fontWeight: "normal" },
+    { src: "/fonts/Inter-Bold.ttf", fontWeight: "bold" },
+    { src: "/fonts/Inter-Medium.ttf", fontWeight: "medium" },
+    { src: "/fonts/Inter-Light.ttf", fontWeight: "light" },
+  ],
+});
 
 export const createLayout6Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({

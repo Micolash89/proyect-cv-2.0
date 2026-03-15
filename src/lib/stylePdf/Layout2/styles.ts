@@ -1,5 +1,14 @@
-import { StyleSheet } from "@react-pdf/renderer";
+import { StyleSheet, Font } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
+
+Font.register({
+  family: "Roboto",
+  fonts: [
+    { src: "/fonts/Roboto-Regular.ttf" },
+    { src: "/fonts/Roboto-Regular.ttf", fontWeight: "normal" },
+    { src: "/fonts/Roboto-Bold.ttf", fontWeight: "bold" },
+  ],
+});
 
 export const createLayout2Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
