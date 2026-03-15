@@ -2,6 +2,7 @@ import React from "react";
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
+import { registerFonts } from "../fonts";
 import { createLayout4Styles } from "./styles";
 
 const parseDate = (d: string | undefined) => {
@@ -11,6 +12,7 @@ const parseDate = (d: string | undefined) => {
 };
 
 export const Layout4: React.FC<{ user: UserCV; options?: Partial<OptionsPDF> }> = ({ user, options }) => {
+  registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout4Styles(opts);
   const name = options?.fullName ? user.fullName : user.fullName.split(" ").slice(0,2).join(" ");

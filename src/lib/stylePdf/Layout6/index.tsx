@@ -2,11 +2,13 @@ import React from "react";
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
+import { registerFonts } from "../fonts";
 import { createLayout6Styles } from "./styles";
 
 const parseDate = (d: string | undefined) => { if (!d) return ""; try { const da = new Date(d); return `${da.getMonth()+1}/${da.getFullYear()}`; } catch { return d; } };
 
 export const Layout6: React.FC<{ user: UserCV; options?: Partial<OptionsPDF> }> = ({ user, options }) => {
+  registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout6Styles(opts);
   const name = options?.fullName ? user.fullName : user.fullName.split(" ").slice(0,2).join(" ");

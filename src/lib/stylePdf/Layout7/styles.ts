@@ -1,17 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "/fonts/Helvetica-Regular.ttf" },
-    { src: "/fonts/Helvetica-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Helvetica-Bold.ttf", fontWeight: "bold" },
-    { src: "/fonts/Helvetica-Oblique.ttf", fontStyle: "italic" },
-    { src: "/fonts/Helvetica-Light.ttf", fontWeight: "light" },
-    { src: "/fonts/Helvetica-Medium.ttf", fontWeight: "medium" },
-  ],
-});
 
 export const createLayout7Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -47,7 +35,7 @@ export const createLayout7Styles = (opts: OptionsPDF) => {
     },
     name: {
       color: "#FFFFFF",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.headerFontSize,
       marginBottom: 5,
     },
@@ -78,7 +66,7 @@ export const createLayout7Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       color: "#2C3E50",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 3,
       borderBottomWidth: 1,
       borderBottomColor: "#BDC3C7",
@@ -92,10 +80,10 @@ export const createLayout7Styles = (opts: OptionsPDF) => {
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 3,
-      fontWeight: 700,
+      fontWeight: "bold",
     },
     institution: {
-      fontWeight: 700,
+      fontWeight: "bold",
       color: "#2C3E50",
       fontSize: opts.bodyFontSize + 1,
     },
@@ -114,7 +102,7 @@ export const createLayout7Styles = (opts: OptionsPDF) => {
     },
     jobTitle: {
       color: "#2980B9",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize,
       marginTop: 2,
     },

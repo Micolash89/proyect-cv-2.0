@@ -2,6 +2,7 @@ import React from "react";
 import { Document, Page, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
+import { registerFonts } from "../fonts";
 import { Layout1Header } from "./Header";
 import { Layout1Body } from "./Body";
 import { createLayout1Styles } from "./styles";
@@ -12,6 +13,7 @@ interface Layout1Props {
 }
 
 export const Layout1: React.FC<Layout1Props> = ({ user, options }) => {
+  registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout1Styles(opts);
 

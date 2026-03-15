@@ -1,14 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Roboto",
-  fonts: [
-    { src: "/fonts/Roboto-Regular.ttf" },
-    { src: "/fonts/Roboto-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Roboto-Bold.ttf", fontWeight: "bold" },
-  ],
-});
 
 export const createLayout2Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -40,7 +31,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       height: 100,
     },
     name: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.headerFontSize,
       textAlign: "center",
       marginBottom: 5,
@@ -61,7 +52,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       marginBottom: 3,
     },
     sectionTitle: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 3,
       marginTop: 15,
       marginBottom: 10,
@@ -79,7 +70,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       marginBottom: 2,
     },
     institution: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
     },
     location: {

@@ -1,16 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Inter",
-  fonts: [
-    { src: "/fonts/Inter-Regular.ttf" },
-    { src: "/fonts/Inter-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Inter-Bold.ttf", fontWeight: "bold" },
-    { src: "/fonts/Inter-Medium.ttf", fontWeight: "medium" },
-    { src: "/fonts/Inter-Light.ttf", fontWeight: "light" },
-  ],
-});
 
 export const createLayout6Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -47,7 +36,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       borderColor: "#EAEAEA",
     },
     name: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.headerFontSize,
     },
     contactInfo: {
@@ -60,7 +49,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       marginTop: 10,
     },
     contactLabel: {
-      fontWeight: 500,
+      fontWeight: "medium",
       color: "#666666",
       fontSize: opts.bodyFontSize - 1,
     },
@@ -69,7 +58,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize - 1,
     },
     sectionTitle: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 3,
       marginTop: 15,
       paddingTop: 5,
@@ -112,7 +101,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       zIndex: 1,
     },
     timelineTitle: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
       color: "#333333",
     },
@@ -178,7 +167,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       marginBottom: 2,
     },
     institution: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
       color: "#333333",
     },

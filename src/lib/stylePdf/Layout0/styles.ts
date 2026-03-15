@@ -1,15 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Times",
-  fonts: [
-    { src: "/fonts/TimesNewRoman.ttf" },
-    { src: "/fonts/TimesNewRoman.ttf", fontWeight: "normal" },
-    { src: "/fonts/TimesNewRomanBold.ttf", fontWeight: "bold" },
-    { src: "/fonts/TimesNewRomanItalic.ttf", fontStyle: "italic" },
-  ],
-});
 
 export const createLayout0Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -33,7 +23,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     name: {
       fontSize: opts.headerFontSize,
-      fontWeight: 700,
+      fontWeight: "bold",
       textTransform: "uppercase",
       textAlign: "center",
       marginBottom: 4,
@@ -68,7 +58,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       fontSize: opts.bodyFontSize + 2,
-      fontWeight: 700,
+      fontWeight: "bold",
       textTransform: "uppercase",
       borderBottomWidth: 1,
       borderBottomColor: "#000000",
@@ -88,7 +78,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       marginBottom: 2,
     },
     institution: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
     },
     location: {
@@ -97,7 +87,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       fontStyle: "italic",
     },
     degree: {
-      fontWeight: 600,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize,
     },
     dates: {

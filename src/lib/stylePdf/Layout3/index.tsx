@@ -2,6 +2,7 @@ import React from "react";
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
+import { registerFonts } from "../fonts";
 import { createLayout3Styles } from "./styles";
 
 const parseDate = (dateStr: string | undefined) => {
@@ -15,6 +16,7 @@ const parseDate = (dateStr: string | undefined) => {
 };
 
 export const Layout3: React.FC<{ user: UserCV; options?: Partial<OptionsPDF> }> = ({ user, options }) => {
+  registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout3Styles(opts);
 

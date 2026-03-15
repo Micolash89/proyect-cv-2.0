@@ -1,17 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Helvetica",
-  fonts: [
-    { src: "/fonts/Helvetica-Regular.ttf" },
-    { src: "/fonts/Helvetica-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Helvetica-Bold.ttf", fontWeight: "bold" },
-    { src: "/fonts/Helvetica-Oblique.ttf", fontStyle: "italic" },
-    { src: "/fonts/Helvetica-Light.ttf", fontWeight: "light" },
-    { src: "/fonts/Helvetica-Medium.ttf", fontWeight: "medium" },
-  ],
-});
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -56,7 +44,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     name: {
       fontSize: opts.headerFontSize + 10,
-      fontWeight: 300,
+      fontWeight: "light",
       letterSpacing: 3,
       marginBottom: 20,
       marginTop: 20,
@@ -66,7 +54,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     lastName: {
       fontSize: opts.headerFontSize + 10,
-      fontWeight: 700,
+      fontWeight: "bold",
       letterSpacing: 3,
       marginBottom: 0,
       marginLeft: 20,
@@ -81,14 +69,14 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       fontSize: opts.bodyFontSize + 3,
-      fontWeight: 500,
+      fontWeight: "medium",
       marginBottom: 5,
       letterSpacing: 1,
       color: "white",
     },
     rightSectionTitle: {
       fontSize: opts.bodyFontSize + 3,
-      fontWeight: 700,
+      fontWeight: "bold",
       marginTop: 10,
       marginBottom: 7,
       letterSpacing: 1,
@@ -138,7 +126,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     experienceTitle: {
       fontSize: opts.bodyFontSize + 1,
-      fontWeight: 700,
+      fontWeight: "bold",
       marginBottom: 3,
       color: "#333333",
     },
@@ -157,7 +145,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     educationTitle: {
       fontSize: opts.bodyFontSize + 1,
-      fontWeight: 700,
+      fontWeight: "bold",
       marginBottom: 3,
       color: "#333333",
     },
@@ -178,8 +166,8 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     entryContainer: { marginBottom: 10 },
     entryHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
-    institution: { fontWeight: 700, fontSize: opts.bodyFontSize + 1, color: "#333333" },
-    jobTitle: { fontWeight: 500, fontSize: opts.bodyFontSize, color: "#444444" },
+    institution: { fontWeight: "bold", fontSize: opts.bodyFontSize + 1, color: "#333333" },
+    jobTitle: { fontWeight: "medium", fontSize: opts.bodyFontSize, color: "#444444" },
     dates: { fontSize: opts.bodyFontSize - 1, color: "#666666" },
     degree: { fontSize: opts.bodyFontSize, color: "#444444" },
     description: { fontSize: opts.bodyFontSize, color: "#333333", lineHeight: 1.4 },

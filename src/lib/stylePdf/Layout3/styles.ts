@@ -1,14 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Montserrat",
-  fonts: [
-    { src: "/fonts/Montserrat-Regular.ttf" },
-    { src: "/fonts/Montserrat-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Montserrat-Bold.ttf", fontWeight: "bold" },
-  ],
-});
 
 export const createLayout3Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -53,13 +44,13 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     name: {
       color: "#FFFFFF",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.headerFontSize,
       marginBottom: 5,
     },
     title: {
       color: "#CBD5E0",
-      fontWeight: 500,
+      fontWeight: "medium",
       fontSize: opts.bodyFontSize + 1,
     },
     contactInfo: {
@@ -77,7 +68,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       color: "#2A4365",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 3,
       borderBottomWidth: 2,
       borderBottomColor: "#E2E8F0",
@@ -94,7 +85,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     languageName: {
       color: "#2D3748",
-      fontWeight: 500,
+      fontWeight: "medium",
       fontSize: opts.bodyFontSize,
     },
     languageLevel: {
@@ -117,12 +108,12 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     companyName: {
       color: "#2D3748",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
     },
     jobTitle: {
       color: "#4A5568",
-      fontWeight: 500,
+      fontWeight: "medium",
       fontSize: opts.bodyFontSize,
       marginBottom: 1,
     },
@@ -152,7 +143,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     institutionName: {
       color: "#2D3748",
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
     },
     degree: {
@@ -166,7 +157,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     certificationName: {
       fontSize: opts.bodyFontSize - 1,
       color: "#2D3748",
-      fontWeight: 500,
+      fontWeight: "medium",
     },
     certificationInstitution: {
       fontSize: opts.bodyFontSize - 2,
@@ -186,7 +177,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
       marginBottom: 2,
     },
     institution: {
-      fontWeight: 700,
+      fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
       color: "#2D3748",
     },

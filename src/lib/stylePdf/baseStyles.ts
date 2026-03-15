@@ -14,7 +14,7 @@ export const createBaseStyles = (primaryColor: string, fontSize: number = 10) =>
     },
     name: {
       fontSize: fontSize * 2.2,
-      fontWeight: 700,
+      fontWeight: "bold",
       color: primaryColor,
       marginBottom: 4,
     },
@@ -41,7 +41,7 @@ export const createBaseStyles = (primaryColor: string, fontSize: number = 10) =>
     },
     sectionTitle: {
       fontSize: fontSize + 2.5,
-      fontWeight: 700,
+      fontWeight: "bold",
       color: primaryColor,
       marginBottom: 8,
       paddingBottom: 4,
@@ -64,7 +64,7 @@ export const createBaseStyles = (primaryColor: string, fontSize: number = 10) =>
       marginBottom: 2,
     },
     jobTitle: {
-      fontWeight: 600,
+      fontWeight: "bold",
       fontSize: fontSize + 0.5,
       color: "#1a1a1a",
     },
@@ -101,7 +101,7 @@ export const createBaseStyles = (primaryColor: string, fontSize: number = 10) =>
       color: "#374151",
     },
     degree: {
-      fontWeight: 600,
+      fontWeight: "bold",
       fontSize: fontSize + 0.5,
     },
     institution: {

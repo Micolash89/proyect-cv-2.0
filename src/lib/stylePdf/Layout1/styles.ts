@@ -1,14 +1,5 @@
-import { StyleSheet, Font } from "@react-pdf/renderer";
+import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
-
-Font.register({
-  family: "Roboto",
-  fonts: [
-    { src: "/fonts/Roboto-Regular.ttf" },
-    { src: "/fonts/Roboto-Regular.ttf", fontWeight: "normal" },
-    { src: "/fonts/Roboto-Bold.ttf", fontWeight: "bold" },
-  ],
-});
 
 export const createLayout1Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
@@ -49,7 +40,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     },
     sidebarName: {
       fontSize: opts.headerFontSize,
-      fontWeight: 700,
+      fontWeight: "bold",
       textTransform: "uppercase",
       color: "#FFFFFF",
       textAlign: "center",
@@ -71,7 +62,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     },
     sidebarSectionTitle: {
       fontSize: opts.bodyFontSize + 2,
-      fontWeight: 700,
+      fontWeight: "bold",
       color: "#FFFFFF",
       marginTop: 20,
       marginBottom: 10,
@@ -89,7 +80,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       fontSize: opts.bodyFontSize + 4,
-      fontWeight: 700,
+      fontWeight: "bold",
       marginBottom: 10,
       borderBottomWidth: 2,
       borderBottomColor: "#dbdbdb",
@@ -101,12 +92,12 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     },
     companyName: {
       fontSize: opts.bodyFontSize + 1,
-      fontWeight: 700,
+      fontWeight: "bold",
       color: "#2D3748",
     },
     jobTitle: {
       fontSize: opts.bodyFontSize,
-      fontWeight: 500,
+      fontWeight: "medium",
       color: "#4A5568",
       marginBottom: 1,
     },
@@ -123,7 +114,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     },
     degree: {
       fontSize: opts.bodyFontSize,
-      fontWeight: 500,
+      fontWeight: "medium",
     },
     institution: {
       fontSize: opts.bodyFontSize - 1,
