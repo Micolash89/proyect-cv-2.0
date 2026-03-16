@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, use } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
+// import Link from "next/link";
+// import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,27 +22,27 @@ import {
   Sparkles,
   Eye,
   CheckCircle,
-  Clock,
+  // Clock,
   Upload,
-  FileText,
+  // FileText,
   Loader2,
   Wand2,
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
-  TemplateType,
-  FontSize,
-  LayoutOrder,
+  // TemplateType,
+  // FontSize,
+  // LayoutOrder,
   CVStatus,
   UserCV,
   Experience,
-  Education,
-  Language,
+  // Education,
+  // Language,
 } from "@/types";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
-  extractCVAction,
+  // extractCVAction,
   improveTextAction,
   generateProfileAction,
 } from "@/app/actions/ia";
@@ -69,7 +69,7 @@ export default function AdminCVPage() {
   const [saving, setSaving] = useState(false);
   const [generatingProfile, setGeneratingProfile] = useState(false);
   const [improvingText, setImprovingText] = useState<string | null>(null);
-  const [uploadingCV, setUploadingCV] = useState(false);
+  // const [uploadingCV, setUploadingCV] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
@@ -258,65 +258,65 @@ export default function AdminCVPage() {
     }
   };
 
-  const handleCVUpload = async (file: File) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("El archivo debe ser menor a 10MB");
-      return;
-    }
+  // const handleCVUpload = async (file: File) => {
+  //   if (!file) return;
+  //   if (file.size > 10 * 1024 * 1024) {
+  //     toast.error("El archivo debe ser menor a 10MB");
+  //     return;
+  //   }
 
-    if (!user) return;
-    setUploadingCV(true);
-    try {
-      const result = await extractCVAction(file);
+  //   if (!user) return;
+  //   setUploadingCV(true);
+  //   try {
+  //     const result = await extractCVAction(file);
 
-      if (result.success && result.extracted) {
-        const extracted = result.extracted;
-        setUser({
-          ...user,
-          fullName: extracted.fullName || user.fullName,
-          email: extracted.email || user.email,
-          phone: extracted.phone || user.phone,
-          location: extracted.location || user.location,
-          summary: extracted.summary || user.summary,
-          experience:
-            extracted.experience && extracted.experience.length > 0
-              ? extracted.experience
-              : user.experience,
-          education:
-            extracted.education && extracted.education.length > 0
-              ? extracted.education
-              : user.education,
-          skills:
-            extracted.skills && extracted.skills.length > 0
-              ? extracted.skills
-              : user.skills,
-          languages:
-            extracted.languages && extracted.languages.length > 0
-              ? extracted.languages
-              : user.languages,
-        });
-        toast.success("CV procesado correctamente");
-      } else {
-        toast.error(result.error || "Error al procesar el CV");
-      }
-    } catch (error) {
-      toast.error("Error al procesar el CV");
-    } finally {
-      setUploadingCV(false);
-    }
-  };
+  //     if (result.success && result.extracted) {
+  //       const extracted = result.extracted;
+  //       setUser({
+  //         ...user,
+  //         fullName: extracted.fullName || user.fullName,
+  //         email: extracted.email || user.email,
+  //         phone: extracted.phone || user.phone,
+  //         location: extracted.location || user.location,
+  //         summary: extracted.summary || user.summary,
+  //         experience:
+  //           extracted.experience && extracted.experience.length > 0
+  //             ? extracted.experience
+  //             : user.experience,
+  //         education:
+  //           extracted.education && extracted.education.length > 0
+  //             ? extracted.education
+  //             : user.education,
+  //         skills:
+  //           extracted.skills && extracted.skills.length > 0
+  //             ? extracted.skills
+  //             : user.skills,
+  //         languages:
+  //           extracted.languages && extracted.languages.length > 0
+  //             ? extracted.languages
+  //             : user.languages,
+  //       });
+  //       toast.success("CV procesado correctamente");
+  //     } else {
+  //       toast.error(result.error || "Error al procesar el CV");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Error al procesar el CV");
+  //   } finally {
+  //     setUploadingCV(false);
+  //   }
+  // };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (
-      file &&
-      (file.type === "application/pdf" || file.type.startsWith("image/"))
-    ) {
-      handleCVUpload(file);
-    }
-  };
+  // const handleDrop = (e: React.DragEvent) => {
+  //   e.preventDefault();
+  //   const file = e.dataTransfer.files[0];
+  //   if (
+  //     file &&
+  //     (file.type === "application/pdf" || file.type.startsWith("image/"))
+  //   ) {
+  //     handleCVUpload(file);
+  //   }
+  // };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -585,7 +585,7 @@ export default function AdminCVPage() {
         </div>
       </div>
 
-      <div
+      {/* <div
         className="border-2 border-dashed rounded-lg p-4 mb-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
@@ -605,7 +605,7 @@ export default function AdminCVPage() {
           onChange={(e) => handleCVUpload(e.target.files?.[0]!)}
           disabled={uploadingCV}
         />
-      </div>
+      </div> */}
 
       <div className="flex gap-2 mb-6">
         <Button

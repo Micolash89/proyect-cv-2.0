@@ -1,5 +1,6 @@
 "use server";
 
+import { AIProvider } from "@/lib/constants/AIconst";
 import { getSettings } from "@/lib/db/models/settings";
 import { improveText, generateProfile, extractFromCV } from "@/lib/ia/factory";
 import type { CVFormData } from "@/types";
@@ -15,7 +16,7 @@ export async function extractCVAction(file: File) {
 
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
     const arrayBuffer = await file.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
@@ -27,32 +28,36 @@ Analiza este documento y extrae los datos en formato JSON.
 El JSON debe tener esta estructura exacta:
 {
   "fullName": "nombre completo",
-  "email": "correo electrónico o null",
-  "phone": "teléfono o null", 
-  "location": "ubicación o null",
-  "summary": "perfil profesional o null",
+  "email": "correo electrónico o string vacío",
+  "phone": "teléfono o string vacío", 
+  "location": "ubicación o string vacío",
+  "summary": "perfil profesional o string vacío",
   "experience": [
     {
+      "id": "id único generado",
       "company": "empresa",
       "position": "puesto",
       "startDate": "fecha inicio (YYYY-MM-DD)",
-      "endDate": "fecha fin (YYYY-MM-DD) o null si es actual",
+      "endDate": "fecha fin (YYYY-MM-DD) o string vacío si es actual",
       "current": true/false,
       "description": "descripción de funciones"
     }
   ],
   "education": [
     {
+      "id": "id único generado",
       "institution": "institución",
       "degree": "título",
-      "field": "campo de estudio o null",
+      "field": "campo de estudio o string vacío",
       "startDate": "fecha inicio",
-      "endDate": "fecha fin"
+      "endDate": "fecha fin o string vacío"
     }
   ],
   "skills": ["skill1", "skill2", "skill3"],
-  "languages": [{"language": "idioma", "level": "nivel"}]
+  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}]
 }
+
+Usa timestamps únicos para cada id (Date.now() + random).
 
 Responde SOLO con el JSON válido, sin texto adicional.
 `;
@@ -71,14 +76,61 @@ Responde SOLO con el JSON válido, sin texto adicional.
     const jsonMatch = text.match(/\{[\s\S]*\}/);
 
     if (jsonMatch) {
-      const extracted = JSON.parse(jsonMatch[0]);
-      return { success: true, extracted };
+      try {
+        const extracted = JSON.parse(jsonMatch[0]);
+        return { success: true, extracted };
+      } catch (parseError) {
+        // Intentar limpiar el JSON si el parsing falla
+        const cleanedJson = cleanJSONResponse(text);
+        if (cleanedJson) {
+          try {
+            const extracted = JSON.parse(cleanedJson);
+            return { success: true, extracted };
+          } catch (e) {
+            console.error("Error parsing cleaned JSON:", e);
+          }
+        }
+      }
     }
 
     throw new Error("No se pudo extraer información");
   } catch (error: any) {
     console.error("Error extracting CV:", error);
     return { success: false, error: error.message || "Error al procesar" };
+  }
+}
+
+function cleanJSONResponse(text: string): string | null {
+  try {
+    // Buscar el bloque JSON más completo
+    const jsonBlockMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonBlockMatch) return null;
+    
+    let jsonStr = jsonBlockMatch[0];
+    
+    // Eliminar caracteres inválidos al inicio y final
+    jsonStr = jsonStr.trim();
+    
+    // Eliminar texto antes del primer { y después del último }
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace === -1 || lastBrace === -1) return null;
+    jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    
+    // Reemplazar comillas smart por comillas normales
+    jsonStr = jsonStr.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+    
+    // Reemplazar null por strings vacíos en campos de texto
+    jsonStr = jsonStr.replace(/"(\w+)": null,/g, '"$1": "",');
+    jsonStr = jsonStr.replace(/"(\w+)": null}/g, '"$1": ""}');
+    jsonStr = jsonStr.replace(/"(\w+)": null/g, '"$1": ""');
+    
+    // Eliminar trailing commas
+    jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+    
+    return jsonStr;
+  } catch {
+    return null;
   }
 }
 

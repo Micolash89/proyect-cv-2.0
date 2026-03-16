@@ -18,22 +18,39 @@ import type { CVFormData, CVStatus } from "@/types";
 import { renderToStream } from "@react-pdf/renderer";
 import CVTemplate from "@/components/cv/templates/CVTemplate";
 
-export async function getCVs(search?: string, status?: string) {
+export async function getCVs(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
   const admin = await getCurrentAdmin();
   if (!admin) {
     throw new Error("No autorizado");
   }
 
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 10;
+  const skip = (page - 1) * limit;
+  
   let users;
-  if (search) {
-    users = await searchUsers(search);
-  } else if (status && status !== "all") {
-    users = await getUsersByStatus(status as CVStatus);
+  let total = 0;
+  
+  if (filters?.search) {
+    const result = await searchUsers(filters.search);
+    users = result;
+    total = result.length;
+  } else if (filters?.status && filters.status !== "all") {
+    users = await getUsersByStatus(filters.status as CVStatus);
+    total = users.length;
   } else {
     users = await getAllUsers();
+    total = users.length;
   }
 
-  return { users };
+  const paginatedUsers = users.slice(skip, skip + limit);
+  
+  return { 
+    users: paginatedUsers, 
+    total,
+    page,
+    totalPages: Math.ceil(total / limit)
+  };
 }
 
 export async function getCV(id: string) {
@@ -81,7 +98,7 @@ export async function createCV(data: CVFormData) {
   
   sendNewCVNotification(validated.data.fullName, validated.data.phone).catch(console.error);
 
-  return { success: true, user };
+  return { success: true, id: user._id };
 }
 
 export async function updateCV(id: string, data: Partial<CVFormData & { status?: CVStatus; viewed?: boolean }>) {

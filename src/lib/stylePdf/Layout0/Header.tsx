@@ -4,20 +4,10 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout0Styles } from "./styles";
 
-interface HeaderProps {
+export interface HeaderProps {
   user: UserCV;
   options: OptionsPDF;
 }
-
-const parseDate = (dateStr: string | undefined) => {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getFullYear()}`;
-  } catch {
-    return dateStr;
-  }
-};
 
 export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
   const styles = createLayout0Styles(options);
@@ -35,13 +25,13 @@ export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
             <Text style={styles.contactItem}>{user.location}</Text>
           )}
           {user.phone && (
-            <Text style={styles.contactItem}>{user.phone}</Text>
+            <Text style={styles.contactItem}>{user.location && "·"} {user.phone}</Text>
           )}
           {user.email && (
-            <Text style={styles.contactItem}>{user.email}</Text>
+            <Text style={styles.contactItem}>· {user.email}</Text>
           )}
           {user.linkedin && (
-            <Text style={styles.contactItem}>LinkedIn</Text>
+            <Text style={styles.contactItem}>· {user.linkedin}</Text>
           )}
         </View>
       </View>

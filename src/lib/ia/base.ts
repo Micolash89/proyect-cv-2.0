@@ -1,4 +1,5 @@
 import type { IAProvider, Experience, Education, CVFormData } from "@/types";
+import { AIProvider } from "../constants/AIconst";
 
 export type { IAProvider };
 
@@ -49,7 +50,7 @@ class GeminiProvider implements IAProvider {
     if (this.apiKey) {
       import("@google/generative-ai").then(({ GoogleGenerativeAI }) => {
         this.client = new GoogleGenerativeAI(this.apiKey).getGenerativeModel({
-          model: "gemini-2.0-flash",
+          model: AIProvider.GEMINI,
         });
       });
     }

@@ -102,10 +102,14 @@ export async function deleteCV(id: string) {
   return { success: true };
 }
 
-export async function getCVs(filters?: { status?: string; search?: string }) {
+export async function getCVs(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
   "use server";
   
   const db = await getDatabase();
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 10;
+  const skip = (page - 1) * limit;
+  
   let query: Record<string, unknown> = {};
   
   if (filters?.status && filters.status !== "all") {
@@ -120,12 +124,22 @@ export async function getCVs(filters?: { status?: string; search?: string }) {
     ];
   }
   
-  const users = await db.collection("users")
-    .find(query)
-    .sort({ createdAt: -1 })
-    .toArray();
+  const [users, total] = await Promise.all([
+    db.collection("users")
+      .find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray(),
+    db.collection("users").countDocuments(query)
+  ]);
   
-  return users.map((u: any) => ({ ...u, _id: u._id.toString() }));
+  return {
+    users: users.map((u: any) => ({ ...u, _id: u._id.toString() })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 export async function getCV(id: string) {

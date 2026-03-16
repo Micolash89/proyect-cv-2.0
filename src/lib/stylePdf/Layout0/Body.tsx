@@ -27,7 +27,8 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{exp.company}</Text>
         <Text style={styles.dates}>
-          {parseDate(exp.startDate)} - {exp.current ? "Actualidad" : parseDate(exp.endDate)}
+          {parseDate(exp.startDate)} -{" "}
+          {exp.current ? "Actualidad" : parseDate(exp.endDate)}
         </Text>
       </View>
       <Text style={styles.degree}>{exp.position}</Text>
@@ -42,19 +43,23 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{edu.institution}</Text>
         <Text style={styles.dates}>
-          {parseDate(edu.startDate)} - {edu.current ? "Actualidad" : parseDate(edu.endDate)}
+          {parseDate(edu.startDate)} -{" "}
+          {edu.current ? "Actualidad" : parseDate(edu.endDate)}
         </Text>
       </View>
-      <Text style={styles.degree}>{edu.degree}</Text>
+      <View style={styles.entryHeader}>
+        <Text style={styles.degree}>{edu.degree}</Text>
+        <Text style={styles.dates}>locación</Text>
+      </View>
     </View>
   ));
 
-  const orderedExperience = options.reverseExperience 
-    ? [...experienceEntries].reverse() 
+  const orderedExperience = options.reverseExperience
+    ? [...experienceEntries].reverse()
     : experienceEntries;
 
-  const orderedEducation = options.reverseEducation 
-    ? [...educationEntries].reverse() 
+  const orderedEducation = options.reverseEducation
+    ? [...educationEntries].reverse()
     : educationEntries;
 
   return (
@@ -69,18 +74,14 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       {user.experience.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>EXPERIENCIA LABORAL</Text>
-          <View style={styles.sectionContent}>
-            {orderedExperience}
-          </View>
+          <View style={styles.sectionContent}>{orderedExperience}</View>
         </View>
       )}
 
       {user.education.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>FORMACIÓN ACADÉMICA</Text>
-          <View style={styles.sectionContent}>
-            {orderedEducation}
-          </View>
+          <View style={styles.sectionContent}>{orderedEducation}</View>
         </View>
       )}
 
@@ -89,7 +90,9 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
           <Text style={styles.sectionTitle}>HABILIDADES</Text>
           <View style={styles.skills}>
             {user.skills.map((skill, index) => (
-              <Text key={index} style={styles.skill}>{skill}</Text>
+              <Text key={index} style={styles.skill}>
+                {skill} {index !== user.skills.length - 1 && "·"}
+              </Text>
             ))}
           </View>
         </View>

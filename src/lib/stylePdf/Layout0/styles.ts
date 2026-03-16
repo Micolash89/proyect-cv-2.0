@@ -10,7 +10,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       backgroundColor: "#ffffff",
     },
     header: {
-      marginBottom: 10,
+      // marginBottom: 0,
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
@@ -32,12 +32,12 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "center",
-      gap: 8,
+      gap: 2,
       marginTop: 4,
       fontSize: opts.bodyFontSize - 1,
       color: "#333333",
-      borderBottomWidth: 1,
-      borderBottomColor: "#000000",
+      // borderBottomWidth: 1,
+      // borderBottomColor: "#000000",
       paddingBottom: 8,
     },
     contactItem: {
@@ -47,10 +47,10 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     photo: {
       position: "absolute",
-      top: 5,
-      right: 10,
-      width: 90,
-      height: 90,
+      top: -10,
+      left: -2,
+      width: 70,
+      height: 70,
       objectFit: "cover",
     },
     section: {
@@ -68,6 +68,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     sectionContent: {
       flexDirection: "column",
       gap: 10,
+      // lineHeight: 0.7,
     },
     entryContainer: {
       marginBottom: 8,
@@ -75,11 +76,12 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     entryHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 2,
+      // marginBottom: 2,
     },
     institution: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
+      textTransform: "uppercase",
     },
     location: {
       fontSize: opts.bodyFontSize - 1,
@@ -100,21 +102,26 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       marginRight: 12,
       marginTop: 4,
       color: "#444444",
-      lineHeight: 1.4,
+      lineHeight: 0.7,
     },
     skills: {
+      margin:"auto",
       marginTop: 4,
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 6,
+      gap: 2,
+      
     },
     skill: {
       fontSize: opts.bodyFontSize - 1,
     },
     summary: {
       color: "#444444",
-      lineHeight: 1.5,
+      lineHeight: 0.7,
       textAlign: "justify",
+      paddingLeft: 12,
+      paddingRight: 12,
+      fontStyle:"italic"
     },
     languageItem: {
       flexDirection: "row",

@@ -1,5 +1,6 @@
 "use server";
 
+import { AIProvider } from "@/lib/constants/AIconst";
 import { getSettings } from "@/lib/db/models/settings";
 
 export async function generateProfile(
@@ -18,7 +19,7 @@ export async function generateProfile(
 
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
   const experienceText = experience
     .map((e) => `${e.position} en ${e.company}: ${e.description}`)
@@ -63,7 +64,7 @@ export async function generateSkills(
 
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
   const experienceText = experience
     .map((e) => `${e.position} en ${e.company}`)
@@ -116,7 +117,7 @@ export async function improveText(text: string): Promise<string> {
 
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
   const prompt = `
 Mejora la siguiente descripción de funciones laborales para un CV. 
@@ -150,7 +151,7 @@ export async function testIAConnection(provider: "gemini" | "claude"): Promise<b
     if (provider === "gemini") {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
       await model.generateContent("Hello");
       return true;
     } else {

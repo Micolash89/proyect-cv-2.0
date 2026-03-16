@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Upload,
+  Send,
 } from "lucide-react";
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
@@ -262,7 +263,7 @@ export default function AdminNewCVPage() {
         });
       if (result.success && result.id) {
         toast.success("CV creado correctamente");
-        router.push(`/admin/cv/${result.id}`);
+        router.push("/admin");
       } else {
         toast.error(result.error || "Error al crear CV");
       }
@@ -1209,8 +1210,8 @@ setMunicipios([]);
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} loading={loading}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Crear CV
+                  <Send className="h-4 w-4 mr-2" />
+                  Enviar
                 </Button>
               )}
             </div>

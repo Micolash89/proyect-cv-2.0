@@ -48,16 +48,53 @@ export function CVDropzone({ onDataExtracted, className }: CVDropzoneProps) {
         toast.success("CV procesado correctamente");
         
         if (onDataExtracted) {
+          const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          
+          const experience = (result.extracted.experience || []).map((exp: any) => ({
+            id: exp.id || generateId(),
+            company: exp.company || "",
+            position: exp.position || "",
+            startDate: exp.startDate || "",
+            endDate: exp.endDate || "",
+            current: exp.current || false,
+            description: exp.description || "",
+          }));
+          
+          const education = (result.extracted.education || []).map((edu: any) => ({
+            id: edu.id || generateId(),
+            institution: edu.institution || "",
+            degree: edu.degree || "",
+            field: edu.field || "",
+            startDate: edu.startDate || "",
+            endDate: edu.endDate || "",
+            current: edu.current || false,
+          }));
+          
+          const languages = (result.extracted.languages || []).map((lang: any) => ({
+            id: lang.id || generateId(),
+            language: lang.language || "",
+            level: lang.level || "",
+          }));
+          
+          // Deduplicar skills por nombre (case-insensitive)
+          const seenSkills = new Set<string>();
+          const skills = (result.extracted.skills || []).filter((skill: string) => {
+            const normalizedSkill = skill.toLowerCase().trim();
+            if (seenSkills.has(normalizedSkill)) return false;
+            seenSkills.add(normalizedSkill);
+            return true;
+          });
+          
           onDataExtracted({
             fullName: result.extracted.fullName || "",
             email: result.extracted.email || "",
             phone: result.extracted.phone || "",
             location: result.extracted.location || "",
             summary: result.extracted.summary || "",
-            experience: result.extracted.experience || [],
-            education: result.extracted.education || [],
-            skills: result.extracted.skills || [],
-            languages: result.extracted.languages || [],
+            experience,
+            education,
+            skills,
+            languages,
           });
         }
       } else {

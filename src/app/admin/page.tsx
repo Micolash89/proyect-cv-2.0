@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Search, Filter, Eye, CheckCircle, Clock, XCircle,
-  FileText, Users, Plus
+  FileText, Users, Plus, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { formatDate, formatPhone, cn } from "@/lib/utils/cn";
 import type { UserCV, CVStatus } from "@/types";
@@ -25,16 +25,27 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [debouncedSearch] = useDebounce(search, 500);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
   useEffect(() => {
     fetchUsers();
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, currentPage]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { users } = await getCVs(debouncedSearch, statusFilter);
-      setUsers(users as unknown as UserCV[]);
+      const result = await getCVs({ 
+        status: statusFilter, 
+        search: debouncedSearch, 
+        page: currentPage,
+        limit 
+      });
+      setUsers(result.users as unknown as UserCV[]);
+      setTotalPages(result.totalPages);
+      setTotal(result.total);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -42,8 +53,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
   const stats = {
-    total: users.length,
+    total,
     pending: users.filter((u) => u.status === "pending").length,
     reviewed: users.filter((u) => u.status === "reviewed").length,
     completed: users.filter((u) => u.status === "completed").length,
@@ -135,13 +162,13 @@ export default function AdminDashboard() {
           <Input
             placeholder="Buscar por nombre, teléfono o email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             icon={<Search className="h-4 w-4" />}
           />
         </div>
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value)}
           options={[
             { value: "all", label: "Todos los estados" },
             { value: "pending", label: "Pendientes" },
@@ -247,6 +274,35 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, total)} de {total} registros
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );
