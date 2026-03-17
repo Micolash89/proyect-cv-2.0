@@ -64,10 +64,12 @@ export function CVDropzone({ onDataExtracted, className }: CVDropzoneProps) {
             id: edu.id || generateId(),
             institution: edu.institution || "",
             degree: edu.degree || "",
-            field: edu.field || "",
             startDate: edu.startDate || "",
             endDate: edu.endDate || "",
             current: edu.current || false,
+            provincia: "",
+            municipio: "",
+            localidad: "",
           }));
           
           const languages = (result.extracted.languages || []).map((lang: any) => ({

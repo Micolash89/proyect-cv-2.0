@@ -43,7 +43,7 @@ import {
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
-import { getProvincias, getMunicipios, getLocalidades, type Provincia, type Municipio, type Localidad } from "@/lib/api/georef";
+import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 import type {
   TemplateType,
   FontSize,
@@ -52,6 +52,8 @@ import type {
   Education,
   Language,
 } from "@/types";
+import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
+import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 
 const steps = [
   { id: 1, title: "Datos Personales", icon: User },
@@ -163,10 +165,10 @@ function RegistroPageContent() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [municipios, setMunicipios] = useState<Municipio[]>([]);
-  const [localidades, setLocalidades] = useState<Localidad[]>([]);
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [localidades, setLocalidadess] = useState<Localidad[]>([]);
   const [selectedProvincia, setSelectedProvincia] = useState<string>("");
-  const [selectedMunicipio, setSelectedMunicipio] = useState<string>("");
+  const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
   const [selectedLocalidad, setSelectedLocalidad] = useState<string>("");
 
   useEffect(() => {
@@ -214,47 +216,47 @@ function RegistroPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    const loadMunicipios = async () => {
+    const loadDepartamentos = async () => {
       if (!selectedProvincia) {
-        setMunicipios([]);
-        setLocalidades([]);
-        setSelectedMunicipio("");
+        setDepartamentos([]);
+        setDepartamentos([]);
+        setSelectedDepartamento("");
         setSelectedLocalidad("");
         return;
       }
       try {
-        const data = await getMunicipios(selectedProvincia);
-        setMunicipios(data);
-        setLocalidades([]);
-        setSelectedMunicipio("");
+        const data = await getDepartamentos(selectedProvincia);
+        setDepartamentos(data);
+        setDepartamentos([]);
+        setSelectedDepartamento("");
         setSelectedLocalidad("");
       } catch (error) {
-        console.error("Error loading municipios:", error);
+        console.error("Error loading departamentos:", error);
       }
     };
-    loadMunicipios();
+    loadDepartamentos();
   }, [selectedProvincia]);
 
   useEffect(() => {
-    const loadLocalidadess = async () => {
+    const loadMunicipiosLocalidad = async () => {
       if (!selectedProvincia) {
-        setLocalidades([]);
+        setLocalidadess([]);
         return;
       }
       try {
-        const data = await getLocalidades(selectedProvincia);
-        setLocalidades(data);
+        const data = await getMunicipiosLocalidad(selectedProvincia, selectedDepartamento || undefined);
+        setLocalidadess(data);
         setSelectedLocalidad("");
       } catch (error) {
         console.error("Error loading localidades:", error);
       }
     };
-    loadLocalidadess();
-  }, [selectedProvincia]);
+    loadMunicipiosLocalidad();
+  }, [selectedProvincia, selectedDepartamento]);
 
   const updateLocation = () => {
     const parts = [
-      selectedLocalidad || selectedMunicipio,
+      selectedLocalidad || selectedDepartamento,
       selectedProvincia ? provincias.find(p => p.id === selectedProvincia)?.nombre : ""
     ].filter(Boolean);
     setFormData((prev) => ({ ...prev, location: parts.join(", ") }));
@@ -262,7 +264,7 @@ function RegistroPageContent() {
 
   useEffect(() => {
     updateLocation();
-  }, [selectedProvincia, selectedMunicipio, selectedLocalidad]);
+  }, [selectedProvincia, selectedDepartamento, selectedLocalidad]);
 
   const {
     register,
@@ -312,6 +314,15 @@ function RegistroPageContent() {
     }));
   };
 
+  const updateExperienceLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    setFormData((prev) => ({
+      ...prev,
+      experience: prev.experience.map((exp) =>
+        exp.id === id ? { ...exp, ...locationData } : exp,
+      ),
+    }));
+  };
+
   const addEducation = () => {
     setFormData((prev) => ({
       ...prev,
@@ -321,10 +332,12 @@ function RegistroPageContent() {
           id: generateId(),
           institution: "",
           degree: "",
-          field: "",
           startDate: "",
           endDate: "",
           current: false,
+          provincia: "",
+          municipio: "",
+          localidad: "",
         },
       ],
     }));
@@ -342,6 +355,15 @@ function RegistroPageContent() {
       ...prev,
       education: prev.education.map((edu) =>
         edu.id === id ? { ...edu, [field]: value } : edu,
+      ),
+    }));
+  };
+
+  const updateEducationLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    setFormData((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) =>
+        edu.id === id ? { ...edu, ...locationData } : edu,
       ),
     }));
   };
@@ -643,7 +665,7 @@ function RegistroPageContent() {
                     </Button>
                   ) : (
                     <div className="space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <select
                           value={selectedProvincia}
                           onChange={(e) => setSelectedProvincia(e.target.value)}
@@ -657,33 +679,35 @@ function RegistroPageContent() {
                           ))}
                         </select>
                         
-                        {municipios.length > 0 && (
+                        {departamentos.length > 0 && (
                           <select
-                            value={selectedMunicipio}
-                            onChange={(e) => setSelectedMunicipio(e.target.value)}
+                            value={selectedDepartamento}
+                            onChange={(e) => setSelectedDepartamento(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="">Seleccioná un municipio</option>
-                            {municipios.map((m) => (
-                              <option key={m.id} value={m.nombre}>
-                                {m.nombre}
+                            <option value="">Seleccioná un departamento</option>
+                            {departamentos.map((d) => (
+                              <option key={d.id} value={d.nombre}>
+                                {d.nombre}
                               </option>
                             ))}
                           </select>
                         )}
                         
-                        <select
-                          value={selectedLocalidad}
-                          onChange={(e) => setSelectedLocalidad(e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-full"
-                        >
-                          <option value="">Seleccioná una localidad</option>
-                          {localidades.map((l) => (
-                            <option key={l.id} value={l.nombre}>
-                              {l.nombre}
-                            </option>
-                          ))}
-                        </select>
+                        {localidades.length > 0 && (
+                          <select
+                            value={selectedLocalidad}
+                            onChange={(e) => setSelectedLocalidad(e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Seleccioná una localidad</option>
+                            {localidades.map((l) => (
+                              <option key={l.id} value={l.nombre}>
+                                {l.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                       
                       {formData.location && (
@@ -841,6 +865,13 @@ function RegistroPageContent() {
                             updateExperience(exp.id, "position", e.target.value)
                           }
                         />
+                        <ExperienceLocationSelector
+                          experienciaId={exp.id}
+                          initialProvincia={exp.provincia}
+                          initialMunicipio={exp.municipio}
+                          initialLocalidad={exp.localidad}
+                          onChange={updateExperienceLocation}
+                        />
                       </div>
                       <div className="grid md:grid-cols-2 gap-3">
                         <Input
@@ -946,12 +977,12 @@ function RegistroPageContent() {
                           }
                         />
                       </div>
-                      <Input
-                        placeholder="Campo de estudio (opcional)"
-                        value={edu.field}
-                        onChange={(e) =>
-                          updateEducation(edu.id, "field", e.target.value)
-                        }
+                      <EducationLocationSelector
+                        educacionId={edu.id}
+                        initialProvincia={edu.provincia}
+                        initialMunicipio={edu.municipio}
+                        initialLocalidad={edu.localidad}
+                        onChange={updateEducationLocation}
                       />
                       <div className="grid md:grid-cols-2 gap-3">
                         <Input

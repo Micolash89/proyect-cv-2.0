@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,9 @@ import {
   registroSteps,
 } from "@/lib/constants";
 import { templateOptions } from "@/lib/constants/templates";
-import { getProvincias, getMunicipios, getLocalidades, type Provincia, type Municipio, type Localidad } from "@/lib/api/georef";
+import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
+import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
+import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import type { TemplateType, Experience, Education, Language, TemplateSettings, FontSize } from "@/types";
 
 const DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
@@ -80,10 +82,10 @@ export default function AdminNewCVPage() {
   });
 
   const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [municipios, setMunicipios] = useState<Municipio[]>([]);
-  const [localidades, setLocalidades] = useState<Localidad[]>([]);
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [localidades, setMunicipiosLocalidad] = useState<Localidad[]>([]);
   const [selectedProvincia, setSelectedProvincia] = useState<string>("");
-  const [selectedMunicipio, setSelectedMunicipio] = useState<string>("");
+  const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
   const [selectedLocalidad, setSelectedLocalidad] = useState<string>("");
 
   const updateFormData = (data: Partial<typeof formData>) => {
@@ -138,6 +140,9 @@ export default function AdminNewCVPage() {
           endDate: "",
           current: false,
           description: "",
+          provincia: "",
+          municipio: "",
+          localidad: "",
         },
       ],
     });
@@ -157,6 +162,14 @@ export default function AdminNewCVPage() {
     });
   };
 
+  const updateExperienceLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    updateFormData({
+      experience: formData.experience.map((e) =>
+        e.id === id ? { ...e, ...locationData } : e,
+      ),
+    });
+  };
+
   const addEducation = () => {
     updateFormData({
       education: [
@@ -168,6 +181,9 @@ export default function AdminNewCVPage() {
           startDate: "",
           endDate: "",
           current: false,
+          provincia: "",
+          municipio: "",
+          localidad: "",
         },
       ],
     });
@@ -187,6 +203,14 @@ export default function AdminNewCVPage() {
     });
   };
 
+  const updateEducationLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    updateFormData({
+      education: formData.education.map((e) =>
+        e.id === id ? { ...e, ...locationData } : e,
+      ),
+    });
+  };
+
   const addSkill = (skill: string) => {
     if (!skill.trim()) return;
     if (!formData.skills.includes(skill.trim())) {
@@ -202,7 +226,7 @@ export default function AdminNewCVPage() {
     updateFormData({
       languages: [
         ...formData.languages,
-        { id: generateId(), language: "Español", level: "Intermedio" },
+        { id: generateId(), language: "EspaÃ±ol", level: "Intermedio" },
       ],
     });
   };
@@ -309,48 +333,48 @@ export default function AdminNewCVPage() {
   }, []);
 
   useEffect(() => {
-    const loadMunicipios = async () => {
+    const loadDepartamentos = async () => {
       if (!selectedProvincia) {
-setMunicipios([]);
-        setLocalidades([]);
-        setSelectedMunicipio("");
+        setDepartamentos([]);
+        setMunicipiosLocalidad([]);
+        setSelectedDepartamento("");
         setSelectedLocalidad("");
         return;
       }
       try {
-        const data = await getMunicipios(selectedProvincia);
-        setMunicipios(data);
-        setLocalidades([]);
-        setSelectedMunicipio("");
+        const data = await getDepartamentos(selectedProvincia);
+        setDepartamentos(data);
+        setMunicipiosLocalidad([]);
+        setSelectedDepartamento("");
         setSelectedLocalidad("");
       } catch (error) {
-        console.error("Error loading municipios:", error);
+        console.error("Error loading departamentos:", error);
       }
     };
-    loadMunicipios();
+    loadDepartamentos();
   }, [selectedProvincia]);
 
   useEffect(() => {
-    const loadLocalidades = async () => {
+    const loadMunicipiosLocalidad = async () => {
       if (!selectedProvincia) {
-        setLocalidades([]);
+        setMunicipiosLocalidad([]);
         return;
       }
       try {
-        const data = await getLocalidades(selectedProvincia);
-        setLocalidades(data);
+        const data = await getMunicipiosLocalidad(selectedProvincia, selectedDepartamento || undefined);
+        setMunicipiosLocalidad(data);
         setSelectedLocalidad("");
       } catch (error) {
         console.error("Error loading localidades:", error);
       }
     };
-    loadLocalidades();
-  }, [selectedProvincia]);
+    loadMunicipiosLocalidad();
+  }, [selectedProvincia, selectedDepartamento]);
 
   const updateLocation = () => {
     const provinciaNombre = selectedProvincia ? provincias.find(p => p.id === selectedProvincia)?.nombre : "";
     const parts = [
-      selectedLocalidad || selectedMunicipio,
+      selectedLocalidad || selectedDepartamento,
       provinciaNombre
     ].filter(Boolean);
     updateFormData({ location: parts.join(", ") });
@@ -358,7 +382,7 @@ setMunicipios([]);
 
   useEffect(() => {
     updateLocation();
-  }, [selectedProvincia, selectedMunicipio, selectedLocalidad]);
+  }, [selectedProvincia, selectedDepartamento, selectedLocalidad]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -375,7 +399,7 @@ setMunicipios([]);
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Nuevo CV</h1>
-            <p className="text-muted-foreground">Crear un nuevo currículum</p>
+            <p className="text-muted-foreground">Crear un nuevo currÃ­culum</p>
           </div>
         </div>
 
@@ -423,14 +447,14 @@ setMunicipios([]);
                           onChange={(e) =>
                             updateFormData({ fullName: e.target.value })
                           }
-                          placeholder="Juan Pérez"
+                          placeholder="Juan PÃ©rez"
                           autoComplete="name"
                           inputMode="text"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Teléfono *</Label>
+                          <Label>TelÃ©fono *</Label>
                           <Input
                             value={formData.phone}
                             onChange={(e) =>
@@ -456,14 +480,14 @@ setMunicipios([]);
                         </div>
                       </div>
                       <div>
-                        <Label>Ubicación</Label>
+                        <Label>UbicaciÃ³n</Label>
                         <div className="space-y-2 mt-2">
                           <select
                             value={selectedProvincia}
                             onChange={(e) => setSelectedProvincia(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="">Seleccioná una provincia</option>
+                            <option value="">SeleccionÃ¡ una provincia</option>
                             {provincias.map((p) => (
                               <option key={p.id} value={p.id}>
                                 {p.nombre}
@@ -471,16 +495,16 @@ setMunicipios([]);
                             ))}
                           </select>
                           
-                          {municipios.length > 0 && (
+                          {departamentos.length > 0 && (
                             <select
-                              value={selectedMunicipio}
-                              onChange={(e) => setSelectedMunicipio(e.target.value)}
+                              value={selectedDepartamento}
+                              onChange={(e) => setSelectedDepartamento(e.target.value)}
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              <option value="">Seleccioná un municipio</option>
-                              {municipios.map((m) => (
-                                <option key={m.id} value={m.nombre}>
-                                  {m.nombre}
+                              <option value="">Seleccioná un departamento</option>
+                              {departamentos.map((d) => (
+                                <option key={d.id} value={d.nombre}>
+                                  {d.nombre}
                                 </option>
                               ))}
                             </select>
@@ -491,7 +515,7 @@ setMunicipios([]);
                             onChange={(e) => setSelectedLocalidad(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="">Seleccioná una localidad</option>
+                            <option value="">SeleccionÃ¡ una localidad</option>
                             {localidades.map((l) => (
                               <option key={l.id} value={l.nombre}>
                                 {l.nombre}
@@ -627,6 +651,13 @@ setMunicipios([]);
                             }
                             placeholder="Puesto"
                           />
+                          <ExperienceLocationSelector
+                            experienciaId={exp.id}
+                            initialProvincia={exp.provincia}
+                            initialMunicipio={exp.municipio}
+                            initialLocalidad={exp.localidad}
+                            onChange={updateExperienceLocation}
+                          />
                           <div className="grid grid-cols-2 gap-2">
                             <Input
                               type="date"
@@ -675,7 +706,7 @@ setMunicipios([]);
                                 e.target.value,
                               )
                             }
-                            placeholder="Descripción de funciones..."
+                            placeholder="DescripciÃ³n de funciones..."
                             className="h-20"
                           />
                         </div>
@@ -700,7 +731,7 @@ setMunicipios([]);
                 >
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Educación</CardTitle>
+                      <CardTitle>EducaciÃ³n</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
@@ -718,7 +749,7 @@ setMunicipios([]);
                         >
                           <div className="flex justify-between">
                             <Label className="text-xs text-muted-foreground">
-                              Institución
+                              InstituciÃ³n
                             </Label>
                             <Button
                               variant="ghost"
@@ -744,7 +775,14 @@ setMunicipios([]);
                             onChange={(e) =>
                               updateEducation(edu.id, "degree", e.target.value)
                             }
-                            placeholder="Carrera/Título"
+                            placeholder="Carrera/TÃ­tulo"
+                          />
+                          <EducationLocationSelector
+                            educacionId={edu.id}
+                            initialProvincia={edu.provincia}
+                            initialMunicipio={edu.municipio}
+                            initialLocalidad={edu.localidad}
+                            onChange={updateEducationLocation}
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <Input
@@ -899,7 +937,7 @@ setMunicipios([]);
                 >
                   <Card>
                     <CardHeader>
-                      <CardTitle>Diseño del CV</CardTitle>
+                      <CardTitle>DiseÃ±o del CV</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -994,7 +1032,7 @@ setMunicipios([]);
                       </div>
 
                       <div>
-                        <Label>Color del diseño</Label>
+                        <Label>Color del diseÃ±o</Label>
                         <div className="grid grid-cols-4 gap-2 mt-2">
                           {colorPalette.map((color) => (
                             <button
@@ -1023,12 +1061,12 @@ setMunicipios([]);
                       </div>
 
                       <div className="border-t pt-4">
-                        <Label className="text-base font-semibold">Configuración Avanzada</Label>
+                        <Label className="text-base font-semibold">ConfiguraciÃ³n Avanzada</Label>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-sm">Tamaño de fuente</Label>
+                          <Label className="text-sm">TamaÃ±o de fuente</Label>
                           <Select
                             value={formData.templateSettings.fontSize || "medium"}
                             onChange={(e) =>
@@ -1040,7 +1078,7 @@ setMunicipios([]);
                               })
                             }
                             options={[
-                              { value: "small", label: "Pequeño" },
+                              { value: "small", label: "PequeÃ±o" },
                               { value: "medium", label: "Mediano" },
                               { value: "large", label: "Grande" },
                             ]}
@@ -1145,7 +1183,7 @@ setMunicipios([]);
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            Teléfono:
+                            TelÃ©fono:
                           </span>
                           <span>{formData.phone}</span>
                         </div>
@@ -1161,7 +1199,7 @@ setMunicipios([]);
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            Educación:
+                            EducaciÃ³n:
                           </span>
                           <span>{formData.education.length}</span>
                         </div>

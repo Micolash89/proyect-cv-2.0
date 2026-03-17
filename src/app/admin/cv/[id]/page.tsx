@@ -39,6 +39,7 @@ import type {
   // Education,
   // Language,
 } from "@/types";
+import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
@@ -442,10 +443,12 @@ export default function AdminCVPage() {
           id: generateId(),
           institution: "",
           degree: "",
-          field: "",
           startDate: "",
           endDate: "",
           current: false,
+          provincia: "",
+          municipio: "",
+          localidad: "",
         },
       ],
     });
@@ -465,6 +468,16 @@ export default function AdminCVPage() {
       ...user,
       education: user.education.map((e: any) =>
         e.id === id ? { ...e, [field]: value } : e,
+      ),
+    });
+  };
+
+  const updateEducationLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    if (!user) return;
+    setUser({
+      ...user,
+      education: user.education.map((e: any) =>
+        e.id === id ? { ...e, ...locationData } : e,
       ),
     });
   };
@@ -798,22 +811,13 @@ export default function AdminCVPage() {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="Título"
-                      value={edu.degree}
-                      onChange={(e) =>
-                        updateEducation(edu.id, "degree", e.target.value)
-                      }
-                    />
-                    <Input
-                      placeholder="Campo de estudio"
-                      value={edu.field || ""}
-                      onChange={(e) =>
-                        updateEducation(edu.id, "field", e.target.value)
-                      }
-                    />
-                  </div>
+                  <EducationLocationSelector
+                    educacionId={edu.id}
+                    initialProvincia={edu.provincia}
+                    initialMunicipio={edu.municipio}
+                    initialLocalidad={edu.localidad}
+                    onChange={updateEducationLocation}
+                  />
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"

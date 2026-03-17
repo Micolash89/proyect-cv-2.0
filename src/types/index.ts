@@ -35,16 +35,21 @@ export interface Experience {
   endDate?: string;
   current: boolean;
   description: string;
+  provincia?: string;
+  municipio?: string;
+  localidad?: string;
 }
 
 export interface Education {
   id: string;
   institution: string;
   degree: string;
-  field?: string;
   startDate: string;
   endDate?: string;
   current: boolean;
+  provincia?: string;
+  municipio?: string;
+  localidad?: string;
 }
 
 export interface Language {
