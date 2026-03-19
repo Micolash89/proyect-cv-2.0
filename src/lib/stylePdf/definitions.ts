@@ -65,3 +65,4 @@ export const COLOR_PRESETS = [
   { name: "Naranja", value: "#c05621" },
   { name: "Teal", value: "#285e61" },
 ];
+

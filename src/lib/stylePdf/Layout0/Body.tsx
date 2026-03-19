@@ -49,7 +49,7 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       </View>
       <View style={styles.entryHeader}>
         <Text style={styles.degree}>{edu.degree}</Text>
-        <Text style={styles.dates}>locación</Text>
+        <Text style={styles.dates}>{edu.municipio} {edu.localidad}</Text>
       </View>
     </View>
   ));

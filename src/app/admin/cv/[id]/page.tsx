@@ -40,6 +40,8 @@ import type {
   // Language,
 } from "@/types";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
+import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
+import { getProvincias, getDepartamentos, type Provincia, type Departamento } from "@/lib/api/georef";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
@@ -48,6 +50,7 @@ import {
   generateProfileAction,
 } from "@/app/actions/ia";
 import { generateSkills } from "@/lib/ia/factory";
+import { templates } from "@/types/definitionsCV";
 
 const colorPalette = [
   { name: "Gris Oscuro", value: "#374151" },
@@ -79,6 +82,13 @@ export default function AdminCVPage() {
   const [previewPosition, setPreviewPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  
+  // Location state for Datos Personales
+  const [provincias, setProvincias] = useState<Provincia[]>([]);
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [selectedProvincia, setSelectedProvincia] = useState("");
+  const [selectedDepartamento, setSelectedDepartamento] = useState("");
+  const [selectedLocalidad, setSelectedLocalidad] = useState("");
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -259,6 +269,82 @@ export default function AdminCVPage() {
     }
   };
 
+  // Load provincias on mount
+  useEffect(() => {
+    const loadProvincias = async () => {
+      const data = await getProvincias();
+      setProvincias(data);
+    };
+    loadProvincias();
+  }, []);
+
+  // Load departamentos when provincia changes
+  useEffect(() => {
+    const loadDepartamentos = async () => {
+      if (!selectedProvincia) {
+        setDepartamentos([]);
+        setSelectedDepartamento("");
+        setSelectedLocalidad("");
+        return;
+      }
+      const data = await getDepartamentos(selectedProvincia);
+      setDepartamentos(data);
+    };
+    loadDepartamentos();
+  }, [selectedProvincia]);
+
+  // Update user location when selection changes
+  const handleProvinciaChange = (value: string) => {
+    setSelectedProvincia(value);
+    setSelectedDepartamento("");
+    setSelectedLocalidad("");
+    setDepartamentos([]);
+  };
+
+  const handleDepartamentoChange = (value: string) => {
+    setSelectedDepartamento(value);
+    setSelectedLocalidad("");
+  };
+
+  const handleLocalidadChange = (value: string) => {
+    setSelectedLocalidad(value);
+  };
+
+  // Update user.location when location selection changes
+  useEffect(() => {
+    if (!user) return;
+    const provinciaNombre = selectedProvincia ? provincias.find(p => p.id === selectedProvincia)?.nombre : "";
+    const parts = [
+      selectedLocalidad || selectedDepartamento,
+      provinciaNombre
+    ].filter(Boolean);
+    const newLocation = parts.join(", ");
+    if (user.location !== newLocation) {
+      setUser({ ...user, location: newLocation });
+    }
+  }, [selectedProvincia, selectedDepartamento, selectedLocalidad, user?.location]);
+
+  // Initialize location from user data (only once on mount)
+  const [locationInitialized, setLocationInitialized] = useState(false);
+  
+  useEffect(() => {
+    if (user && user.location && !locationInitialized && provincias.length > 0) {
+      // Try to parse location if it contains comma
+      const parts = user.location.split(", ");
+      if (parts.length >= 2) {
+        const loc = parts[0];
+        const prov = parts.slice(1).join(", ");
+        // Try to find matching provincia
+        const provMatch = provincias.find(p => p.nombre === prov);
+        if (provMatch) {
+          setSelectedProvincia(provMatch.id);
+          // We'll need to also set the departamento/localidad after loading
+        }
+      }
+      setLocationInitialized(true);
+    }
+  }, [user, provincias, locationInitialized]);
+
   // const handleCVUpload = async (file: File) => {
   //   if (!file) return;
   //   if (file.size > 10 * 1024 * 1024) {
@@ -433,6 +519,16 @@ export default function AdminCVPage() {
     });
   };
 
+  const updateExperienceLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+    if (!user) return;
+    setUser({
+      ...user,
+      experience: user.experience.map((e: any) =>
+        e.id === id ? { ...e, ...locationData } : e,
+      ),
+    });
+  };
+
   const addEducation = () => {
     if (!user) return;
     setUser({
@@ -494,6 +590,31 @@ export default function AdminCVPage() {
     setUser({
       ...user,
       skills: user.skills.filter((s: string) => s !== skill),
+    });
+  };
+
+  // Language functions
+  const addLanguage = (language: string, level: string) => {
+    if (!user || !language.trim()) return;
+    const newLang = { id: generateId(), language: language.trim(), level };
+    setUser({ ...user, languages: [...user.languages, newLang] });
+  };
+
+  const removeLanguage = (id: string) => {
+    if (!user) return;
+    setUser({
+      ...user,
+      languages: user.languages.filter((l: any) => l.id !== id),
+    });
+  };
+
+  const updateLanguage = (id: string, field: string, value: string) => {
+    if (!user) return;
+    setUser({
+      ...user,
+      languages: user.languages.map((l: any) =>
+        l.id === id ? { ...l, [field]: value } : l,
+      ),
     });
   };
 
@@ -671,11 +792,50 @@ export default function AdminCVPage() {
                   />
                 </div>
                 <div>
-                  <Label>Ubicación</Label>
+                  <Label>DNI (opcional)</Label>
                   <Input
-                    value={user.location || ""}
-                    onChange={(e) => updateField("location", e.target.value)}
+                    value={user.dni || ""}
+                    onChange={(e) => updateField("dni", e.target.value)}
+                    placeholder="Ej: 12345678"
                   />
+                </div>
+              </div>
+              <div>
+                <Label>Ubicación</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <select
+                    value={selectedProvincia}
+                    onChange={(e) => handleProvinciaChange(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Provincia</option>
+                    {provincias.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedDepartamento}
+                    onChange={(e) => handleDepartamentoChange(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!selectedProvincia}
+                  >
+                    <option value="">Departamento</option>
+                    {departamentos.map((d) => (
+                      <option key={d.id} value={d.nombre}>
+                        {d.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedLocalidad}
+                    onChange={(e) => handleLocalidadChange(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!selectedProvincia}
+                  >
+                    <option value="">Localidad</option>
+                  </select>
                 </div>
               </div>
               <div>
@@ -703,7 +863,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateExperience(exp.id, "company", e.target.value)
                       }
-                      className="w-1/2"
+                      className="w-full"
                     />
                     <Button
                       variant="ghost"
@@ -719,6 +879,13 @@ export default function AdminCVPage() {
                     onChange={(e) =>
                       updateExperience(exp.id, "position", e.target.value)
                     }
+                  />
+                  <ExperienceLocationSelector
+                    experienciaId={exp.id}
+                    initialProvincia={exp.provincia}
+                    initialMunicipio={exp.municipio}
+                    initialLocalidad={exp.localidad}
+                    onChange={updateExperienceLocation}
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <Input
@@ -792,8 +959,8 @@ export default function AdminCVPage() {
               <CardTitle>Educación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {user.education.map((edu: any) => (
-                <div key={edu.id} className="p-4 border rounded-lg space-y-3">
+              {user.education.map((edu: any, index:number) => (
+                <div key={index + "educacion"} className="p-4 border rounded-lg space-y-3">
                   <div className="flex justify-between">
                     <Input
                       placeholder="Institución"
@@ -801,7 +968,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "institution", e.target.value)
                       }
-                      className="w-1/2"
+                      className="w-full"
                     />
                     <Button
                       variant="ghost"
@@ -811,6 +978,13 @@ export default function AdminCVPage() {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
+                  <Input
+                    placeholder="Título / Carrera"
+                    value={edu.degree}
+                    onChange={(e) =>
+                      updateEducation(edu.id, "degree", e.target.value)
+                    }
+                  />
                   <EducationLocationSelector
                     educacionId={edu.id}
                     initialProvincia={edu.provincia}
@@ -894,6 +1068,70 @@ export default function AdminCVPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Idiomas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Idioma (ej: Inglés)"
+                  id="newLanguage"
+                  className="flex-1"
+                />
+                <select
+                  id="newLanguageLevel"
+                  className="flex h-10 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="Básico">Básico</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                  <option value="Nativo">Nativo</option>
+                </select>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById("newLanguage") as HTMLInputElement;
+                    const select = document.getElementById("newLanguageLevel") as HTMLSelectElement;
+                    addLanguage(input.value, select.value);
+                    input.value = "";
+                    select.value = "Básico";
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+                  <div className="space-y-2">
+                    {user.languages.map((lang: any) => (
+                      <div key={lang.id} className="flex items-center gap-2 p-2 border rounded">
+                        <Input
+                          value={lang.language || ""}
+                          onChange={(e) => updateLanguage(lang.id, "language", e.target.value)}
+                          className="flex-1"
+                        />
+                    <select
+                      value={lang.level || "Básico"}
+                      onChange={(e) => updateLanguage(lang.id, "level", e.target.value)}
+                      className="flex h-10 w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="Básico">Básico</option>
+                      <option value="Intermedio">Intermedio</option>
+                      <option value="Avanzado">Avanzado</option>
+                      <option value="Nativo">Nativo</option>
+                    </select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeLanguage(lang.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Perfil / Resumen</CardTitle>
             </CardHeader>
             <CardContent>
@@ -937,48 +1175,7 @@ export default function AdminCVPage() {
               <div>
                 <Label>Plantilla</Label>
                 <div className="grid grid-cols-4 gap-2 mt-2">
-                  {[
-                    {
-                      id: "harvard",
-                      name: "Harvard",
-                      img: "/templates/template-0.png",
-                    },
-                    {
-                      id: "modern",
-                      name: "Moderno",
-                      img: "/templates/template-1.png",
-                    },
-                    {
-                      id: "classic",
-                      name: "Clásico",
-                      img: "/templates/template-2.png",
-                    },
-                    {
-                      id: "creative",
-                      name: "Creativo",
-                      img: "/templates/template-3.png",
-                    },
-                    {
-                      id: "minimal",
-                      name: "Minimal",
-                      img: "/templates/template-4.png",
-                    },
-                    {
-                      id: "professional",
-                      name: "Profesional",
-                      img: "/templates/template-5.png",
-                    },
-                    {
-                      id: "layout6",
-                      name: "Elegante",
-                      img: "/templates/template-6.jpg",
-                    },
-                    {
-                      id: "layout7",
-                      name: "Moderno",
-                      img: "/templates/template-7.png",
-                    },
-                  ].map((template) => (
+                  {templates.map((template) => (
                     <button
                       key={template.id}
                       type="button"
