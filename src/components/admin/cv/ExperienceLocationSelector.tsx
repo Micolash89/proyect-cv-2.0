@@ -87,7 +87,7 @@ export function ExperienceLocationSelector({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-2 col-span-2">
       <Select
         value={selectedProvincia}
         onChange={(e) => handleProvinciaChange(e.target.value)}
@@ -100,7 +100,7 @@ export function ExperienceLocationSelector({
         value={selectedDepartamento}
         onChange={(e) => handleDepartamentoChange(e.target.value)}
         options={[
-          { value: "", label: "Departamento" },
+          { value: "", label: "Municipio" },
           ...departamentos.map((d) => ({ value: d.id, label: d.nombre }))
         ]}
         disabled={!selectedProvincia}

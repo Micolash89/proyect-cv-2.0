@@ -41,7 +41,12 @@ import type {
 } from "@/types";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
-import { getProvincias, getDepartamentos, type Provincia, type Departamento } from "@/lib/api/georef";
+import {
+  getProvincias,
+  getDepartamentos,
+  type Provincia,
+  type Departamento,
+} from "@/lib/api/georef";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
@@ -82,7 +87,7 @@ export default function AdminCVPage() {
   const [previewPosition, setPreviewPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  
+
   // Location state for Datos Personales
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
@@ -313,29 +318,41 @@ export default function AdminCVPage() {
   // Update user.location when location selection changes
   useEffect(() => {
     if (!user) return;
-    const provinciaNombre = selectedProvincia ? provincias.find(p => p.id === selectedProvincia)?.nombre : "";
+    const provinciaNombre = selectedProvincia
+      ? provincias.find((p) => p.id === selectedProvincia)?.nombre
+      : "";
     const parts = [
       selectedLocalidad || selectedDepartamento,
-      provinciaNombre
+      provinciaNombre,
     ].filter(Boolean);
     const newLocation = parts.join(", ");
     if (user.location !== newLocation) {
       setUser({ ...user, location: newLocation });
     }
-  }, [selectedProvincia, selectedDepartamento, selectedLocalidad, user?.location]);
+  }, [
+    selectedProvincia,
+    selectedDepartamento,
+    selectedLocalidad,
+    user?.location,
+  ]);
 
   // Initialize location from user data (only once on mount)
   const [locationInitialized, setLocationInitialized] = useState(false);
-  
+
   useEffect(() => {
-    if (user && user.location && !locationInitialized && provincias.length > 0) {
+    if (
+      user &&
+      user.location &&
+      !locationInitialized &&
+      provincias.length > 0
+    ) {
       // Try to parse location if it contains comma
       const parts = user.location.split(", ");
       if (parts.length >= 2) {
         const loc = parts[0];
         const prov = parts.slice(1).join(", ");
         // Try to find matching provincia
-        const provMatch = provincias.find(p => p.nombre === prov);
+        const provMatch = provincias.find((p) => p.nombre === prov);
         if (provMatch) {
           setSelectedProvincia(provMatch.id);
           // We'll need to also set the departamento/localidad after loading
@@ -519,7 +536,10 @@ export default function AdminCVPage() {
     });
   };
 
-  const updateExperienceLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+  const updateExperienceLocation = (
+    id: string,
+    locationData: { provincia: string; municipio: string; localidad: string },
+  ) => {
     if (!user) return;
     setUser({
       ...user,
@@ -568,7 +588,10 @@ export default function AdminCVPage() {
     });
   };
 
-  const updateEducationLocation = (id: string, locationData: { provincia: string; municipio: string; localidad: string }) => {
+  const updateEducationLocation = (
+    id: string,
+    locationData: { provincia: string; municipio: string; localidad: string },
+  ) => {
     if (!user) return;
     setUser({
       ...user,
@@ -633,12 +656,12 @@ export default function AdminCVPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {showPreview && (
-        <div 
+        <div
           className="fixed w-100 h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden"
-          style={{ 
-            left: previewPosition.x, 
+          style={{
+            left: previewPosition.x,
             top: previewPosition.y,
-            cursor: isDragging ? 'grabbing' : 'grab',
+            cursor: isDragging ? "grabbing" : "grab",
           }}
           onMouseDown={handleMouseDown}
         >
@@ -821,7 +844,7 @@ export default function AdminCVPage() {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!selectedProvincia}
                   >
-                    <option value="">Departamento</option>
+                    <option value="">Municipio</option>
                     {departamentos.map((d) => (
                       <option key={d.id} value={d.nombre}>
                         {d.nombre}
@@ -857,6 +880,9 @@ export default function AdminCVPage() {
               {user.experience.map((exp: any) => (
                 <div key={exp.id} className="p-4 border rounded-lg space-y-3">
                   <div className="flex justify-between">
+                    <div>
+
+                    
                     <Input
                       placeholder="Empresa"
                       value={exp.company}
@@ -879,7 +905,9 @@ export default function AdminCVPage() {
                     onChange={(e) =>
                       updateExperience(exp.id, "position", e.target.value)
                     }
-                  />
+                    />
+
+                    </div>
                   <ExperienceLocationSelector
                     experienciaId={exp.id}
                     initialProvincia={exp.provincia}
@@ -887,6 +915,7 @@ export default function AdminCVPage() {
                     initialLocalidad={exp.localidad}
                     onChange={updateExperienceLocation}
                   />
+
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
@@ -959,8 +988,11 @@ export default function AdminCVPage() {
               <CardTitle>Educación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {user.education.map((edu: any, index:number) => (
-                <div key={index + "educacion"} className="p-4 border rounded-lg space-y-3">
+              {user.education.map((edu: any, index: number) => (
+                <div
+                  key={index + "educacion"}
+                  className="p-4 border rounded-lg space-y-3"
+                >
                   <div className="flex justify-between">
                     <Input
                       placeholder="Institución"
@@ -1089,8 +1121,12 @@ export default function AdminCVPage() {
                 <Button
                   type="button"
                   onClick={() => {
-                    const input = document.getElementById("newLanguage") as HTMLInputElement;
-                    const select = document.getElementById("newLanguageLevel") as HTMLSelectElement;
+                    const input = document.getElementById(
+                      "newLanguage",
+                    ) as HTMLInputElement;
+                    const select = document.getElementById(
+                      "newLanguageLevel",
+                    ) as HTMLSelectElement;
                     addLanguage(input.value, select.value);
                     input.value = "";
                     select.value = "Básico";
@@ -1099,17 +1135,24 @@ export default function AdminCVPage() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-                  <div className="space-y-2">
-                    {user.languages.map((lang: any) => (
-                      <div key={lang.id} className="flex items-center gap-2 p-2 border rounded">
-                        <Input
-                          value={lang.language || ""}
-                          onChange={(e) => updateLanguage(lang.id, "language", e.target.value)}
-                          className="flex-1"
-                        />
+              <div className="space-y-2">
+                {user.languages.map((lang: any) => (
+                  <div
+                    key={lang.id}
+                    className="flex items-center gap-2 p-2 border rounded"
+                  >
+                    <Input
+                      value={lang.language || ""}
+                      onChange={(e) =>
+                        updateLanguage(lang.id, "language", e.target.value)
+                      }
+                      className="flex-1"
+                    />
                     <select
                       value={lang.level || "Básico"}
-                      onChange={(e) => updateLanguage(lang.id, "level", e.target.value)}
+                      onChange={(e) =>
+                        updateLanguage(lang.id, "level", e.target.value)
+                      }
                       className="flex h-10 w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="Básico">Básico</option>
@@ -1285,7 +1328,9 @@ export default function AdminCVPage() {
               </div>
 
               <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">Configuración Avanzada</Label>
+                <Label className="text-base font-semibold">
+                  Configuración Avanzada
+                </Label>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1309,7 +1354,10 @@ export default function AdminCVPage() {
                   <Select
                     value={String(user.templateSettings.padding || 40)}
                     onChange={(e) =>
-                      updateTemplateSettings("padding", parseInt(e.target.value))
+                      updateTemplateSettings(
+                        "padding",
+                        parseInt(e.target.value),
+                      )
                     }
                     options={[
                       { value: "30", label: "Compact (30px)" },
@@ -1335,7 +1383,9 @@ export default function AdminCVPage() {
               </div>
 
               <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">Orden de contenido</Label>
+                <Label className="text-base font-semibold">
+                  Orden de contenido
+                </Label>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1345,7 +1395,10 @@ export default function AdminCVPage() {
                       type="checkbox"
                       checked={user.templateSettings.reverseExperience || false}
                       onChange={(e) =>
-                        updateTemplateSettings("reverseExperience", e.target.checked)
+                        updateTemplateSettings(
+                          "reverseExperience",
+                          e.target.checked,
+                        )
                       }
                       className="w-4 h-4"
                     />
@@ -1358,7 +1411,10 @@ export default function AdminCVPage() {
                       type="checkbox"
                       checked={user.templateSettings.reverseEducation || false}
                       onChange={(e) =>
-                        updateTemplateSettings("reverseEducation", e.target.checked)
+                        updateTemplateSettings(
+                          "reverseEducation",
+                          e.target.checked,
+                        )
                       }
                       className="w-4 h-4"
                     />
@@ -1368,7 +1424,9 @@ export default function AdminCVPage() {
               </div>
 
               <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">Mostrar secciones</Label>
+                <Label className="text-base font-semibold">
+                  Mostrar secciones
+                </Label>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
