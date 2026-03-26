@@ -1113,6 +1113,7 @@ export default function AdminCVPage() {
                   id="newLanguageLevel"
                   className="flex h-10 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
+                  <option value="" disabled hidden>Idioma</option>
                   <option value="Básico">Básico</option>
                   <option value="Intermedio">Intermedio</option>
                   <option value="Avanzado">Avanzado</option>
@@ -1155,6 +1156,7 @@ export default function AdminCVPage() {
                       }
                       className="flex h-10 w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
+                      <option value="" disabled hidden>Nivel</option>
                       <option value="Básico">Básico</option>
                       <option value="Intermedio">Intermedio</option>
                       <option value="Avanzado">Avanzado</option>
@@ -1249,7 +1251,7 @@ export default function AdminCVPage() {
 
               <div>
                 <Label>Color del diseño</Label>
-                <div className="grid grid-cols-4 gap-2 mt-2">
+                <div className="flex flex-wrap gap-3 mt-2">
                   {colorPalette.map((color) => (
                     <button
                       key={color.value}
@@ -1258,7 +1260,7 @@ export default function AdminCVPage() {
                         updateTemplateSettings("primaryColor", color.value)
                       }
                       className={cn(
-                        "h-10 rounded-lg border-2 transition-all",
+                        "h-8 w-8 rounded-full border-2 transition-all",
                         user.templateSettings.primaryColor === color.value
                           ? "border-foreground scale-110"
                           : "border-transparent hover:scale-105",

@@ -83,16 +83,6 @@ export function LocationSelector({
     }
   }, []);
 
-  const notifyChange = useCallback(() => {
-    if (onChange) {
-      onChange({
-        provincia: selectedProvincia,
-        municipio: selectedDepartamento,
-        localidad: selectedLocalidad
-      });
-    }
-  }, [onChange, selectedProvincia, selectedDepartamento, selectedLocalidad]);
-
   const handleProvinciaChange = (newValue: string) => {
     setSelectedProvincia(newValue);
     setSelectedDepartamento("");
@@ -141,7 +131,7 @@ export function LocationSelector({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 col-span-2 gap-2">
       <Select
         value={selectedProvincia}
         onChange={(e) => handleProvinciaChange(e.target.value)}
@@ -155,7 +145,7 @@ export function LocationSelector({
         value={selectedDepartamento}
         onChange={(e) => handleDepartamentoChange(e.target.value)}
         options={[
-          { value: "", label: showLabels ? "Departamento" : "" },
+          { value: "", label: showLabels ? "Municipio" : "" },
           ...departamentos.map((d) => ({ value: d.id, label: d.nombre }))
         ]}
         disabled={disabled || !selectedProvincia}
