@@ -89,7 +89,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       fontStyle: "italic",
     },
     degree: {
-      fontWeight: "bold",
+      fontWeight: "normal",
       fontSize: opts.bodyFontSize,
     },
     dates: {

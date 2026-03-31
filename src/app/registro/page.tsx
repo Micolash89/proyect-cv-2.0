@@ -478,7 +478,7 @@ function RegistroPageContent() {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
-                      <Button
+                      {/* <Button
                         type="button"
                         variant="outline"
                         className="w-full flex items-center justify-center gap-2"
@@ -509,7 +509,7 @@ function RegistroPageContent() {
                           />
                         </svg>
                         Llenar con Google
-                      </Button>
+                      </Button> */}
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>

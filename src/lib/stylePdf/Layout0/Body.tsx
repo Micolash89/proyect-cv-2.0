@@ -41,14 +41,14 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   const educationEntries = user.education.map((edu, index) => (
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{edu.institution}</Text>
+        <Text style={styles.institution}>{edu.degree}</Text>
         <Text style={styles.dates}>
           {parseDate(edu.startDate)} -{" "}
           {edu.current ? "Actualidad" : parseDate(edu.endDate)}
         </Text>
       </View>
       <View style={styles.entryHeader}>
-        <Text style={styles.degree}>{edu.degree}</Text>
+        <Text style={styles.degree}>{edu.institution}</Text>
         <Text style={styles.dates}>{edu.municipio} {edu.localidad}</Text>
       </View>
     </View>

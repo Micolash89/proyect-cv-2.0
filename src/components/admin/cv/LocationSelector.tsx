@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Select } from "@/components/ui/select";
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 
@@ -25,139 +25,147 @@ export function LocationSelector({
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [localidades, setLocalidadess] = useState<Localidad[]>([]);
   
-  const [selectedProvincia, setSelectedProvincia] = useState(value.provincia || "");
-  const [selectedDepartamento, setSelectedDepartamento] = useState(value.municipio || "");
-  const [selectedLocalidad, setSelectedLocalidad] = useState(value.localidad || "");
+  const [selectedProvinciaId, setSelectedProvinciaId] = useState("");
+  const [selectedProvinciaNombre, setSelectedProvinciaNombre] = useState("");
+  const [selectedDepartamentoId, setSelectedDepartamentoId] = useState("");
+  const [selectedDepartamentoNombre, setSelectedDepartamentoNombre] = useState("");
+  const [selectedLocalidadNombre, setSelectedLocalidadNombre] = useState("");
   
-  const isInitialized = useRef(false);
+  const initRef = useRef({ provincia: false, municipio: false, localidad: false });
 
-  // Load provincias on mount
   useEffect(() => {
     const loadProvincias = async () => {
       const data = await getProvincias();
       setProvincias(data);
+      
+      if (value.provincia && !initRef.current.provincia) {
+        const provinciaEncontrada = data.find(p => p.nombre === value.provincia);
+        if (provinciaEncontrada) {
+          setSelectedProvinciaId(provinciaEncontrada.id);
+          setSelectedProvinciaNombre(value.provincia);
+          initRef.current.provincia = true;
+        }
+      }
     };
     loadProvincias();
-  }, []);
+  }, [value.provincia]);
 
-  // Load departamentos when provincia changes
   useEffect(() => {
     const loadDepartamentos = async () => {
-      if (!selectedProvincia) {
+      if (!selectedProvinciaId) {
         setDepartamentos([]);
         setLocalidadess([]);
         return;
       }
-      const data = await getDepartamentos(selectedProvincia);
+      const data = await getDepartamentos(selectedProvinciaId);
       setDepartamentos(data);
+      
+      if (value.municipio && !initRef.current.municipio && selectedProvinciaId) {
+        const deptoEncontrado = data.find(d => d.nombre === value.municipio);
+        if (deptoEncontrado) {
+          setSelectedDepartamentoId(deptoEncontrado.id);
+          setSelectedDepartamentoNombre(value.municipio);
+          initRef.current.municipio = true;
+        }
+      }
     };
     loadDepartamentos();
-  }, [selectedProvincia]);
+  }, [selectedProvinciaId, value.municipio]);
 
-  // Load localidades when provincia or departamento changes
   useEffect(() => {
     const loadLocalidadess = async () => {
-      if (!selectedProvincia) {
+      if (!selectedProvinciaId) {
         setLocalidadess([]);
         return;
       }
-      const data = await getMunicipiosLocalidad(selectedProvincia, selectedDepartamento || undefined);
+      const data = await getMunicipiosLocalidad(selectedProvinciaId, selectedDepartamentoId || undefined);
       setLocalidadess(data);
+      
+      if (value.localidad && !initRef.current.localidad && selectedProvinciaId) {
+        setSelectedLocalidadNombre(value.localidad);
+        initRef.current.localidad = true;
+      }
     };
     loadLocalidadess();
-  }, [selectedProvincia, selectedDepartamento]);
+  }, [selectedProvinciaId, selectedDepartamentoId, value.localidad]);
 
-  // Sync with external value changes (only on initial mount)
-  useEffect(() => {
-    if (!isInitialized.current) {
-      if (value.provincia !== undefined) {
-        setSelectedProvincia(value.provincia);
-      }
-      if (value.municipio !== undefined) {
-        setSelectedDepartamento(value.municipio);
-      }
-      if (value.localidad !== undefined) {
-        setSelectedLocalidad(value.localidad);
-      }
-      isInitialized.current = true;
-    }
-  }, []);
-
-  const handleProvinciaChange = (newValue: string) => {
-    setSelectedProvincia(newValue);
-    setSelectedDepartamento("");
-    setSelectedLocalidad("");
+  const handleProvinciaChange = (nombreProvincia: string) => {
+    setSelectedProvinciaNombre(nombreProvincia);
+    const provincia = provincias.find(p => p.nombre === nombreProvincia);
+    setSelectedProvinciaId(provincia?.id || "");
+    setSelectedDepartamentoId("");
+    setSelectedDepartamentoNombre("");
+    setSelectedLocalidadNombre("");
     setDepartamentos([]);
     setLocalidadess([]);
-    // Notify parent after state update
-    setTimeout(() => {
-      if (onChange) {
-        onChange({
-          provincia: newValue,
-          municipio: "",
-          localidad: ""
-        });
-      }
-    }, 0);
+    initRef.current = { provincia: true, municipio: false, localidad: false };
+    
+    if (onChange) {
+      onChange({
+        provincia: nombreProvincia,
+        municipio: "",
+        localidad: ""
+      });
+    }
   };
 
-  const handleDepartamentoChange = (newValue: string) => {
-    setSelectedDepartamento(newValue);
-    setSelectedLocalidad("");
-    // Notify parent after state update
-    setTimeout(() => {
-      if (onChange) {
-        onChange({
-          provincia: selectedProvincia,
-          municipio: newValue,
-          localidad: ""
-        });
-      }
-    }, 0);
+  const handleDepartamentoChange = (nombreDepartamento: string) => {
+    setSelectedDepartamentoNombre(nombreDepartamento);
+    const departamento = departamentos.find(d => d.nombre === nombreDepartamento);
+    setSelectedDepartamentoId(departamento?.id || "");
+    setSelectedLocalidadNombre("");
+    initRef.current = { provincia: true, municipio: true, localidad: false };
+    
+    if (onChange) {
+      onChange({
+        provincia: selectedProvinciaNombre,
+        municipio: nombreDepartamento,
+        localidad: ""
+      });
+    }
   };
 
-  const handleLocalidadChange = (newValue: string) => {
-    setSelectedLocalidad(newValue);
-    // Notify parent after state update
-    setTimeout(() => {
-      if (onChange) {
-        onChange({
-          provincia: selectedProvincia,
-          municipio: selectedDepartamento,
-          localidad: newValue
-        });
-      }
-    }, 0);
+  const handleLocalidadChange = (nombreLocalidad: string) => {
+    setSelectedLocalidadNombre(nombreLocalidad);
+    initRef.current = { provincia: true, municipio: true, localidad: true };
+    
+    if (onChange) {
+      onChange({
+        provincia: selectedProvinciaNombre,
+        municipio: selectedDepartamentoNombre,
+        localidad: nombreLocalidad
+      });
+    }
   };
 
   return (
     <div className="grid grid-cols-3 col-span-2 gap-2">
       <Select
-        value={selectedProvincia}
+        value={selectedProvinciaNombre}
         onChange={(e) => handleProvinciaChange(e.target.value)}
         options={[
           { value: "", label: showLabels ? "Provincia" : "" },
-          ...provincias.map((p) => ({ value: p.id, label: p.nombre }))
+          ...provincias.map((p) => ({ value: p.nombre, label: p.nombre }))
         ]}
         disabled={disabled}
       />
       <Select
-        value={selectedDepartamento}
+        value={selectedDepartamentoNombre}
         onChange={(e) => handleDepartamentoChange(e.target.value)}
         options={[
           { value: "", label: showLabels ? "Municipio" : "" },
-          ...departamentos.map((d) => ({ value: d.id, label: d.nombre }))
+          ...departamentos.map((d) => ({ value: d.nombre, label: d.nombre }))
         ]}
-        disabled={disabled || !selectedProvincia}
+        disabled={disabled || !selectedProvinciaId}
       />
       <Select
-        value={selectedLocalidad}
+        value={selectedLocalidadNombre}
         onChange={(e) => handleLocalidadChange(e.target.value)}
         options={[
           { value: "", label: showLabels ? "Localidad" : "" },
-          ...localidades.map((l) => ({ value: l.id, label: l.nombre }))
+          ...localidades.map((l) => ({ value: l.nombre, label: l.nombre }))
         ]}
-        disabled={disabled || !selectedProvincia}
+        disabled={disabled || !selectedProvinciaId}
       />
     </div>
   );

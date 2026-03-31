@@ -41,6 +41,7 @@ import type {
 } from "@/types";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
+import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import {
   getProvincias,
   getDepartamentos,
@@ -491,6 +492,23 @@ export default function AdminCVPage() {
     setUser({ ...user, [field]: value });
   };
 
+  const updatePersonalLocation = (location: { provincia: string; municipio: string; localidad: string }) => {
+    if (!user) return;
+    const locationString = [location.localidad || location.municipio, location.provincia]
+      .filter(Boolean)
+      .join(", ");
+    setUser({ 
+      ...user, 
+      provincia: location.provincia,
+      municipio: location.municipio,
+      localidad: location.localidad,
+      location: locationString 
+    });
+    setSelectedProvincia(location.provincia);
+    setSelectedDepartamento(location.municipio);
+    setSelectedLocalidad(location.localidad);
+  };
+
   const updateTemplateSettings = (field: string, value: any) => {
     if (!user) return;
     setUser({
@@ -825,40 +843,16 @@ export default function AdminCVPage() {
               </div>
               <div>
                 <Label>Ubicación</Label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  <select
-                    value={selectedProvincia}
-                    onChange={(e) => handleProvinciaChange(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Provincia</option>
-                    {provincias.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedDepartamento}
-                    onChange={(e) => handleDepartamentoChange(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!selectedProvincia}
-                  >
-                    <option value="">Municipio</option>
-                    {departamentos.map((d) => (
-                      <option key={d.id} value={d.nombre}>
-                        {d.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedLocalidad}
-                    onChange={(e) => handleLocalidadChange(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!selectedProvincia}
-                  >
-                    <option value="">Localidad</option>
-                  </select>
+                <div className="mt-2">
+                  <LocationSelector
+                    value={{
+                      provincia: user?.provincia || "",
+                      municipio: user?.municipio || "",
+                      localidad: user?.localidad || "",
+                    }}
+                    onChange={updatePersonalLocation}
+                    showLabels={true}
+                  />
                 </div>
               </div>
               <div>
