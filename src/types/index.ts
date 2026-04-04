@@ -128,6 +128,9 @@ export interface UserCV {
   disponibilidad?: string;
   office?: boolean;
   links?: string;
+  provincia?: string;
+  municipio?: string;
+  localidad?: string;
 }
 
 export interface Admin {
