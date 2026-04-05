@@ -860,9 +860,9 @@ export default function AdminNewCVPage() {
                         />
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {formData.skills.map((skill) => (
+                        {formData.skills.map((skill, index) => (
                           <Badge
-                            key={skill}
+                            key={`${skill}-${index}`}
                             variant="secondary"
                             className="cursor-pointer"
                             onClick={() => removeSkill(skill)}

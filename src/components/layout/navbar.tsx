@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { FileText, Menu, X } from "lucide-react";
+import { FileText, Menu, X, Home, PlusCircle, LogIn } from "lucide-react";
 import { useState } from "react";
 
 export function Navbar() {
@@ -17,15 +17,24 @@ export function Navbar() {
           <span className="text-xl font-bold">CV Generator</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            Inicio
+        <nav className="hidden md:flex items-center gap-2">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Button>
           </Link>
           <Link href="/registro">
-            <Button size="sm">Crear CV</Button>
+            <Button size="sm" className="gap-2">
+              <PlusCircle className="h-4 w-4" />
+              <span>Crear CV</span>
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button variant="outline" size="sm" className="gap-2">
+              <LogIn className="h-4 w-4" />
+              <span>Login</span>
+            </Button>
           </Link>
           <ThemeToggle />
         </nav>
@@ -44,20 +53,30 @@ export function Navbar() {
 
       {isOpen && (
         <div className="border-t md:hidden">
-          <nav className="container mx-auto flex flex-col gap-4 p-4">
+          <nav className="container mx-auto flex flex-col gap-2 p-4">
             <Link
               href="/"
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
-              Inicio
+              <Home className="h-4 w-4" />
+              Home
             </Link>
             <Link
               href="/registro"
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
+              <PlusCircle className="h-4 w-4" />
               Crear CV
+            </Link>
+            <Link
+              href="/login"
+              className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              <LogIn className="h-4 w-4" />
+              Login
             </Link>
           </nav>
         </div>

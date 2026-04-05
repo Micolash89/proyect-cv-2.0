@@ -1,18 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { getSession, logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
-  FileText, Settings, LogOut, Search, Filter,
-  Eye, CheckCircle, Clock, XCircle
+  FileText, Settings, LogOut, Home, PlusCircle
 } from "lucide-react";
-import { formatDate } from "@/lib/utils/cn";
-import type { UserCV, CVStatus } from "@/types";
 
 export default async function AdminLayout({
   children,
@@ -39,7 +32,19 @@ export default async function AdminLayout({
             <span className="text-xl font-bold">CV Admin</span>
           </Link>
 
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
+            </Link>
+            <Link href="/admin/cv/new">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <PlusCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Crear CV</span>
+              </Button>
+            </Link>
             <Link href="/admin/settings">
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/hooks/useTheme";
-import { Navbar } from "@/components/layout/navbar";
+import { NavbarWrapper } from "@/components/layout/navbar-wrapper";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -149,7 +149,7 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
-          <Navbar />
+          <NavbarWrapper />
           <main className="min-h-screen">{children}</main>
           <Toaster position="top-right" />
         </ThemeProvider>

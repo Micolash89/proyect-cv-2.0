@@ -1078,9 +1078,9 @@ export default function AdminCVPage() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
-                {user.skills.map((skill: string) => (
+                {user.skills.map((skill: string, index: number) => (
                   <Badge
-                    key={skill}
+                    key={`${skill}-${index}`}
                     variant="secondary"
                     className="cursor-pointer"
                     onClick={() => removeSkill(skill)}

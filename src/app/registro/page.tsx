@@ -948,9 +948,9 @@ function RegistroPageContent() {
                   <div>
                     <Label>Habilidades</Label>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.skills.map((skill) => (
+                      {formData.skills.map((skill, index) => (
                         <Badge
-                          key={skill}
+                          key={`${skill}-${index}`}
                           variant="secondary"
                           className="cursor-pointer"
                           onClick={() => removeSkill(skill)}
