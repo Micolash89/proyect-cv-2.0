@@ -435,8 +435,8 @@ export default function AdminCVPage() {
       toast.error("El archivo debe ser una imagen");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen debe ser menor a 5MB");
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 1MB");
       return;
     }
 
@@ -1538,6 +1538,9 @@ export default function AdminCVPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Arrastra una imagen o haz clic para seleccionar
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG hasta 1MB
                 </p>
                 {(user.photo || photoPreview) && (
                   <Button

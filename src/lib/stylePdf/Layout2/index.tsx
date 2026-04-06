@@ -1,8 +1,10 @@
 import React from "react";
-import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
+import { Document, Page, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF, DEFAULT_OPTIONS_PDF } from "../definitions";
 import { registerFonts } from "../fonts";
+import { Layout2Header } from "./Header";
+import { Layout2Body } from "./Body";
 import { createLayout2Styles } from "./styles";
 
 interface Layout2Props {
@@ -10,107 +12,18 @@ interface Layout2Props {
   options?: Partial<OptionsPDF>;
 }
 
-const parseDate = (dateStr: string | undefined) => {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getFullYear()}`;
-  } catch {
-    return dateStr;
-  }
-};
-
 export const Layout2: React.FC<Layout2Props> = ({ user, options }) => {
   registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout2Styles(opts);
 
-  const fullNameText = options?.fullName 
-    ? user.fullName 
-    : user.fullName.split(" ").slice(0, 2).join(" ");
-
-  const experienceEntries = user.experience.map((exp, index) => (
-    <View key={index} style={styles.entryContainer}>
-      <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{exp.company}</Text>
-        <Text style={styles.dates}>
-          {parseDate(exp.startDate)} - {exp.current ? "Actualidad" : parseDate(exp.endDate)}
-        </Text>
-      </View>
-      <Text style={styles.degree}>{exp.position}</Text>
-      {exp.description && <Text style={styles.description}>{exp.description}</Text>}
-    </View>
-  ));
-
-  const educationEntries = user.education.map((edu, index) => (
-    <View key={index} style={styles.entryContainer}>
-      <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{edu.institution}</Text>
-        <Text style={styles.dates}>
-          {parseDate(edu.startDate)} - {parseDate(edu.endDate)}
-        </Text>
-      </View>
-      <Text style={styles.degree}>{edu.degree}</Text>
-    </View>
-  ));
-
-  const orderedExperience = opts.reverseExperience 
-    ? [...experienceEntries].reverse() 
-    : experienceEntries;
-
-  const orderedEducation = opts.reverseEducation 
-    ? [...educationEntries].reverse() 
-    : educationEntries;
+  const documentTitle = opts.fullName ? user.fullName : user.fullName.split(" ").slice(0, 2).join(" ");
 
   return (
-    <Document title={`CV - ${user.fullName}`}>
+    <Document title={`CV - ${documentTitle}`}>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.name}>{fullNameText}</Text>
-          <View style={styles.contactInfo}>
-            {user.location && <Text>{user.location}</Text>}
-            {user.phone && <Text>{user.phone}</Text>}
-            {user.email && <Text>{user.email}</Text>}
-          </View>
-        </View>
-
-        {opts.showPhoto && user.photo && (
-          <View style={styles.photoContainer}>
-            <Image src={user.photo} style={styles.photo} />
-          </View>
-        )}
-
-        {opts.showSummary && user.summary && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PERFIL PROFESIONAL</Text>
-            <Text style={styles.summary}>{user.summary}</Text>
-          </View>
-        )}
-
-        {user.experience.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>EXPERIENCIA LABORAL</Text>
-            {orderedExperience}
-          </View>
-        )}
-
-        {user.education.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>FORMACIÓN ACADÉMICA</Text>
-            {orderedEducation}
-          </View>
-        )}
-
-        {opts.showSkills && user.skills.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>HABILIDADES</Text>
-            <View style={styles.skills}>
-              {user.skills.map((skill, index) => (
-                <Text key={index} style={styles.skill}>{skill}</Text>
-              ))}
-            </View>
-          </View>
-        )}
+        <Layout2Header user={user} options={opts} />
+        <Layout2Body user={user} options={opts} />
       </Page>
     </Document>
   );

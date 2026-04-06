@@ -1,8 +1,8 @@
 import React from "react";
-import { View, Text, Image } from "@react-pdf/renderer";
+import { Image, Text, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
-import { createLayout1Styles } from "./styles";
+import { createLayout2Styles } from "./styles";
 
 interface HeaderProps {
   user: UserCV;
@@ -20,8 +20,8 @@ const buildLocationLabel = (user: UserCV) => {
   return user.location || "";
 };
 
-export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
-  const styles = createLayout1Styles(options);
+export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
+  const styles = createLayout2Styles(options);
 
   const fullNameText = options.fullName
     ? user.fullName
@@ -30,6 +30,7 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
   const [firstName, ...lastNameParts] = fullNameText.split(" ");
   const lastName = lastNameParts.join(" ");
   const profession = user.targetJob || user.experience[0]?.position || "";
+
   const contactItems = [
     user.fechaNacimiento,
     user.dni ? `DNI: ${user.dni}` : "",
@@ -39,68 +40,69 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
   ].filter(Boolean);
 
   const additionalInfoItems = [
-    user.licencia ? `• ${user.licencia}` : "",
-    formatBooleanValue(user.movilidad, "• Vehículo propio", "• Sin movilidad"),
-    formatBooleanValue(user.office, "• Jornada oficina", "• Modalidad flexible"),
-    user.disponibilidad ? `• ${user.disponibilidad}` : "",
-    user.incorporacion ? `• ${user.incorporacion}` : "",
-    user.links ? `• ${user.links}` : "",
+    formatBooleanValue(user.movilidad, "Vehiculo propio", "Sin movilidad"),
+    user.disponibilidad || "",
+    formatBooleanValue(user.office, "Jornada completa", "Modalidad flexible"),
+    user.licencia || "",
+    user.incorporacion || "",
   ].filter(Boolean);
 
   return (
-    <View style={styles.sidebar}>
+    <View style={styles.leftColumn}>
       {options.showPhoto && user.photo && (
-        <View style={{ marginBottom: 15 }}>
+        <View style={styles.profileImageWrapper}>
           {/* React PDF's Image is not an HTML img element, so alt-text does not apply here. */}
           {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={user.photo} style={styles.profileImage} />
         </View>
       )}
-      
-      <Text style={styles.sidebarName}>{firstName}</Text>
-      <Text style={styles.sidebarName}>{lastName}</Text>
+
+      <Text style={styles.name}>{firstName}</Text>
+      <Text style={styles.name}>{lastName}</Text>
       {profession && <Text style={styles.profession}>{profession}</Text>}
 
-      <View style={styles.sidebarContact}>
+      <View style={styles.sidebarContactGroup}>
         {contactItems.map((item, index) => (
-          <Text key={index} style={styles.sidebarContactItem}>
+          <Text key={index} style={styles.contactItem}>
             {item}
           </Text>
         ))}
       </View>
 
       {options.showSkills && user.skills.length > 0 && (
-        <>
-          <Text style={styles.sidebarSectionTitle}>HABILIDADES</Text>
+        <View style={styles.sidebarSection}>
+          <Text style={styles.sidebarSectionTitle}>Habilidades</Text>
           {user.skills.map((skill, index) => (
-            <Text key={index} style={styles.skillItem}>• {skill}</Text>
+            <Text key={index} style={styles.skillPill}>
+              {skill}
+            </Text>
           ))}
-        </>
+        </View>
       )}
 
       {options.showLanguages && user.languages.length > 0 && (
-        <>
-          <Text style={styles.sidebarSectionTitle}>IDIOMAS</Text>
+        <View style={styles.sidebarSection}>
+          <Text style={styles.sidebarSectionTitle}>Idiomas</Text>
           {user.languages.map((lang, index) => (
-            <Text key={index} style={styles.skillItem}>
-              • {lang.language} - {lang.level}
+            <Text key={index} style={styles.sidebarListItem}>
+              {lang.language} - {lang.level}
             </Text>
           ))}
-        </>
+        </View>
       )}
 
       {additionalInfoItems.length > 0 && (
-        <>
-          <Text style={styles.sidebarSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+        <View style={styles.sidebarSection}>
+          <Text style={styles.sidebarSectionTitle}>Información Adicional</Text>
           {additionalInfoItems.map((item, index) => (
-            <Text key={index} style={styles.additionalInfoItem}>
+            <Text key={index} style={styles.sidebarListItem}>
               {item}
             </Text>
           ))}
-        </>
+        </View>
       )}
     </View>
   );
 };
 
-export default Layout1Header;
+export default Layout2Header;

@@ -52,6 +52,12 @@ export async function extractFromCV(file: File): Promise<any> {
   return provider.extractFromCV(file);
 }
 
+export async function extractFromText(text: string): Promise<any> {
+  const provider = await getIAProvider();
+  if (!provider) throw new Error("No IA provider configured");
+  return provider.extractFromText(text);
+}
+
 export async function generateSkills(
   experience: any[],
   education: any[],

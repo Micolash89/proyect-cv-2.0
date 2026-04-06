@@ -159,6 +159,57 @@ Responde SOLO con el JSON, sin texto adicional.
     throw new Error("Could not extract data from CV");
   }
 
+  async extractFromText(text: string): Promise<Partial<CVFormData>> {
+    if (!this.client) throw new Error("Gemini not configured");
+
+    const prompt = `
+Eres un asistente que extrae información de currículums. Analiza el siguiente texto que contiene datos de un CV 
+y extrae los siguientes datos en formato JSON:
+
+{
+  "fullName": "nombre completo",
+  "email": "correo electrónico",
+  "phone": "teléfono",
+  "location": "ubicación",
+  "summary": "perfil profesional",
+  "experience": [
+    {
+      "company": "empresa",
+      "position": "puesto",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin o 'actual'",
+      "current": true/false,
+      "description": "descripción de funciones"
+    }
+  ],
+  "education": [
+    {
+      "institution": "institución",
+      "degree": "título",
+      "field": "campo de estudio",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin"
+    }
+  ],
+  "skills": ["skill1", "skill2"],
+  "languages": [{"language": "idioma", "level": "nivel"}]
+}
+
+Texto del CV:
+${text}
+
+Responde SOLO con el JSON, sin texto adicional.
+`;
+
+    const result = await this.client.generateContent(prompt);
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error("Could not extract data from text");
+  }
+
   async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {
     const experienceText = experience.map((e) => `${e.position} en ${e.company}`).join("\n");
     const educationText = education.map((e) => `${e.degree} en ${e.institution}`).join("\n");
@@ -268,6 +319,62 @@ El perfil debe:
     throw new Error("Claude does not support file vision in the free tier");
   }
 
+  async extractFromText(text: string): Promise<Partial<CVFormData>> {
+    if (!this.client) throw new Error("Claude not configured");
+
+    const prompt = `
+Eres un asistente que extrae información de currículums. Analiza el siguiente texto que contiene datos de un CV 
+y extrae los siguientes datos en formato JSON:
+
+{
+  "fullName": "nombre completo",
+  "email": "correo electrónico",
+  "phone": "teléfono",
+  "location": "ubicación",
+  "summary": "perfil profesional",
+  "experience": [
+    {
+      "company": "empresa",
+      "position": "puesto",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin o 'actual'",
+      "current": true/false,
+      "description": "descripción de funciones"
+    }
+  ],
+  "education": [
+    {
+      "institution": "institución",
+      "degree": "título",
+      "field": "campo de estudio",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin"
+    }
+  ],
+  "skills": ["skill1", "skill2"],
+  "languages": [{"language": "idioma", "level": "nivel"}]
+}
+
+Texto del CV:
+${text}
+
+Responde SOLO con el JSON, sin texto adicional.
+`;
+
+    const result = await this.client.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const responseText = result.content[0].type === "text" ? result.content[0].text : "";
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error("Could not extract data from text");
+  }
+
   async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {
     const experienceText = experience.map((e) => `${e.position} en ${e.company}`).join("\n");
     const educationText = education.map((e) => `${e.degree} en ${e.institution}`).join("\n");
@@ -373,6 +480,60 @@ El perfil debe:
 
   async extractFromCV(file: File): Promise<Partial<CVFormData>> {
     throw new Error("Groq no soporta extracción de CV desde archivo. Usá Gemini para esta función.");
+  }
+
+  async extractFromText(text: string): Promise<Partial<CVFormData>> {
+    const prompt = `
+Eres un asistente que extrae información de currículums. Analiza el siguiente texto que contiene datos de un CV 
+y extrae los siguientes datos en formato JSON:
+
+{
+  "fullName": "nombre completo",
+  "email": "correo electrónico",
+  "phone": "teléfono",
+  "location": "ubicación",
+  "summary": "perfil profesional",
+  "experience": [
+    {
+      "company": "empresa",
+      "position": "puesto",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin o 'actual'",
+      "current": true/false,
+      "description": "descripción de funciones"
+    }
+  ],
+  "education": [
+    {
+      "institution": "institución",
+      "degree": "título",
+      "field": "campo de estudio",
+      "startDate": "fecha inicio",
+      "endDate": "fecha fin"
+    }
+  ],
+  "skills": ["skill1", "skill2"],
+  "languages": [{"language": "idioma", "level": "nivel"}]
+}
+
+Texto del CV:
+${text}
+
+Responde SOLO con el JSON, sin texto adicional.
+`;
+
+    const result = await this.client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2000,
+    });
+
+    const responseText = result.choices[0]?.message?.content || "";
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error("Could not extract data from text");
   }
 
   async generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]> {

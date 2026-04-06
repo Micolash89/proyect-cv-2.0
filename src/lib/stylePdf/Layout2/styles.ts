@@ -2,87 +2,133 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout2Styles = (opts: OptionsPDF) => {
+  const sidebarBackground = opts.headerBackground || opts.primaryColor;
+
   return StyleSheet.create({
     page: {
-      fontFamily: "Roboto",
+      fontFamily: opts.fontFamily,
       flexDirection: "row",
+      backgroundColor: "#F3F4F6",
     },
     leftColumn: {
-      width: "30%",
+      width: "29%",
       color: "white",
-      paddingVertical: 20,
-      paddingHorizontal: 10,
-      backgroundColor: opts.primaryColor,
+      paddingVertical: 18,
+      paddingHorizontal: 8,
+      backgroundColor: sidebarBackground,
     },
     rightColumn: {
-      width: "70%",
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 0,
+      width: "71%",
+      paddingHorizontal: 18,
+      paddingTop: 18,
+      paddingBottom: 10,
       flexDirection: "column",
       display: "flex",
     },
+    profileImageWrapper: {
+      alignItems: "center",
+      marginBottom: 12,
+    },
     profileImage: {
-      borderRadius: 50,
-      marginBottom: 20,
+      borderRadius: 56,
+      marginBottom: 16,
       objectFit: "cover",
       alignSelf: "center",
-      width: 100,
-      height: 100,
+      width: 112,
+      height: 112,
+      borderWidth: 3,
+      borderColor: "#D4A45D",
     },
     name: {
       fontWeight: "bold",
       fontSize: opts.headerFontSize,
       textAlign: "center",
-      marginBottom: 5,
+      marginBottom: 2,
       color: "#FFFFFF",
     },
-    contactInfo: {
-      marginBottom: 10,
+    sidebarContactGroup: {
+      marginTop: 8,
+      marginBottom: 8,
     },
     profession: {
       textAlign: "center",
       fontSize: opts.bodyFontSize + 2,
-      marginBottom: 5,
+      marginBottom: 10,
       color: "#FFFFFF",
+      textTransform: "lowercase",
     },
     contactItem: {
       fontSize: opts.bodyFontSize - 1,
       color: "#FFFFFF",
       marginBottom: 3,
     },
+    sidebarSection: {
+      marginTop: 10,
+    },
+    sidebarSectionTitle: {
+      fontWeight: "bold",
+      fontSize: opts.bodyFontSize + 4,
+      color: "#FFFFFF",
+      borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.7)",
+      paddingBottom: 4,
+      marginBottom: 8,
+    },
+    sidebarListItem: {
+      fontSize: opts.bodyFontSize,
+      color: "#FFFFFF",
+      marginBottom: 3,
+      lineHeight: 1.3,
+    },
+    skillPill: {
+      alignSelf: "flex-start",
+      backgroundColor: "#77849A",
+      color: "#FFFFFF",
+      borderRadius: 9,
+      fontSize: opts.bodyFontSize - 2,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      marginBottom: 5,
+    },
     sectionTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 3,
-      marginTop: 15,
-      marginBottom: 10,
-      paddingBottom: 5,
-      color: opts.primaryColor,
+      marginTop: 0,
+      marginBottom: 8,
+      paddingBottom: 4,
+      color: "#5E6470",
       borderBottomWidth: 1,
-      borderBottomColor: "#e5e7eb",
+      borderBottomColor: "#C7CDD6",
     },
     entryContainer: {
-      marginBottom: 7,
+      marginBottom: 11,
     },
     entryHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 2,
+      marginBottom: 1,
+    },
+    entryMeta: {
+      alignItems: "flex-end",
+      maxWidth: "42%",
     },
     institution: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 1,
+      color: "#121212",
+      maxWidth: "58%",
     },
     location: {
-      color: "#7F8C8D",
+      color: "#748092",
       fontSize: opts.bodyFontSize - 1,
     },
     degree: {
       fontStyle: "italic",
       fontSize: opts.bodyFontSize,
+      color: "#1D1D1D",
     },
     dates: {
-      color: "#7F8C8D",
+      color: "#748092",
       fontSize: opts.bodyFontSize - 1,
     },
     description: {
@@ -90,6 +136,32 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       marginTop: 4,
       color: "#4A5568",
       lineHeight: 1.4,
+    },
+    bulletItem: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: 2,
+      marginLeft: 6,
+    },
+    bulletDot: {
+      width: 8,
+      fontSize: opts.bodyFontSize + 2,
+      lineHeight: 1,
+      color: "#111111",
+    },
+    bulletText: {
+      flex: 1,
+      fontSize: opts.bodyFontSize,
+      lineHeight: 1.3,
+      color: "#1F1F1F",
+    },
+    summary: {
+      color: "#0F1115",
+      lineHeight: 1.35,
+      marginBottom: 10,
+    },
+    section: {
+      marginBottom: 10,
     },
     skills: {
       flexDirection: "row",
@@ -105,9 +177,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       borderRadius: 10,
       fontSize: opts.bodyFontSize - 2,
     },
-    summary: {
-      color: "#4A5568",
-      lineHeight: 1.5,
+    contactInfo: {
       marginBottom: 10,
     },
     header: {
@@ -126,9 +196,6 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       height: 70,
       borderRadius: 35,
       objectFit: "cover",
-    },
-    section: {
-      marginTop: 12,
     },
   });
 };

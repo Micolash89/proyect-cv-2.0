@@ -34,9 +34,4 @@ export const templates = [
     name: "Elegante",
     img: "/templates/template-6.jpg",
   },
-  {
-    id: "layout7",
-    name: "Moderno",
-    img: "/templates/template-7.png",
-  },
 ];

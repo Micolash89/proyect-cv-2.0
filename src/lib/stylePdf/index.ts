@@ -5,5 +5,4 @@ export { Layout3 } from "./Layout3/index";
 export { Layout4 } from "./Layout4/index";
 export { Layout5 } from "./Layout5/index";
 export { Layout6 } from "./Layout6/index";
-export { Layout7 } from "./Layout7/index";
 export { DEFAULT_OPTIONS_PDF, type OptionsPDF } from "./definitions";

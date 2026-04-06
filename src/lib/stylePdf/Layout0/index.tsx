@@ -16,9 +16,10 @@ export const Layout0: React.FC<Layout0Props> = ({ user, options }) => {
   registerFonts();
   const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout0Styles(opts);
+  const documentTitle = opts.fullName ? user.fullName : user.fullName.split(" ").slice(0, 2).join(" ");
 
   return (
-    <Document title={`CV - ${user.fullName}`}>
+    <Document title={`CV - ${documentTitle}`}>
       <Page size="A4" style={styles.page}>
         <Layout0Header user={user} options={opts} />
         <Layout0Body user={user} options={opts} />

@@ -2,12 +2,17 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout4Styles = (opts: OptionsPDF) => {
+  const bodyPaddingX = Math.max(16, Math.round(opts.bodyPadding * 0.45));
+  const bodyPaddingY = Math.max(12, Math.round(opts.bodyPadding * 0.35));
+  const headerPadding = Math.max(12, Math.round(opts.headerPadding * 0.35));
+
   return StyleSheet.create({
     page: {
-      fontFamily: "Helvetica",
-      paddingHorizontal: 20,
-      paddingTop: 10,
-      paddingBottom: 0,
+      fontFamily: opts.fontFamily,
+      paddingHorizontal: bodyPaddingX,
+      paddingTop: bodyPaddingY,
+      paddingBottom: bodyPaddingY,
+      backgroundColor: "#F4F4F4",
     },
     container: {
       flexDirection: "row",
@@ -17,162 +22,143 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       width: "35%",
       paddingRight: 20,
       borderRightWidth: 1,
-      borderRightColor: "#DDDDDD",
+      borderRightColor: "#D8D8D8",
+      paddingTop: headerPadding,
     },
     rightColumn: {
       width: "65%",
       paddingLeft: 20,
+      paddingTop: headerPadding,
     },
-    header: {
-      marginBottom: 20,
-    },
-    name: {
-      fontSize: opts.headerFontSize,
-      letterSpacing: 2,
-      textTransform: "uppercase",
-      color: "#333333",
-      fontWeight: "bold",
-    },
-    title: {
-      fontSize: opts.bodyFontSize + 2,
-      letterSpacing: 1,
-      color: "#666666",
-      textTransform: "uppercase",
-      marginBottom: 20,
-    },
-    contactInfo: {
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: 2,
-    },
-    contactItem: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 5,
-      color: "#444444",
-    },
-    section: {
-      marginTop: 15,
-    },
-    sectionTitle: {
-      fontSize: opts.bodyFontSize + 1,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-      marginBottom: 10,
-      color: "#333333",
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDDDDD",
-      paddingBottom: 5,
-      fontWeight: "bold",
-    },
-    skillItem: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 5,
-      color: "#444444",
-    },
-    languageItem: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 5,
-      color: "#444444",
-    },
-    profileSummary: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 15,
-      lineHeight: 1.4,
-      color: "#444444",
-      textAlign: "justify",
-    },
-    experienceEntry: {
-      marginBottom: 10,
-    },
-    entryContainer: {
-      marginBottom: 10,
-    },
-    entryHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 2,
-    },
-    institution: {
-      fontWeight: "bold",
-      fontSize: opts.bodyFontSize + 1,
-      color: "#333333",
-    },
-    jobTitle: {
-      fontWeight: "medium",
-      fontSize: opts.bodyFontSize,
-      color: "#444444",
-      marginBottom: 3,
-    },
-    dateLocation: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#666666",
-      marginBottom: 5,
-    },
-    description: {
-      fontSize: opts.bodyFontSize,
-      lineHeight: 1.4,
-      color: "#444444",
-      marginBottom: 5,
-    },
-    educationEntry: {
-      marginBottom: 5,
-    },
-    institutionName: {
-      fontWeight: "bold",
-      fontSize: opts.bodyFontSize,
-      color: "#333333",
-    },
-    degree: {
-      fontSize: opts.bodyFontSize,
-      color: "#444444",
-      marginBottom: 2,
-    },
-    gpa: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#666666",
-    },
-    divider: {
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDDDDD",
-      marginVertical: 10,
+    photoWrap: {
+      marginBottom: 16,
+      alignItems: "center",
     },
     profileImage: {
-      borderRadius: 50,
-      marginBottom: 20,
-      height: 150,
-      alignSelf: "center",
+      borderRadius: 52,
+      height: 104,
+      width: 104,
+      alignSelf: "flex-start",
       objectFit: "cover",
-      width: 120,
     },
-    profession: {
-      textAlign: "center",
-      marginBottom: 5,
+    leftSectionTitle: {
+      fontSize: opts.bodyFontSize + 5,
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      marginBottom: 8,
+      color: "#172538",
+      borderBottomWidth: 1,
+      borderBottomColor: "#D6D6D6",
+      paddingBottom: 4,
+      fontWeight: "medium",
+    },
+    leftText: {
+      fontSize: opts.bodyFontSize + 1,
+      marginBottom: 2,
+      color: "#2F3B4A",
+      lineHeight: 1.3,
+    },
+    leftMeta: {
       fontSize: opts.bodyFontSize,
-      color: "#666666",
+      color: "#657184",
+      marginBottom: 2,
     },
-    skills: {
+    leftItemGroup: {
+      marginBottom: 6,
+    },
+    leftItemTitle: {
+      fontWeight: "medium",
+      color: "#1C2736",
+      fontSize: opts.bodyFontSize + 1,
+      lineHeight: 1.25,
+    },
+    leftBulletItem: {
+      fontSize: opts.bodyFontSize + 1,
+      marginBottom: 2,
+      color: "#2F3B4A",
+      lineHeight: 1.3,
+    },
+    nameHeader: {
+      marginBottom: 8,
+      paddingBottom: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: "#D9D9D9",
+      position: "relative",
+      minHeight: 72,
+      justifyContent: "flex-start",
+    },
+    name: {
+      fontSize: opts.headerFontSize + 8,
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      color: "#172538",
+      fontWeight: "medium",
+    },
+    watermarkSurname: {
+      position: "absolute",
+      right: 6,
+      top: -2,
+      fontFamily: "Quensialy",
+      fontSize: opts.headerFontSize + 42,
+      color: "#C7C7C7",
+    },
+    section: {
+      marginTop: 12,
+    },
+    sectionTitle: {
+      fontSize: opts.bodyFontSize + 5,
+      letterSpacing: 1.3,
+      textTransform: "uppercase",
+      marginBottom: 8,
+      color: "#172538",
+      borderBottomWidth: 1,
+      borderBottomColor: "#D6D6D6",
+      paddingBottom: 4,
+      fontWeight: "medium",
+    },
+    entryContainer: {
+      marginBottom: 12,
+    },
+    entryTitle: {
+      fontSize: opts.bodyFontSize + 4,
+      color: "#1D2738",
+      fontWeight: "medium",
+      marginBottom: 1,
+    },
+    entrySubtitle: {
+      fontWeight: "medium",
+      fontSize: opts.bodyFontSize + 2,
+      color: "#273549",
+      marginBottom: 1,
+    },
+    entryMeta: {
+      fontSize: opts.bodyFontSize + 1,
+      color: "#687488",
+      marginBottom: 2,
+    },
+    bulletItem: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      marginTop: 5,
-      gap: 4,
+      alignItems: "flex-start",
+      marginLeft: 2,
+      marginBottom: 1,
     },
-    skill: {
-      backgroundColor: "#a3a3a3",
-      color: "white",
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 10,
-      fontSize: opts.bodyFontSize - 2,
+    bulletDot: {
+      width: 8,
+      fontSize: opts.bodyFontSize + 2,
+      lineHeight: 1,
+      color: "#29384B",
+    },
+    bulletText: {
+      flex: 1,
+      fontSize: opts.bodyFontSize + 1,
+      color: "#29384B",
+      lineHeight: 1.32,
     },
     summary: {
-      color: "#444444",
-      lineHeight: 1.5,
-      fontSize: opts.bodyFontSize,
-      marginBottom: 10,
-    },
-    dates: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#666666",
+      color: "#2F3B4A",
+      lineHeight: 1.35,
+      fontSize: opts.bodyFontSize + 1,
+      marginBottom: 8,
     },
   });
 };

@@ -7,7 +7,6 @@ import { Layout3 } from "@/lib/stylePdf/Layout3/index";
 import { Layout4 } from "@/lib/stylePdf/Layout4/index";
 import { Layout5 } from "@/lib/stylePdf/Layout5/index";
 import { Layout6 } from "@/lib/stylePdf/Layout6/index";
-import { Layout7 } from "@/lib/stylePdf/Layout7/index";
 import { DEFAULT_OPTIONS_PDF } from "@/lib/stylePdf/definitions";
 
 interface CVTemplateProps {
@@ -22,11 +21,17 @@ const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
     creative: Layout3,
     minimal: Layout4,
     professional: Layout5,
+    layout6: Layout6,
     elegant: Layout6,
-    modernPlus: Layout7,
   };
 
-  const SelectedLayout = templateMap[user.selectedTemplate] || Layout0;
+  const templateAliases: Record<string, string> = {
+    elegant: "layout6",
+  };
+
+  const selectedTemplateId = templateAliases[user.selectedTemplate] || user.selectedTemplate;
+
+  const SelectedLayout = templateMap[selectedTemplateId] || Layout0;
   
   const templateSettings = user.templateSettings || {};
   

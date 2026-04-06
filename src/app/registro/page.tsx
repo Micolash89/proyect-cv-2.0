@@ -360,8 +360,8 @@ function RegistroPageContent() {
 
   const handlePhotoUpload = (file: File) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen debe ser menor a 5MB");
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 1MB");
       return;
     }
 
@@ -732,7 +732,7 @@ function RegistroPageContent() {
                           Arrastra una imagen o haz clic para seleccionar
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          PNG, JPG hasta 5MB
+                          PNG, JPG hasta 1MB
                         </p>
                       </div>
                     </motion.div>
@@ -1120,11 +1120,6 @@ function RegistroPageContent() {
                           id: "layout6",
                           name: "Elegante",
                           img: "/templates/template-6.jpg",
-                        },
-                        {
-                          id: "layout7",
-                          name: "Contemporáneo",
-                          img: "/templates/template-7.png",
                         },
                       ].map((template) => (
                         <button

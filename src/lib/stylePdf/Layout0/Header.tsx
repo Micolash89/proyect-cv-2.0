@@ -12,30 +12,33 @@ export interface HeaderProps {
 export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
   const styles = createLayout0Styles(options);
 
-  const fullNameText = options.fullName 
-    ? user.fullName 
+  const fullNameText = options.fullName
+    ? user.fullName
     : user.fullName.split(" ").slice(0, 2).join(" ");
 
+  const locationLabel = [user.localidad, user.provincia].filter(Boolean).join(", ") || user.location;
+  const contactItems = [
+    locationLabel,
+    user.linkedin,
+    user.phone,
+    user.email,
+  ].filter(Boolean);
+
   return (
-    <View style={styles.header} fixed={false}>
+    <View style={styles.header}>
       <View style={styles.headerInfo}>
         <Text style={styles.name}>{fullNameText}</Text>
         <View style={styles.contactInfo}>
-          {user.location && (
-            <Text style={styles.contactItem}>{user.location}</Text>
-          )}
-          {user.phone && (
-            <Text style={styles.contactItem}>{user.location && "·"} {user.phone}</Text>
-          )}
-          {user.email && (
-            <Text style={styles.contactItem}>· {user.email}</Text>
-          )}
-          {user.linkedin && (
-            <Text style={styles.contactItem}>· {user.linkedin}</Text>
-          )}
+          {contactItems.map((item, index) => (
+            <Text key={index} style={styles.contactItem}>
+              {index > 0 ? ` · ${item}` : item}
+            </Text>
+          ))}
         </View>
       </View>
       {options.showPhoto && user.photo && (
+        // React PDF's Image is not an HTML img element, so alt-text does not apply here.
+        // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={user.photo} style={styles.photo} />
       )}
     </View>

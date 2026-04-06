@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CVDropzone, type ExtractedCVData } from "@/components/ui/cv-dropzone";
+import { AITextExtractor, type ExtractedCVData } from "@/components/ui/ai-text-extractor";
 import {
   ArrowLeft,
   Save,
@@ -68,8 +68,10 @@ export default function AdminNewCVPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
+    dni: "",
     email: "",
     location: "",
+    links: "",
     summary: "",
     photo: "",
     experience: [] as Experience[],
@@ -99,6 +101,15 @@ export default function AdminNewCVPage() {
   };
 
   const processPhotoFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("El archivo debe ser una imagen");
+      return;
+    }
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 1MB");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -226,7 +237,7 @@ export default function AdminNewCVPage() {
     updateFormData({
       languages: [
         ...formData.languages,
-        { id: generateId(), language: "EspaÃ±ol", level: "Intermedio" },
+        { id: generateId(), language: "Español", level: "Intermedio" },
       ],
     });
   };
@@ -399,19 +410,22 @@ export default function AdminNewCVPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Nuevo CV</h1>
-            <p className="text-muted-foreground">Crear un nuevo currÃ­culum</p>
+            <p className="text-muted-foreground">Crear un nuevo currículum</p>
           </div>
         </div>
 
         <div className="flex gap-2 mb-8 overflow-x-auto">
           {registroSteps.map((step) => (
-            <div
+            <button
+              type="button"
               key={step.id}
+              onClick={() => step.id < currentStep && setCurrentStep(step.id)}
+              disabled={step.id > currentStep}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap text-sm",
                 currentStep === step.id && "bg-primary text-primary-foreground",
-                currentStep > step.id && "bg-green-100 text-green-700",
-                currentStep < step.id && "bg-muted text-muted-foreground",
+                currentStep > step.id && "bg-green-100 text-green-700 cursor-pointer hover:bg-green-200",
+                currentStep < step.id && "bg-muted text-muted-foreground cursor-not-allowed",
               )}
             >
               {currentStep > step.id ? (
@@ -420,7 +434,7 @@ export default function AdminNewCVPage() {
                 <step.icon className="h-4 w-4" />
               )}
               {step.title}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -447,14 +461,14 @@ export default function AdminNewCVPage() {
                           onChange={(e) =>
                             updateFormData({ fullName: e.target.value })
                           }
-                          placeholder="Juan PÃ©rez"
+                          placeholder="Juan Pérez"
                           autoComplete="name"
                           inputMode="text"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>TelÃ©fono *</Label>
+                          <Label>Teléfono *</Label>
                           <Input
                             value={formData.phone}
                             onChange={(e) =>
@@ -479,15 +493,27 @@ export default function AdminNewCVPage() {
                           />
                         </div>
                       </div>
-                      <div>
-                        <Label>UbicaciÃ³n</Label>
-                        <div className="space-y-2 mt-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>DNI (opcional)</Label>
+                          <Input
+                            value={formData.dni}
+                            onChange={(e) =>
+                              updateFormData({ dni: e.target.value })
+                            }
+                            placeholder="12.345.678"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <Label>Ubicación</Label>
+                          <div className="space-y-2 mt-2">
                           <select
                             value={selectedProvincia}
                             onChange={(e) => setSelectedProvincia(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="">SeleccionÃ¡ una provincia</option>
+                            <option value="">Seleccioná una provincia</option>
                             {provincias.map((p) => (
                               <option key={p.id} value={p.id}>
                                 {p.nombre}
@@ -515,7 +541,7 @@ export default function AdminNewCVPage() {
                             onChange={(e) => setSelectedLocalidad(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <option value="">SeleccionÃ¡ una localidad</option>
+                            <option value="">Seleccioná una localidad</option>
                             {localidades.map((l) => (
                               <option key={l.id} value={l.nombre}>
                                 {l.nombre}
@@ -529,6 +555,22 @@ export default function AdminNewCVPage() {
                             </p>
                           )}
                         </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <Label>Links relevantes (opcional)</Label>
+                        <Textarea
+                          value={formData.links}
+                          onChange={(e) =>
+                            updateFormData({ links: e.target.value })
+                          }
+                          placeholder="linkedin.com/in/tu-perfil, github.com/tu-usuario"
+                          rows={2}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Separa varios links con comas
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -584,6 +626,9 @@ export default function AdminNewCVPage() {
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Arrastra una imagen o haz clic para seleccionar
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG hasta 1MB
                         </p>
                       </div>
                     </CardContent>
@@ -706,7 +751,7 @@ export default function AdminNewCVPage() {
                                 e.target.value,
                               )
                             }
-                            placeholder="DescripciÃ³n de funciones..."
+                            placeholder="Descripción de funciones..."
                             className="h-20"
                           />
                         </div>
@@ -731,7 +776,7 @@ export default function AdminNewCVPage() {
                 >
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>EducaciÃ³n</CardTitle>
+                      <CardTitle>Educación</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
@@ -749,7 +794,7 @@ export default function AdminNewCVPage() {
                         >
                           <div className="flex justify-between">
                             <Label className="text-xs text-muted-foreground">
-                              InstituciÃ³n
+                              Institución
                             </Label>
                             <Button
                               variant="ghost"
@@ -937,7 +982,7 @@ export default function AdminNewCVPage() {
                 >
                   <Card>
                     <CardHeader>
-                      <CardTitle>DiseÃ±o del CV</CardTitle>
+                      <CardTitle>Diseño del CV</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -1032,7 +1077,7 @@ export default function AdminNewCVPage() {
                       </div>
 
                       <div>
-                        <Label>Color del diseÃ±o</Label>
+                        <Label>Color del diseño</Label>
                         <div className="grid grid-cols-4 gap-2 mt-2">
                           {colorPalette.map((color) => (
                             <button
@@ -1061,12 +1106,12 @@ export default function AdminNewCVPage() {
                       </div>
 
                       <div className="border-t pt-4">
-                        <Label className="text-base font-semibold">ConfiguraciÃ³n Avanzada</Label>
+                        <Label className="text-base font-semibold">Configuración Avanzada</Label>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-sm">TamaÃ±o de fuente</Label>
+                          <Label className="text-sm">Tamaño de fuente</Label>
                           <Select
                             value={formData.templateSettings.fontSize || "medium"}
                             onChange={(e) =>
@@ -1078,7 +1123,7 @@ export default function AdminNewCVPage() {
                               })
                             }
                             options={[
-                              { value: "small", label: "PequeÃ±o" },
+                              { value: "small", label: "Pequeño" },
                               { value: "medium", label: "Mediano" },
                               { value: "large", label: "Grande" },
                             ]}
@@ -1183,7 +1228,7 @@ export default function AdminNewCVPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            TelÃ©fono:
+                            Teléfono:
                           </span>
                           <span>{formData.phone}</span>
                         </div>
@@ -1199,7 +1244,7 @@ export default function AdminNewCVPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">
-                            EducaciÃ³n:
+                            Educación:
                           </span>
                           <span>{formData.education.length}</span>
                         </div>
@@ -1261,7 +1306,7 @@ export default function AdminNewCVPage() {
                 <CardTitle>Importar CV</CardTitle>
               </CardHeader>
               <CardContent>
-                <CVDropzone onDataExtracted={handleDataExtracted} />
+                <AITextExtractor onDataExtracted={handleDataExtracted} />
               </CardContent>
             </Card>
           </div>

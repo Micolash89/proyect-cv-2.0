@@ -59,5 +59,20 @@ export function registerFonts() {
     ],
   });
 
+  Font.register({
+    family: "Poppins",
+    fonts: [
+      { src: path.join(fontsPath, "Poppins-Regular.ttf") },
+      { src: path.join(fontsPath, "Poppins-Regular.ttf"), fontWeight: "normal" },
+      { src: path.join(fontsPath, "Poppins-Bold.ttf"), fontWeight: "bold" },
+      { src: path.join(fontsPath, "Poppins-Italic.ttf"), fontStyle: "italic" },
+    ],
+  });
+
+  Font.register({
+    family: "Quensialy",
+    fonts: [{ src: path.join(fontsPath, "Quensialy-Signature.ttf") }],
+  });
+
   registered = true;
 }

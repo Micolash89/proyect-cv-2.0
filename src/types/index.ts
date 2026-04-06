@@ -1,5 +1,13 @@
 export type CVStatus = "pending" | "reviewed" | "completed";
-export type TemplateType = "harvard" | "modern" | "classic" | "creative" | "minimal" | "professional" | "elegant" | "modernPlus";
+export type TemplateType =
+  | "harvard"
+  | "modern"
+  | "classic"
+  | "creative"
+  | "minimal"
+  | "professional"
+  | "layout6"
+  | "elegant";
 export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";
@@ -181,5 +189,6 @@ export interface IAProvider {
   generateProfile(experience: Experience[], skills: string[], targetJob?: string): Promise<string>;
   improveText(text: string): Promise<string>;
   extractFromCV(file: File): Promise<Partial<CVFormData>>;
+  extractFromText(text: string): Promise<Partial<CVFormData>>;
   generateSkills(experience: Experience[], education: Education[], targetJob?: string): Promise<string[]>;
 }

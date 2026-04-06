@@ -2,202 +2,172 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout3Styles = (opts: OptionsPDF) => {
+  const headerBackground = opts.headerBackground || opts.primaryColor;
+  const pageBackground = "#EFF1F4";
+  const bodyPaddingX = Math.max(14, Math.round(opts.bodyPadding * 0.45));
+  const bodyPaddingY = Math.max(14, Math.round(opts.bodyPadding * 0.4));
+  const headerPaddingX = Math.max(16, Math.round(opts.headerPadding * 0.5));
+  const headerPaddingY = Math.max(14, Math.round(opts.headerPadding * 0.38));
+
   return StyleSheet.create({
     page: {
-      fontFamily: "Montserrat",
+      fontFamily: opts.fontFamily,
       padding: 0,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: pageBackground,
     },
-    header: {
+    topHeader: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#2A4365",
-      paddingHorizontal: 20,
-      paddingVertical: 15,
-      marginBottom: 10,
+      backgroundColor: headerBackground,
+      paddingHorizontal: headerPaddingX,
+      paddingVertical: headerPaddingY,
+      minHeight: 120,
     },
-    headerContent: {
-      marginLeft: 20,
-      flex: 1,
-    },
-    container: {
-      flexDirection: "row",
-      padding: 20,
-    },
-    leftColumn: {
-      width: "30%",
-      paddingRight: 5,
-    },
-    rightColumn: {
-      width: "70%",
-      borderLeftWidth: 1,
-      borderLeftColor: "#E2E8F0",
-      paddingLeft: 20,
+    photoFrame: {
+      width: 112,
+      height: 112,
+      borderRadius: 56,
+      borderWidth: 3,
+      borderColor: "#D3A15E",
+      overflow: "hidden",
+      marginRight: 16,
+      backgroundColor: "#A47840",
     },
     profileImage: {
-      width: 100,
-      height: 100,
+      width: "100%",
+      height: "100%",
       objectFit: "cover",
-      borderRadius: 50,
-      borderWidth: 4,
-      borderColor: "#FFFFFF",
+    },
+    headerTextBlock: {
+      flex: 1,
     },
     name: {
       color: "#FFFFFF",
       fontWeight: "bold",
-      fontSize: opts.headerFontSize,
-      marginBottom: 5,
+      fontSize: opts.headerFontSize + 2,
+      marginBottom: 2,
+      letterSpacing: 0.4,
     },
-    title: {
-      color: "#CBD5E0",
-      fontWeight: "medium",
-      fontSize: opts.bodyFontSize + 1,
+    profession: {
+      color: "#DDE4EE",
+      fontWeight: "normal",
+      fontSize: opts.bodyFontSize + 4,
+      textTransform: "lowercase",
     },
-    contactInfo: {
+    bodyContainer: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 10,
-      marginTop: 8,
+      paddingHorizontal: bodyPaddingX,
+      paddingTop: bodyPaddingY,
+      paddingBottom: bodyPaddingY,
     },
-    contactItem: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#FFFFFF",
+    leftColumn: {
+      width: "35%",
+      paddingRight: 14,
+      borderRightWidth: 1,
+      borderRightColor: "#D4D8E0",
+    },
+    rightColumn: {
+      width: "65%",
+      paddingLeft: 20,
     },
     section: {
-      marginBottom: 10,
+      marginBottom: 14,
     },
-    sectionTitle: {
-      color: "#2A4365",
+    leftSectionTitle: {
+      color: opts.primaryColor,
       fontWeight: "bold",
-      fontSize: opts.bodyFontSize + 3,
-      borderBottomWidth: 2,
-      borderBottomColor: "#E2E8F0",
-      paddingBottom: 5,
-      marginBottom: 10,
-    },
-    skillItem: {
-      color: "#4A5568",
-      fontSize: opts.bodyFontSize - 1,
-      marginBottom: 5,
-    },
-    languageItem: {
-      marginBottom: 5,
-    },
-    languageName: {
-      color: "#2D3748",
-      fontWeight: "medium",
-      fontSize: opts.bodyFontSize,
-    },
-    languageLevel: {
-      color: "#718096",
-      fontSize: opts.bodyFontSize - 1,
-    },
-    profileText: {
-      color: "#4A5568",
-      lineHeight: 1.6,
-      fontSize: opts.bodyFontSize,
-    },
-    experienceItem: {
-      marginBottom: 10,
-    },
-    experienceHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 3,
-    },
-    companyName: {
-      color: "#2D3748",
-      fontWeight: "bold",
-      fontSize: opts.bodyFontSize + 1,
-    },
-    jobTitle: {
-      color: "#4A5568",
-      fontWeight: "medium",
-      fontSize: opts.bodyFontSize,
-      marginBottom: 1,
-    },
-    dateLocation: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#718096",
-    },
-    locationText: {
-      color: "#718096",
-      fontSize: opts.bodyFontSize - 1,
-      marginBottom: 1,
-    },
-    description: {
-      color: "#4A5568",
-      lineHeight: 1.4,
-      fontSize: opts.bodyFontSize,
-      marginTop: 4,
-    },
-    educationItem: {
-      marginBottom: 10,
-    },
-    educationHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 3,
-    },
-    institutionName: {
-      color: "#2D3748",
-      fontWeight: "bold",
-      fontSize: opts.bodyFontSize + 1,
-    },
-    degree: {
-      color: "#4A5568",
-      fontSize: opts.bodyFontSize,
-      marginBottom: 2,
-    },
-    certificationItem: {
+      fontSize: opts.bodyFontSize + 4,
+      borderBottomWidth: 1,
+      borderBottomColor: "#CDD2DB",
+      paddingBottom: 4,
       marginBottom: 8,
     },
-    certificationName: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#2D3748",
-      fontWeight: "medium",
+    leftInfoItem: {
+      color: "#5B6576",
+      fontSize: opts.bodyFontSize + 1,
+      lineHeight: 1.35,
     },
-    certificationInstitution: {
-      fontSize: opts.bodyFontSize - 2,
-      color: "#718096",
+    leftInfoMeta: {
+      color: "#7B8698",
+      fontSize: opts.bodyFontSize,
+      textTransform: "uppercase",
+      lineHeight: 1.2,
+      marginBottom: 2,
+    },
+    leftBulletItem: {
+      color: "#5B6576",
+      fontSize: opts.bodyFontSize + 1,
+      lineHeight: 1.3,
+      marginBottom: 2,
+    },
+    languageItem: {
+      marginBottom: 4,
+    },
+    sectionTitle: {
+      color: opts.primaryColor,
+      fontWeight: "bold",
+      fontSize: opts.bodyFontSize + 5,
+      borderBottomWidth: 1,
+      borderBottomColor: "#CDD2DB",
+      paddingBottom: 4,
+      marginBottom: 8,
     },
     summary: {
-      color: "#4A5568",
-      lineHeight: 1.6,
-      fontSize: opts.bodyFontSize,
+      color: "#3D4A60",
+      lineHeight: 1.45,
+      fontSize: opts.bodyFontSize + 1,
     },
     entryContainer: {
-      marginBottom: 10,
+      marginBottom: 11,
     },
     entryHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 2,
+      marginBottom: 1,
     },
     institution: {
       fontWeight: "bold",
+      fontSize: opts.bodyFontSize + 3,
+      color: "#121827",
+      maxWidth: "70%",
+    },
+    degree: {
+      color: "#2C3648",
+      fontSize: opts.bodyFontSize + 2,
+      fontStyle: "italic",
+      marginBottom: 1,
+    },
+    location: {
+      color: "#5D6779",
       fontSize: opts.bodyFontSize + 1,
-      color: "#2D3748",
+      marginBottom: 2,
     },
     dates: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#718096",
+      fontSize: opts.bodyFontSize + 1,
+      color: "#7A8699",
+      textAlign: "right",
     },
-    skills: {
+    bulletItem: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 6,
-      marginTop: 5,
+      alignItems: "flex-start",
+      marginTop: 1,
+      marginLeft: 2,
     },
-    skill: {
-      backgroundColor: "#2A4365",
-      color: "#FFFFFF",
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 4,
-      fontSize: opts.bodyFontSize - 1,
+    bulletDot: {
+      width: 8,
+      color: "#2D3748",
+      fontSize: opts.bodyFontSize + 2,
+      lineHeight: 1,
+    },
+    bulletText: {
+      flex: 1,
+      color: "#2C3648",
+      fontSize: opts.bodyFontSize + 1,
+      lineHeight: 1.32,
+    },
+    certificationMeta: {
+      color: "#4B586F",
+      fontSize: opts.bodyFontSize + 1,
     },
   });
 };

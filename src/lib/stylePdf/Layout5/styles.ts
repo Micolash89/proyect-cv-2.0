@@ -2,177 +2,179 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
+  const horizontalPadding = Math.max(14, Math.round(opts.bodyPadding * 0.4));
+  const verticalPadding = Math.max(10, Math.round(opts.bodyPadding * 0.3));
+  const headerHeight = 232;
+  const leftColumnWidth = "35%";
+  const rightColumnWidth = "65%";
+
   return StyleSheet.create({
     page: {
-      fontFamily: "Helvetica",
+      fontFamily: opts.fontFamily,
+      paddingHorizontal: horizontalPadding,
+      paddingTop: verticalPadding,
+      paddingBottom: verticalPadding,
+      backgroundColor: "#F0F0F0",
+    },
+    topHeader: {
       flexDirection: "row",
+      width: "100%",
+      height: headerHeight,
+      marginBottom: 0,
     },
-    leftColumn: {
-      width: "35%",
-      paddingTop: 20,
-      paddingLeft: 20,
-      paddingRight: 5,
-      paddingBottom: 0,
-      marginTop: 230,
-    },
-    rightColumn: {
-      width: "65%",
-      paddingTop: 240,
-      paddingHorizontal: 20,
-      paddingBottom: 0,
-    },
-    header: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 230,
+    headerImageColumn: {
+      width: leftColumnWidth,
+      height: headerHeight,
     },
     headerImage: {
-      width: "35%",
-      height: 230,
+      width: "100%",
+      height: "100%",
       objectFit: "cover",
     },
-    headerContent: {
-      position: "absolute",
-      top: 0,
-      right: 0,
-      width: "65%",
-      height: 230,
-      padding: 20,
-      backgroundColor: "#ededed",
+    headerImageFallback: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: "#D0D3D7",
     },
-    name: {
-      fontSize: opts.headerFontSize + 10,
+    headerNameColumn: {
+      width: rightColumnWidth,
+      height: headerHeight,
+      backgroundColor: "#E6E7E9",
+      paddingTop: 24,
+      paddingHorizontal: 28,
+      justifyContent: "flex-start",
+    },
+    firstName: {
+      fontSize: opts.headerFontSize + 9,
       fontWeight: "light",
       letterSpacing: 3,
-      marginBottom: 20,
-      marginTop: 20,
-      marginLeft: 20,
+      marginBottom: 9,
       lineHeight: 1,
-      color: "#333333",
+      color: "#0A0F18",
     },
     lastName: {
-      fontSize: opts.headerFontSize + 10,
+      fontSize: opts.headerFontSize + 9,
       fontWeight: "bold",
       letterSpacing: 3,
-      marginBottom: 0,
-      marginLeft: 20,
-      color: "#333333",
+      color: "#02060D",
     },
-    title: {
-      fontSize: opts.bodyFontSize + 4,
-      marginTop: 30,
-      marginLeft: 20,
-      letterSpacing: 1,
-      color: "#333333",
-    },
-    sectionTitle: {
+    orientationText: {
+      marginTop: 14,
       fontSize: opts.bodyFontSize + 3,
+      color: "#5B6678",
       fontWeight: "medium",
-      marginBottom: 5,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    contentRow: {
+      flexDirection: "row",
+      width: "100%",
+    },
+    leftColumn: {
+      width: leftColumnWidth,
+      backgroundColor: "#4E5054",
+      paddingTop: 12,
+      paddingLeft: 12,
+      paddingRight: 10,
+      paddingBottom: 8,
+    },
+    rightColumn: {
+      width: rightColumnWidth,
+      backgroundColor: "#F5F5F5",
+      paddingTop: 12,
+      paddingHorizontal: 18,
+      paddingBottom: 8,
+    },
+    section: {
+      marginBottom: 11,
+    },
+    leftSection: {
+      marginBottom: 18,
+    },
+    leftSectionTitle: {
+      fontSize: opts.bodyFontSize + 4,
+      fontWeight: "medium",
+      marginBottom: 6,
       letterSpacing: 1,
-      color: "white",
+      color: "#FFFFFF",
+      textTransform: "uppercase",
     },
-    rightSectionTitle: {
-      fontSize: opts.bodyFontSize + 3,
-      fontWeight: "bold",
-      marginTop: 10,
-      marginBottom: 7,
-      letterSpacing: 1,
-      color: "#000000",
+    leftText: {
+      fontSize: opts.bodyFontSize + 1,
+      marginBottom: 1,
+      color: "#FFFFFF",
+      lineHeight: 1.28,
     },
-    contactInfo: {
-      marginBottom: 40,
-    },
-    contactItem: {
+    leftMetaText: {
       fontSize: opts.bodyFontSize,
-      marginBottom: 8,
-      color: "white",
+      color: "#D7D8DC",
+      fontStyle: "italic",
+      lineHeight: 1.2,
+      marginBottom: 1,
     },
-    skillsList: {
-      marginBottom: 30,
-    },
-    skillItem: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 8,
-      color: "white",
-    },
-    profileText: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 5,
-      color: "#333333",
+    courseItem: {
+      marginBottom: 6,
     },
     languageItem: {
-      marginBottom: 8,
+      marginBottom: 4,
     },
-    languageName: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 3,
-      color: "white",
-    },
-    languageLevel: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#CCCCCC",
-      fontStyle: "italic",
-    },
-    experienceEntry: {
-      marginBottom: 10,
-    },
-    experienceDate: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 5,
-      color: "#333333",
-    },
-    experienceTitle: {
-      fontSize: opts.bodyFontSize + 1,
+    rightSectionTitle: {
+      fontSize: opts.bodyFontSize + 4,
       fontWeight: "bold",
-      marginBottom: 3,
-      color: "#333333",
-    },
-    experienceCompany: {
-      fontSize: opts.bodyFontSize,
-      marginBottom: 8,
-      color: "#666666",
-    },
-    experienceDescription: {
-      fontSize: opts.bodyFontSize,
-      color: "#333333",
-      lineHeight: 1.4,
-    },
-    educationEntry: {
-      marginBottom: 20,
-    },
-    educationTitle: {
-      fontSize: opts.bodyFontSize + 1,
-      fontWeight: "bold",
-      marginBottom: 3,
-      color: "#333333",
-    },
-    educationDetails: {
-      fontSize: opts.bodyFontSize,
-      color: "#666666",
-      marginBottom: 3,
-    },
-    educationDate: {
-      fontSize: opts.bodyFontSize,
-      color: "#333333",
+      marginBottom: 6,
+      letterSpacing: 1,
+      color: "#050B15",
+      textTransform: "uppercase",
     },
     summary: {
-      color: "#333333",
-      lineHeight: 1.5,
-      fontSize: opts.bodyFontSize,
+      color: "#1C2430",
+      lineHeight: 1.35,
+      fontSize: opts.bodyFontSize + 1,
+      marginBottom: 2,
+    },
+    entryContainer: {
       marginBottom: 10,
     },
-    entryContainer: { marginBottom: 10 },
-    entryHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2 },
-    institution: { fontWeight: "bold", fontSize: opts.bodyFontSize + 1, color: "#333333" },
-    jobTitle: { fontWeight: "medium", fontSize: opts.bodyFontSize, color: "#444444" },
-    dates: { fontSize: opts.bodyFontSize - 1, color: "#666666" },
-    degree: { fontSize: opts.bodyFontSize, color: "#444444" },
-    description: { fontSize: opts.bodyFontSize, color: "#333333", lineHeight: 1.4 },
-    section: { marginBottom: 15 },
-    skills: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
-    skill: { fontSize: opts.bodyFontSize - 1, backgroundColor: "#f3f4f6", padding: 4, borderRadius: 3 },
+    entryTitle: {
+      fontSize: opts.bodyFontSize + 4,
+      fontWeight: "bold",
+      marginBottom: 1,
+      color: "#0A1019",
+    },
+    entryCompany: {
+      fontSize: opts.bodyFontSize + 2,
+      marginBottom: 1,
+      color: "#121C2B",
+      fontWeight: "medium",
+    },
+    entryMeta: {
+      fontSize: opts.bodyFontSize + 1,
+      color: "#394556",
+      marginBottom: 1,
+    },
+    entryLocation: {
+      fontSize: opts.bodyFontSize + 1,
+      color: "#5C6778",
+      marginTop: 2,
+      marginBottom: 1,
+    },
+    bulletItem: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginBottom: 1,
+      marginLeft: 2,
+    },
+    bulletDot: {
+      width: 8,
+      fontSize: opts.bodyFontSize + 2,
+      lineHeight: 1,
+      color: "#1F2A39",
+    },
+    bulletText: {
+      flex: 1,
+      fontSize: opts.bodyFontSize + 1,
+      lineHeight: 1.28,
+      color: "#1F2A39",
+    },
   });
 };

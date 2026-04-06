@@ -2,7 +2,7 @@
 
 import { AIProvider } from "@/lib/constants/AIconst";
 import { getSettings } from "@/lib/db/models/settings";
-import { improveText, generateProfile, extractFromCV } from "@/lib/ia/factory";
+import { improveText, generateProfile, extractFromCV, extractFromText } from "@/lib/ia/factory";
 import type { CVFormData } from "@/types";
 
 export async function extractCVAction(file: File) {
@@ -195,5 +195,97 @@ export async function processIAAction(body: {
   } catch (error: any) {
     console.error("IA error:", error);
     return { success: false, error: error.message || "Error al procesar con IA" };
+  }
+}
+
+export async function extractFromTextAction(text: string) {
+  try {
+    if (!text || text.trim().length < 10) {
+      return { success: false, error: "El texto debe tener al menos 10 caracteres" };
+    }
+
+    const settings = await getSettings();
+    const apiKey = settings.geminiApiKey;
+
+    if (!apiKey) {
+      throw new Error("API key de Gemini no configurada");
+    }
+
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
+
+    const prompt = `
+Eres un asistente experto en extraer información de currículums vitae. 
+Analiza el siguiente texto que contiene datos de un CV y extrae los datos en formato JSON.
+
+El texto puede estar en cualquier formato (ordenado o no), extrae la mayor cantidad de información posible.
+
+El JSON debe tener esta estructura exacta:
+{
+  "fullName": "nombre completo",
+  "email": "correo electrónico o string vacío",
+  "phone": "teléfono o string vacío", 
+  "location": "ubicación o string vacío",
+  "summary": "perfil profesional o string vacío",
+  "experience": [
+    {
+      "id": "id único generado",
+      "company": "empresa",
+      "position": "puesto",
+      "startDate": "fecha inicio (YYYY-MM-DD) o string vacío",
+      "endDate": "fecha fin (YYYY-MM-DD) o string vacío si es actual",
+      "current": true/false,
+      "description": "descripción de funciones"
+    }
+  ],
+  "education": [
+    {
+      "id": "id único generado",
+      "institution": "institución",
+      "degree": "título",
+      "field": "campo de estudio o string vacío",
+      "startDate": "fecha inicio o string vacío",
+      "endDate": "fecha fin o string vacío"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3"],
+  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}]
+}
+
+Usa timestamps únicos para cada id (Date.now() + random).
+
+Texto del CV:
+${text}
+
+Responde SOLO con el JSON válido, sin texto adicional.
+`;
+
+    const result = await model.generateContent(prompt);
+
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+    if (jsonMatch) {
+      try {
+        const extracted = JSON.parse(jsonMatch[0]);
+        return { success: true, extracted };
+      } catch (parseError) {
+        const cleanedJson = cleanJSONResponse(responseText);
+        if (cleanedJson) {
+          try {
+            const extracted = JSON.parse(cleanedJson);
+            return { success: true, extracted };
+          } catch (e) {
+            console.error("Error parsing cleaned JSON:", e);
+          }
+        }
+      }
+    }
+
+    throw new Error("No se pudo extraer información del texto");
+  } catch (error: any) {
+    console.error("Error extracting from text:", error);
+    return { success: false, error: error.message || "Error al procesar texto" };
   }
 }

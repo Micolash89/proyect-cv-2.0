@@ -13,10 +13,34 @@ const parseDate = (dateStr: string | undefined) => {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getFullYear()}`;
+    const formatter = new Intl.DateTimeFormat("es-ES", {
+      month: "long",
+      year: "numeric",
+    });
+    return formatter.format(date);
   } catch {
     return dateStr;
   }
+};
+
+const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+  const start = parseDate(startDate);
+  const end = isCurrent ? "Actualidad" : parseDate(endDate);
+  if (start && end) return `${start} - ${end}`;
+  return start || end;
+};
+
+const getLocationLabel = (localidad?: string, municipio?: string, provincia?: string) => {
+  return [localidad, municipio, provincia].filter(Boolean).join(", ");
+};
+
+const toBulletLines = (text?: string) => {
+  if (!text) return [];
+
+  return text
+    .split(/\r?\n|•/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 };
 
 export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
@@ -26,30 +50,34 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{exp.company}</Text>
+        <Text style={styles.location}>{getLocationLabel(exp.localidad, exp.municipio, exp.provincia)}</Text>
+      </View>
+      <View style={styles.entryHeader}>
+        <Text style={styles.degree}>{exp.position}</Text>
         <Text style={styles.dates}>
-          {parseDate(exp.startDate)} -{" "}
-          {exp.current ? "Actualidad" : parseDate(exp.endDate)}
+          {formatDateRange(exp.startDate, exp.endDate, exp.current)}
         </Text>
       </View>
-      <Text style={styles.degree}>{exp.position}</Text>
-      {exp.description && (
-        <Text style={styles.description}>{exp.description}</Text>
-      )}
+      {toBulletLines(exp.description).map((line, lineIndex) => (
+        <View key={lineIndex} style={styles.bulletItem}>
+          <Text style={styles.bulletDot}>•</Text>
+          <Text style={styles.bulletText}>{line}</Text>
+        </View>
+      ))}
     </View>
   ));
 
   const educationEntries = user.education.map((edu, index) => (
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{edu.degree}</Text>
-        <Text style={styles.dates}>
-          {parseDate(edu.startDate)} -{" "}
-          {edu.current ? "Actualidad" : parseDate(edu.endDate)}
-        </Text>
+        <Text style={styles.institution}>{edu.institution}</Text>
+        <Text style={styles.location}>{getLocationLabel(edu.localidad, edu.municipio, edu.provincia)}</Text>
       </View>
       <View style={styles.entryHeader}>
-        <Text style={styles.degree}>{edu.institution}</Text>
-        <Text style={styles.dates}>{edu.municipio} {edu.localidad}</Text>
+        <Text style={styles.degree}>{edu.degree}</Text>
+        <Text style={styles.dates}>
+          {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+        </Text>
       </View>
     </View>
   ));
@@ -87,12 +115,13 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
 
       {options.showSkills && user.skills.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>HABILIDADES</Text>
+          <Text style={styles.sectionTitle}>SKILLS ADICIONALES</Text>
           <View style={styles.skills}>
             {user.skills.map((skill, index) => (
-              <Text key={index} style={styles.skill}>
-                {skill} {index !== user.skills.length - 1 && "·"}
-              </Text>
+              <View key={index} style={styles.bulletItem}>
+                <Text style={styles.bulletDot}>•</Text>
+                <Text style={styles.bulletText}>{skill}</Text>
+              </View>
             ))}
           </View>
         </View>
