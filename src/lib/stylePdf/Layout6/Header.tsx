@@ -3,6 +3,7 @@ import { Image, Text, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout6Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 interface HeaderProps {
   user: UserCV;
@@ -15,7 +16,12 @@ interface ContactLine {
 }
 
 const buildContactLines = (user: UserCV): ContactLine[] => {
-  const location = [user.localidad, user.municipio, user.provincia].filter(Boolean).join(", ") || user.location || "";
+  const location = formatPdfLocation({
+    localidad: user.localidad,
+    municipio: user.municipio,
+    provincia: user.provincia,
+    fallback: user.location,
+  });
   const social = user.github || user.linkedin || user.links || "";
 
   return [

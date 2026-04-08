@@ -3,6 +3,7 @@ import { View, Text, Image } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout0Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 export interface HeaderProps {
   user: UserCV;
@@ -16,7 +17,12 @@ export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
     ? user.fullName
     : user.fullName.split(" ").slice(0, 2).join(" ");
 
-  const locationLabel = [user.localidad, user.provincia].filter(Boolean).join(", ") || user.location;
+  const locationLabel = formatPdfLocation({
+    localidad: user.localidad,
+    municipio: user.municipio,
+    provincia: user.provincia,
+    fallback: user.location,
+  });
   const contactItems = [
     locationLabel,
     user.linkedin,

@@ -56,18 +56,12 @@ import {
   generateProfileAction,
 } from "@/app/actions/ia";
 import { generateSkills } from "@/lib/ia/factory";
-import { templates } from "@/types/definitionsCV";
-
-const colorPalette = [
-  { name: "Gris Oscuro", value: "#374151" },
-  { name: "Gris", value: "#6b7280" },
-  { name: "Azul Noche", value: "#1e3a5f" },
-  { name: "Bordó", value: "#7f1d1d" },
-  { name: "Verde Oliva", value: "#3f6212" },
-  { name: "Marrón", value: "#78350f" },
-  { name: "Negro", value: "#111827" },
-  { name: "Gris Claro", value: "#9ca3af" },
-];
+import {
+  getTemplatePalette,
+  sanitizeTemplatePrimaryColor,
+  templateOptions,
+} from "@/lib/constants/templates";
+import { TemplateCarousel } from "@/components/ui/template-carousel";
 
 export default function AdminCVPage() {
   const params = useParams();
@@ -514,6 +508,23 @@ export default function AdminCVPage() {
     setUser({
       ...user,
       templateSettings: { ...user.templateSettings, [field]: value },
+    });
+  };
+
+  const updateSelectedTemplate = (templateId: string) => {
+    if (!user) return;
+    const primaryColor = sanitizeTemplatePrimaryColor(
+      templateId,
+      user.templateSettings.primaryColor,
+    );
+
+    setUser({
+      ...user,
+      selectedTemplate: templateId as UserCV["selectedTemplate"],
+      templateSettings: {
+        ...user.templateSettings,
+        primaryColor,
+      },
     });
   };
 
@@ -1213,54 +1224,34 @@ export default function AdminCVPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>Plantilla</Label>
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  {templates.map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      onClick={() =>
-                        updateField("selectedTemplate", template.id)
-                      }
-                      className={cn(
-                        "p-1 border-2 rounded-lg transition-all",
-                        user.selectedTemplate === template.id
-                          ? "border-foreground scale-105"
-                          : "border-transparent hover:border-muted-foreground",
-                      )}
-                    >
-                      <div className="aspect-3/4 bg-muted rounded overflow-hidden">
-                        <img
-                          src={template.img}
-                          alt={template.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-xs text-center mt-1">
-                        {template.name}
-                      </p>
-                    </button>
-                  ))}
+                <div className="mt-2">
+                  <TemplateCarousel
+                    templates={templateOptions}
+                    selectedTemplate={user.selectedTemplate}
+                    onSelectTemplate={updateSelectedTemplate}
+                    desktopPerView={3}
+                  />
                 </div>
               </div>
 
               <div>
                 <Label>Color del diseño</Label>
                 <div className="flex flex-wrap gap-3 mt-2">
-                  {colorPalette.map((color) => (
+                  {getTemplatePalette(user.selectedTemplate).map((color) => (
                     <button
-                      key={color.value}
+                      key={color}
                       type="button"
                       onClick={() =>
-                        updateTemplateSettings("primaryColor", color.value)
+                        updateTemplateSettings("primaryColor", color)
                       }
                       className={cn(
                         "h-8 w-8 rounded-full border-2 transition-all",
-                        user.templateSettings.primaryColor === color.value
+                        user.templateSettings.primaryColor === color
                           ? "border-foreground scale-110"
                           : "border-transparent hover:scale-105",
                       )}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
+                      style={{ backgroundColor: color }}
+                      title={color}
                     />
                   ))}
                 </div>

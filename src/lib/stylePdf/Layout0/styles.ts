@@ -3,10 +3,11 @@ import { OptionsPDF } from "../definitions";
 
 export const createLayout0Styles = (opts: OptionsPDF) => {
   const sectionSpacing = opts.spaceBetween ? 16 : 12;
+  const accentColor = opts.primaryColor || "#000000";
 
   return StyleSheet.create({
     page: {
-      fontFamily: "Times-Roman",
+      fontFamily: opts.fontFamily || "Times",
       fontSize: opts.bodyFontSize,
       padding: opts.padding,
       backgroundColor: "#ffffff",
@@ -55,7 +56,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       height: 60,
       objectFit: "cover",
       borderWidth: 1,
-      borderColor: "#1779C8",
+      borderColor: accentColor,
     },
     section: {
       marginTop: sectionSpacing,
@@ -65,7 +66,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       fontWeight: "bold",
       textTransform: "uppercase",
       borderBottomWidth: 1,
-      borderBottomColor: "#282828",
+      borderBottomColor: accentColor,
       marginBottom: 7,
       paddingBottom: 3,
       color: "#1a1a1a",

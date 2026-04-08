@@ -47,8 +47,15 @@ import { uploadImage } from "@/app/actions/upload";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
+import { TemplateCarousel } from "@/components/ui/template-carousel";
 import type { Experience, Education, Language, TemplateType, FontSize, LayoutOrder } from "@/types";
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
+import {
+  getTemplateDefaultColor,
+  getTemplatePalette,
+  sanitizeTemplatePrimaryColor,
+  templateOptions,
+} from "@/lib/constants/templates";
 
 const steps = [
   { id: 1, title: "Datos Personales", icon: User },
@@ -58,17 +65,6 @@ const steps = [
   { id: 5, title: "Habilidades", icon: FileText },
   { id: 6, title: "Diseño & Color", icon: CheckCircle },
   { id: 7, title: "Confirmar", icon: CheckCircle },
-];
-
-const colorPalette = [
-  { name: "Gris Oscuro", value: "#374151" },
-  { name: "Gris", value: "#6b7280" },
-  { name: "Azul Noche", value: "#1e3a5f" },
-  { name: "Bordó", value: "#7f1d1d" },
-  { name: "Verde Oliva", value: "#3f6212" },
-  { name: "Marrón", value: "#78350f" },
-  { name: "Negro", value: "#111827" },
-  { name: "Gris Claro", value: "#9ca3af" },
 ];
 
 const languageOptions = [
@@ -132,7 +128,7 @@ const defaultFormData: FormData = {
   languages: [],
   selectedTemplate: "harvard",
   templateSettings: {
-    primaryColor: "#111827",
+    primaryColor: getTemplateDefaultColor("harvard"),
     fontSize: "medium",
     fontFamily: "Inter",
     layout: "descending",
@@ -226,6 +222,24 @@ function RegistroPageContent() {
   const updateFormData = useCallback((data: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
   }, []);
+
+  const availableTemplateColors = getTemplatePalette(formData.selectedTemplate);
+
+  const handleTemplateSelection = (templateId: string) => {
+    const nextTemplate = templateId as TemplateType;
+    const nextColor = sanitizeTemplatePrimaryColor(
+      nextTemplate,
+      formData.templateSettings.primaryColor,
+    );
+
+    updateFormData({
+      selectedTemplate: nextTemplate,
+      templateSettings: {
+        ...formData.templateSettings,
+        primaryColor: nextColor,
+      },
+    });
+  };
 
   const addExperience = () => {
     setFormData((prev) => ({
@@ -1084,98 +1098,39 @@ function RegistroPageContent() {
                 >
                   <div>
                     <Label>Elige el diseño de tu CV</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                      {[
-                        {
-                          id: "harvard",
-                          name: "Harvard",
-                          img: "/templates/template-0.png",
-                        },
-                        {
-                          id: "modern",
-                          name: "Moderno",
-                          img: "/templates/template-1.png",
-                        },
-                        {
-                          id: "classic",
-                          name: "Clásico",
-                          img: "/templates/template-2.png",
-                        },
-                        {
-                          id: "creative",
-                          name: "Creativo",
-                          img: "/templates/template-3.png",
-                        },
-                        {
-                          id: "minimal",
-                          name: "Minimalista",
-                          img: "/templates/template-4.png",
-                        },
-                        {
-                          id: "professional",
-                          name: "Profesional",
-                          img: "/templates/template-5.png",
-                        },
-                        {
-                          id: "layout6",
-                          name: "Elegante",
-                          img: "/templates/template-6.jpg",
-                        },
-                      ].map((template) => (
-                        <button
-                          key={template.id}
-                          type="button"
-                          onClick={() =>
-                            updateFormData({
-                              selectedTemplate: template.id as TemplateType,
-                            })
-                          }
-                          className={cn(
-                            "p-2 border-2 rounded-lg transition-all",
-                            formData.selectedTemplate === template.id
-                              ? "border-foreground bg-muted"
-                              : "border-border hover:border-muted-foreground",
-                          )}
-                        >
-                          <div className="aspect-3/4 bg-muted rounded mb-2 overflow-hidden">
-                            <img
-                              src={template.img}
-                              alt={template.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="font-medium text-sm text-center">
-                            {template.name}
-                          </p>
-                        </button>
-                      ))}
+                    <div className="mt-4">
+                      <TemplateCarousel
+                        templates={templateOptions}
+                        selectedTemplate={formData.selectedTemplate}
+                        onSelectTemplate={handleTemplateSelection}
+                      />
                     </div>
                   </div>
 
                   <div>
                     <Label>Color del diseño</Label>
-                    <div className="grid grid-cols-4 gap-2 mt-2">
-                      {colorPalette.map((color) => (
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      {availableTemplateColors.map((color) => (
                         <button
-                          key={color.value}
+                          key={color}
                           type="button"
                           onClick={() =>
                             updateFormData({
                               templateSettings: {
                                 ...formData.templateSettings,
-                                primaryColor: color.value,
+                                primaryColor: color,
                               },
                             })
                           }
                           className={cn(
-                            "h-12 rounded-lg border-2 transition-all",
+                            "h-10 w-10 rounded-full border-2 transition-all cursor-pointer",
                             formData.templateSettings.primaryColor ===
-                              color.value
-                              ? "border-foreground scale-105"
+                              color
+                              ? "border-foreground scale-110"
                               : "border-transparent hover:scale-105",
                           )}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
+                          style={{ backgroundColor: color }}
+                          title={color}
                         />
                       ))}
                     </div>
@@ -1304,10 +1259,10 @@ function RegistroPageContent() {
             <h3 className="font-bold mb-2">¿Qué escribir en el resumen?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               El resumen es una descripción breve (2-3 oraciones) de quién eres
-              y qué aportas. Ejemplo: "Profesional con experiencia en atención
+              y qué aportas. Ejemplo: &quot;Profesional con experiencia en atención
               al cliente, orientado a la satisfacción del usuario y resolución
               de problemas. Busco desarrollarme en el sector de ventas y
-              servicio al cliente."
+              servicio al cliente.&quot;
             </p>
             <Button
               onClick={() => setShowSummaryModal(false)}

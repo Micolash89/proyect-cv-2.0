@@ -3,6 +3,7 @@ import { Text, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout6Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 interface BodyProps {
   user: UserCV;
@@ -34,8 +35,6 @@ const toBulletLines = (text?: string) => {
     .map((line) => line.trim())
     .filter(Boolean);
 };
-
-const formatLocation = (...parts: Array<string | undefined>) => parts.filter(Boolean).join(", ");
 
 export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout6Styles(options);
@@ -77,7 +76,12 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
           <Text style={styles.sectionTitle}>Experiencia de trabajo</Text>
           <View style={styles.timelineContainer}>
             {orderedExperience.map((exp, index) => {
-              const location = formatLocation(exp.localidad, exp.municipio, exp.provincia) || user.location || "";
+              const location = formatPdfLocation({
+                localidad: exp.localidad,
+                municipio: exp.municipio,
+                provincia: exp.provincia,
+                fallback: user.location,
+              });
 
               return (
                 <View key={index} style={styles.timelineEntry}>
@@ -110,7 +114,11 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
           <Text style={styles.sectionTitle}>Educación</Text>
           <View style={styles.educationTimeline}>
             {orderedEducation.map((edu, index) => {
-              const location = formatLocation(edu.localidad, edu.municipio, edu.provincia);
+              const location = formatPdfLocation({
+                localidad: edu.localidad,
+                municipio: edu.municipio,
+                provincia: edu.provincia,
+              });
 
               return (
                 <View key={index} style={styles.educationTimelineEntry}>

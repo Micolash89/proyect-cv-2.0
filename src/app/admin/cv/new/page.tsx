@@ -20,8 +20,6 @@ import {
   FileText,
   CheckCircle,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   Upload,
   Send,
 } from "lucide-react";
@@ -29,21 +27,26 @@ import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
-  colorPalette,
   languageOptions,
   levelOptions,
   fontSizeOptions,
   layoutOptions,
   registroSteps,
 } from "@/lib/constants";
-import { templateOptions } from "@/lib/constants/templates";
+import {
+  getTemplateDefaultColor,
+  getTemplatePalette,
+  sanitizeTemplatePrimaryColor,
+  templateOptions,
+} from "@/lib/constants/templates";
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import type { TemplateType, Experience, Education, Language, TemplateSettings, FontSize } from "@/types";
+import { TemplateCarousel } from "@/components/ui/template-carousel";
 
 const DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
-  primaryColor: "#1e3a5f",
+  primaryColor: getTemplateDefaultColor("harvard"),
   fontSize: "medium",
   fontFamily: "Helvetica",
   layout: "descending",
@@ -63,7 +66,6 @@ export default function AdminNewCVPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [templateCarouselIndex, setTemplateCarouselIndex] = useState(0);
   const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -92,6 +94,24 @@ export default function AdminNewCVPage() {
 
   const updateFormData = (data: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
+  };
+
+  const availableTemplateColors = getTemplatePalette(formData.selectedTemplate);
+
+  const handleTemplateSelection = (templateId: string) => {
+    const nextTemplate = templateId as TemplateType;
+    const nextColor = sanitizeTemplatePrimaryColor(
+      nextTemplate,
+      formData.templateSettings.primaryColor,
+    );
+
+    updateFormData({
+      selectedTemplate: nextTemplate,
+      templateSettings: {
+        ...formData.templateSettings,
+        primaryColor: nextColor,
+      },
+    });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -987,119 +1007,39 @@ export default function AdminNewCVPage() {
                     <CardContent className="space-y-4">
                       <div>
                         <Label>Plantilla</Label>
-                        <div className="relative mt-2">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                setTemplateCarouselIndex((prev) =>
-                                  Math.max(0, prev - 4),
-                                )
-                              }
-                              disabled={templateCarouselIndex === 0}
-                              className="shrink-0 hidden lg:flex"
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-
-                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 flex-1">
-                              {templateOptions
-                                .slice(templateCarouselIndex, templateCarouselIndex + 4)
-                                .map((template) => (
-                                  <button
-                                    key={template.id}
-                                    type="button"
-                                    onClick={() =>
-                                      updateFormData({
-                                        selectedTemplate: template.id as TemplateType,
-                                      })
-                                    }
-                                    className={cn(
-                                      "p-1 border-2 rounded-lg transition-all",
-                                      formData.selectedTemplate === template.id
-                                        ? "border-foreground scale-105"
-                                        : "border-transparent hover:border-muted-foreground",
-                                    )}
-                                  >
-                                    <div className="aspect-3/4 bg-muted rounded overflow-hidden">
-                                      <img
-                                        src={template.img}
-                                        alt={template.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <p className="text-xs text-center mt-1">
-                                      {template.name}
-                                    </p>
-                                  </button>
-                                ))}
-                            </div>
-
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                setTemplateCarouselIndex((prev) =>
-                                  Math.min(
-                                    templateOptions.length - 4,
-                                    prev + 4,
-                                  ),
-                                )
-                              }
-                              disabled={
-                                templateCarouselIndex >=
-                                templateOptions.length - 4
-                              }
-                              className="shrink-0 hidden lg:flex"
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex justify-center mt-2 gap-1 hidden lg:flex">
-                            {Array.from({
-                              length: Math.ceil(templateOptions.length / 4),
-                            }).map((_, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => setTemplateCarouselIndex(i * 4)}
-                                className={cn(
-                                  "w-2 h-2 rounded-full transition-all",
-                                  templateCarouselIndex === i * 4
-                                    ? "bg-foreground"
-                                    : "bg-muted-foreground/30",
-                                )}
-                              />
-                            ))}
-                          </div>
+                        <div className="mt-2">
+                          <TemplateCarousel
+                            templates={templateOptions}
+                            selectedTemplate={formData.selectedTemplate}
+                            onSelectTemplate={handleTemplateSelection}
+                          />
                         </div>
                       </div>
 
                       <div>
                         <Label>Color del diseño</Label>
                         <div className="grid grid-cols-4 gap-2 mt-2">
-                          {colorPalette.map((color) => (
+                          {availableTemplateColors.map((color) => (
                             <button
-                              key={color.value}
+                              key={color}
                               type="button"
                               onClick={() =>
                                 updateFormData({
                                   templateSettings: {
                                     ...formData.templateSettings,
-                                    primaryColor: color.value,
+                                    primaryColor: color,
                                   },
                                 })
                               }
                               className={cn(
                                 "h-10 rounded-lg border-2 transition-all",
                                 formData.templateSettings.primaryColor ===
-                                  color.value
+                                  color
                                   ? "border-foreground scale-110"
                                   : "border-transparent hover:scale-105",
                               )}
-                              style={{ backgroundColor: color.value }}
-                              title={color.name}
+                              style={{ backgroundColor: color }}
+                              title={color}
                             />
                           ))}
                         </div>

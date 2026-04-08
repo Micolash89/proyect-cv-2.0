@@ -3,6 +3,7 @@ import { View, Text } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout0Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 interface BodyProps {
   user: UserCV;
@@ -30,10 +31,6 @@ const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boole
   return start || end;
 };
 
-const getLocationLabel = (localidad?: string, municipio?: string, provincia?: string) => {
-  return [localidad, municipio, provincia].filter(Boolean).join(", ");
-};
-
 const toBulletLines = (text?: string) => {
   if (!text) return [];
 
@@ -50,7 +47,13 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{exp.company}</Text>
-        <Text style={styles.location}>{getLocationLabel(exp.localidad, exp.municipio, exp.provincia)}</Text>
+        <Text style={styles.location}>
+          {formatPdfLocation({
+            localidad: exp.localidad,
+            municipio: exp.municipio,
+            provincia: exp.provincia,
+          })}
+        </Text>
       </View>
       <View style={styles.entryHeader}>
         <Text style={styles.degree}>{exp.position}</Text>
@@ -71,7 +74,13 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{edu.institution}</Text>
-        <Text style={styles.location}>{getLocationLabel(edu.localidad, edu.municipio, edu.provincia)}</Text>
+        <Text style={styles.location}>
+          {formatPdfLocation({
+            localidad: edu.localidad,
+            municipio: edu.municipio,
+            provincia: edu.provincia,
+          })}
+        </Text>
       </View>
       <View style={styles.entryHeader}>
         <Text style={styles.degree}>{edu.degree}</Text>

@@ -9,7 +9,7 @@ import { createLayout6Styles } from "./styles";
 
 export const Layout6: React.FC<{ user: UserCV; options?: Partial<OptionsPDF> }> = ({ user, options }) => {
   registerFonts();
-  const opts = { ...DEFAULT_OPTIONS_PDF, ...options, fontFamily: options?.fontFamily || "Poppins" };
+  const opts = { ...DEFAULT_OPTIONS_PDF, ...options };
   const styles = createLayout6Styles(opts);
   const documentTitle = opts.fullName ? user.fullName : user.fullName.split(" ").slice(0, 2).join(" ");
 

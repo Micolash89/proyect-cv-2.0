@@ -8,10 +8,24 @@ import { Layout4 } from "@/lib/stylePdf/Layout4/index";
 import { Layout5 } from "@/lib/stylePdf/Layout5/index";
 import { Layout6 } from "@/lib/stylePdf/Layout6/index";
 import { DEFAULT_OPTIONS_PDF } from "@/lib/stylePdf/definitions";
+import {
+  resolveTemplateId,
+  sanitizeTemplatePrimaryColor,
+} from "@/lib/constants/templates";
 
 interface CVTemplateProps {
   user: UserCV;
 }
+
+const TEMPLATE_FONT_FAMILY: Record<string, string> = {
+  harvard: "Times",
+  modern: "Roboto",
+  classic: "Roboto",
+  creative: "Montserrat",
+  minimal: "Helvetica",
+  professional: "Helvetica",
+  layout6: "Inter",
+};
 
 const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
   const templateMap: Record<string, React.FC<{ user: UserCV; options?: any }>> = {
@@ -25,11 +39,7 @@ const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
     elegant: Layout6,
   };
 
-  const templateAliases: Record<string, string> = {
-    elegant: "layout6",
-  };
-
-  const selectedTemplateId = templateAliases[user.selectedTemplate] || user.selectedTemplate;
+  const selectedTemplateId = resolveTemplateId(user.selectedTemplate);
 
   const SelectedLayout = templateMap[selectedTemplateId] || Layout0;
   
@@ -42,13 +52,20 @@ const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
   };
   
   const fontSizePreset = fontSizeMap[templateSettings.fontSize as string] || fontSizeMap.medium;
+  const primaryColor = sanitizeTemplatePrimaryColor(
+    selectedTemplateId,
+    templateSettings.primaryColor,
+  );
+  const enforcedFontFamily =
+    TEMPLATE_FONT_FAMILY[selectedTemplateId] || DEFAULT_OPTIONS_PDF.fontFamily;
 
   const options = {
     ...DEFAULT_OPTIONS_PDF,
-    primaryColor: templateSettings.primaryColor || DEFAULT_OPTIONS_PDF.primaryColor,
+    primaryColor,
+    headerBackground: templateSettings.headerBackground || primaryColor,
     headerFontSize: templateSettings.headerFontSize || fontSizePreset.header,
     bodyFontSize: templateSettings.bodyFontSize || fontSizePreset.body,
-    fontFamily: templateSettings.fontFamily || DEFAULT_OPTIONS_PDF.fontFamily,
+    fontFamily: enforcedFontFamily,
     padding: templateSettings.padding || DEFAULT_OPTIONS_PDF.padding,
     margin: templateSettings.margin || DEFAULT_OPTIONS_PDF.margin,
     headerPadding: templateSettings.headerPadding || DEFAULT_OPTIONS_PDF.headerPadding,

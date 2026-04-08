@@ -5,6 +5,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
   const bodyPaddingX = Math.max(16, Math.round(opts.bodyPadding * 0.45));
   const bodyPaddingY = Math.max(12, Math.round(opts.bodyPadding * 0.35));
   const headerPadding = Math.max(12, Math.round(opts.headerPadding * 0.35));
+  const accentColor = opts.primaryColor || "#172538";
 
   return StyleSheet.create({
     page: {
@@ -46,7 +47,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       letterSpacing: 1.2,
       textTransform: "uppercase",
       marginBottom: 8,
-      color: "#172538",
+      color: accentColor,
       borderBottomWidth: 1,
       borderBottomColor: "#D6D6D6",
       paddingBottom: 4,
@@ -91,7 +92,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       fontSize: opts.headerFontSize + 8,
       letterSpacing: 2,
       textTransform: "uppercase",
-      color: "#172538",
+      color: accentColor,
       fontWeight: "medium",
     },
     watermarkSurname: {
@@ -110,7 +111,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       letterSpacing: 1.3,
       textTransform: "uppercase",
       marginBottom: 8,
-      color: "#172538",
+      color: accentColor,
       borderBottomWidth: 1,
       borderBottomColor: "#D6D6D6",
       paddingBottom: 4,

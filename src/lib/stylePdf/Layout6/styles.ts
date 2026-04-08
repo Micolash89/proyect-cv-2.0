@@ -7,6 +7,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
   const headerPaddingX = Math.max(10, Math.round(opts.headerPadding * 0.28));
   const headerPaddingY = Math.max(12, Math.round(opts.headerPadding * 0.3));
   const bodySpacing = opts.spaceBetween ? 16 : 12;
+  const accentColor = opts.primaryColor || "#2D160C";
 
   return StyleSheet.create({
     page: {
@@ -38,7 +39,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 122,
       objectFit: "cover",
       borderWidth: 1,
-      borderColor: "#B8B0A8",
+      borderColor: accentColor,
       alignSelf: "flex-start",
     },
     profileImageFallback: {
@@ -46,13 +47,13 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 122,
       backgroundColor: "#F0F0F0",
       borderWidth: 1,
-      borderColor: "#B8B0A8",
+      borderColor: accentColor,
     },
     name: {
       fontWeight: "bold",
       fontSize: opts.headerFontSize + 5,
       letterSpacing: 0.4,
-      color: "#2D160C",
+      color: accentColor,
     },
     contactInfo: {
       marginTop: 10,
@@ -66,7 +67,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     },
     contactLabel: {
       fontWeight: "bold",
-      color: "#2F1A11",
+      color: accentColor,
       fontSize: opts.bodyFontSize - 1,
       width: 72,
     },
@@ -95,14 +96,14 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     section: {
       marginBottom: bodySpacing,
       borderTopWidth: 1,
-      borderTopColor: "#B8A9A0",
+      borderTopColor: accentColor,
       paddingTop: 10,
     },
     sectionTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 5,
       marginBottom: 8,
-      color: "#24140E",
+      color: accentColor,
       textTransform: "capitalize",
     },
     summary: {
@@ -150,14 +151,14 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 10,
       borderRadius: 5,
       borderWidth: 2,
-      borderColor: "#B8A9A0",
+      borderColor: accentColor,
       backgroundColor: "#FFFFFF",
       marginTop: 6,
     },
     timelineLine: {
       position: "absolute",
       width: 1,
-      backgroundColor: "#B8A9A0",
+      backgroundColor: accentColor,
       top: 15,
       bottom: -12,
     },
@@ -169,7 +170,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     timelineTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 2,
-      color: "#24140E",
+      color: accentColor,
     },
     timelineSubtitle: {
       color: "#5C514A",
@@ -203,14 +204,14 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 10,
       borderRadius: 5,
       borderWidth: 2,
-      borderColor: "#B8A9A0",
+      borderColor: accentColor,
       backgroundColor: "#FFFFFF",
       marginTop: 5,
     },
     educationLine: {
       position: "absolute",
       width: 1,
-      backgroundColor: "#B8A9A0",
+      backgroundColor: accentColor,
       top: 15,
       bottom: -10,
     },
@@ -226,7 +227,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     educationTitle: {
       fontSize: opts.bodyFontSize + 1,
       fontWeight: "bold",
-      color: "#24140E",
+      color: accentColor,
     },
     educationSubtitle: {
       fontSize: opts.bodyFontSize,
@@ -252,7 +253,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       flex: 1,
       paddingLeft: 18,
       borderLeftWidth: 1,
-      borderLeftColor: "#B8A9A0",
+      borderLeftColor: accentColor,
     },
     languageItem: {
       flexDirection: "row",
@@ -261,7 +262,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     },
     languageName: {
       fontSize: opts.bodyFontSize,
-      color: "#24140E",
+      color: accentColor,
     },
     languageLevel: {
       color: "#6B625B",

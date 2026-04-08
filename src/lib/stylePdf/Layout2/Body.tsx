@@ -3,6 +3,7 @@ import { Text, View } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout2Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 interface BodyProps {
   user: UserCV;
@@ -26,10 +27,6 @@ const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boole
   return start || end;
 };
 
-const formatLocation = (...parts: Array<string | undefined>) => {
-  return parts.filter(Boolean).join(", ");
-};
-
 const toBulletLines = (text?: string) => {
   if (!text) return [];
 
@@ -43,7 +40,11 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout2Styles(options);
 
   const experienceEntries = user.experience.map((exp, index) => {
-    const experienceLocation = formatLocation(exp.localidad, exp.municipio, exp.provincia);
+    const experienceLocation = formatPdfLocation({
+      localidad: exp.localidad,
+      municipio: exp.municipio,
+      provincia: exp.provincia,
+    });
 
     return (
       <View key={index} style={styles.entryContainer}>
@@ -66,7 +67,11 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
   });
 
   const educationEntries = user.education.map((edu, index) => {
-    const educationLocation = formatLocation(edu.localidad, edu.municipio, edu.provincia);
+    const educationLocation = formatPdfLocation({
+      localidad: edu.localidad,
+      municipio: edu.municipio,
+      provincia: edu.provincia,
+    });
 
     return (
       <View key={index} style={styles.entryContainer}>

@@ -7,6 +7,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
   const headerHeight = 232;
   const leftColumnWidth = "35%";
   const rightColumnWidth = "65%";
+  const accentColor = opts.primaryColor || "#4E5054";
 
   return StyleSheet.create({
     page: {
@@ -72,7 +73,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     leftColumn: {
       width: leftColumnWidth,
-      backgroundColor: "#4E5054",
+      backgroundColor: accentColor,
       paddingTop: 12,
       paddingLeft: 12,
       paddingRight: 10,
@@ -123,7 +124,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
       fontWeight: "bold",
       marginBottom: 6,
       letterSpacing: 1,
-      color: "#050B15",
+      color: accentColor,
       textTransform: "uppercase",
     },
     summary: {

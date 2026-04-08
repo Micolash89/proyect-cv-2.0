@@ -3,6 +3,7 @@ import { View, Text } from "@react-pdf/renderer";
 import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout1Styles } from "./styles";
+import { formatPdfLocation } from "../utils/location";
 
 interface BodyProps {
   user: UserCV;
@@ -17,10 +18,6 @@ const parseDate = (dateStr: string | undefined) => {
   } catch {
     return dateStr;
   }
-};
-
-const formatLocation = (...parts: Array<string | undefined>) => {
-  return parts.filter(Boolean).join(", ");
 };
 
 const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
@@ -39,7 +36,17 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
       <Text style={styles.jobTitle}>{exp.position}</Text>
       <Text style={styles.dateLocation}>
         {formatDateRange(exp.startDate, exp.endDate, exp.current)}
-        {formatLocation(exp.localidad, exp.municipio, exp.provincia) && ` | ${formatLocation(exp.localidad, exp.municipio, exp.provincia)}`}
+        {formatPdfLocation({
+          localidad: exp.localidad,
+          municipio: exp.municipio,
+          provincia: exp.provincia,
+        })
+          ? ` | ${formatPdfLocation({
+              localidad: exp.localidad,
+              municipio: exp.municipio,
+              provincia: exp.provincia,
+            })}`
+          : ""}
       </Text>
       {exp.description && (
         <Text style={styles.description}>• {exp.description}</Text>
@@ -53,7 +60,17 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
       <Text style={styles.jobTitle}>{edu.degree}</Text>
       <Text style={styles.dateLocation}>
         {formatDateRange(edu.startDate, edu.endDate, edu.current)}
-        {formatLocation(edu.localidad, edu.municipio, edu.provincia) && ` | ${formatLocation(edu.localidad, edu.municipio, edu.provincia)}`}
+        {formatPdfLocation({
+          localidad: edu.localidad,
+          municipio: edu.municipio,
+          provincia: edu.provincia,
+        })
+          ? ` | ${formatPdfLocation({
+              localidad: edu.localidad,
+              municipio: edu.municipio,
+              provincia: edu.provincia,
+            })}`
+          : ""}
       </Text>
     </View>
   ));
