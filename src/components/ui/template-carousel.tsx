@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -19,6 +19,7 @@ export function TemplateCarousel({
   onSelectTemplate,
   desktopPerView = 4,
 }: TemplateCarouselProps) {
+  const mobileScrollRef = useRef<HTMLDivElement | null>(null);
   const [desktopIndex, setDesktopIndex] = useState(0);
 
   const maxDesktopIndex = Math.max(0, templates.length - desktopPerView);
@@ -64,10 +65,35 @@ export function TemplateCarousel({
     }
   };
 
+  const mobileIndex = useMemo(
+    () => {
+      const selectedIndex = templates.findIndex((template) => template.id === selectedTemplate);
+      return selectedIndex >= 0 ? selectedIndex : 0;
+    },
+    [selectedTemplate, templates],
+  );
+
+  const scrollMobileToIndex = (nextIndex: number) => {
+    const container = mobileScrollRef.current;
+    const nextTemplate = templates[nextIndex];
+    if (!container || !nextTemplate) return;
+
+    onSelectTemplate(nextTemplate.id);
+    container.scrollTo({
+      left: container.clientWidth * nextIndex,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="space-y-3">
-      <div className="md:hidden overflow-x-auto snap-x snap-mandatory" onScroll={handleMobileScroll}>
-        <div className="flex">
+      <div className="md:hidden space-y-3">
+        <div
+          ref={mobileScrollRef}
+          className="overflow-x-auto snap-x snap-mandatory scroll-smooth"
+          onScroll={handleMobileScroll}
+        >
+          <div className="flex">
           {templates.map((template) => (
             <button
               key={template.id}
@@ -91,6 +117,46 @@ export function TemplateCarousel({
               <p className="text-sm text-center mt-2 font-medium">{template.name}</p>
             </button>
           ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => scrollMobileToIndex(Math.max(0, mobileIndex - 1))}
+            disabled={mobileIndex === 0}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Anterior
+          </Button>
+          <div className="flex items-center gap-1">
+            {templates.map((template, index) => (
+              <button
+                key={template.id}
+                type="button"
+                onClick={() => scrollMobileToIndex(index)}
+                className={cn(
+                  "h-2.5 rounded-full transition-all",
+                  mobileIndex === index ? "w-6 bg-foreground" : "w-2.5 bg-muted-foreground/30",
+                )}
+                aria-label={`Ir a la plantilla ${template.name}`}
+              />
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => scrollMobileToIndex(Math.min(templates.length - 1, mobileIndex + 1))}
+            disabled={mobileIndex >= templates.length - 1}
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
         </div>
       </div>
 

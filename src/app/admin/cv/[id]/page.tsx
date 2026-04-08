@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-// import Link from "next/link";
-// import { motion } from "framer-motion";
+import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   Save,
@@ -98,41 +99,67 @@ export default function AdminCVPage() {
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
       setPreviewPosition({
         x: e.clientX - dragOffset.x,
         y: e.clientY - dragOffset.y,
       });
     }
-  };
+  }, [dragOffset.x, dragOffset.y, isDragging]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove as any);
+      window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     }
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove as any);
+      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [handleMouseMove, handleMouseUp, isDragging]);
+
+  const fetchUser = useCallback(async () => {
+    if (!params.id) return;
+    try {
+      const { user } = await getCV(params.id as string);
+      setUser(user);
+      setOriginalUser(JSON.parse(JSON.stringify(user)));
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      router.push("/admin");
+    } finally {
+      setLoading(false);
+    }
+  }, [params.id, router]);
 
   useEffect(() => {
-    if (params.id) {
-      fetchUser();
+    fetchUser();
+  }, [fetchUser]);
+
+  const handleStatusChange = useCallback(async (status: CVStatus) => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await updateCV(user._id, { status });
+      setUser({ ...user, status });
+      toast.success("Estado actualizado");
+    } catch (error) {
+      toast.error("Error al actualizar estado");
+    } finally {
+      setSaving(false);
     }
-  }, [params.id]);
+  }, [user]);
 
   useEffect(() => {
     if (user && user?.status == "pending") {
       handleStatusChange("reviewed");
     }
-  }, [user]);
+  }, [handleStatusChange, user]);
 
   useEffect(() => {
     if (user && originalUser) {
@@ -145,19 +172,6 @@ export default function AdminCVPage() {
       setHasUnsavedChanges(isDifferent);
     }
   }, [user, originalUser]);
-
-  const fetchUser = async () => {
-    try {
-      const { user } = await getCV(params.id as string);
-      setUser(user);
-      setOriginalUser(JSON.parse(JSON.stringify(user)));
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      router.push("/admin");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -172,20 +186,6 @@ export default function AdminCVPage() {
     } catch (error) {
       console.error("Error saving:", error);
       toast.error("Error al guardar");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleStatusChange = async (status: CVStatus) => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      await updateCV(user._id, { status });
-      setUser({ ...user, status });
-      toast.success("Estado actualizado");
-    } catch (error) {
-      toast.error("Error al actualizar estado");
     } finally {
       setSaving(false);
     }
@@ -312,7 +312,6 @@ export default function AdminCVPage() {
 
   // Update user.location when location selection changes
   useEffect(() => {
-    if (!user) return;
     const provinciaNombre = selectedProvincia
       ? provincias.find((p) => p.id === selectedProvincia)?.nombre
       : "";
@@ -321,14 +320,15 @@ export default function AdminCVPage() {
       provinciaNombre,
     ].filter(Boolean);
     const newLocation = parts.join(", ");
-    if (user.location !== newLocation) {
-      setUser({ ...user, location: newLocation });
-    }
+    setUser((current) => {
+      if (!current || current.location === newLocation) return current;
+      return { ...current, location: newLocation };
+    });
   }, [
     selectedProvincia,
     selectedDepartamento,
     selectedLocalidad,
-    user?.location,
+    provincias,
   ]);
 
   // Initialize location from user data (only once on mount)
@@ -672,8 +672,55 @@ export default function AdminCVPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 space-y-4 animate-in">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
+          <div className="flex gap-2 flex-wrap">
+            <Skeleton className="h-10 w-28" />
+            <Skeleton className="h-10 w-28" />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Skeleton className="h-10 w-full sm:w-40" />
+            <Skeleton className="h-10 w-full sm:w-40" />
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-40" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -681,65 +728,75 @@ export default function AdminCVPage() {
   if (!user) return null;
 
   const previewUrl = `/downloads/cv/${user._id}?t=${previewKey}`;
+  const currentPhoto = photoPreview || user.photo;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {showPreview && (
-        <div
-          className="fixed w-100 h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden"
-          style={{
-            left: previewPosition.x,
-            top: previewPosition.y,
-            cursor: isDragging ? "grabbing" : "grab",
-          }}
-          onMouseDown={handleMouseDown}
-        >
-          <div className="flex items-center justify-between p-2 border-b bg-gray-50 cursor-grab">
-            <span className="text-sm font-medium text-black">Vista Previa</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="shadow-sm dark:bg-black hover:dark:bg-black/50"
-              onClick={() => setShowPreview(false)}
-            >
-              <X className="h-4 w-4 text-white" />
-            </Button>
-          </div>
-          <iframe
-            src={previewUrl}
-            className="flex-1 w-full rounded-md"
-            title="Vista Previa del CV"
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {showPreview && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            className="fixed inset-x-4 top-4 md:inset-auto md:w-100 md:h-125 bg-white border-2 border-gray-300 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden"
+            style={{
+              left: previewPosition.x,
+              top: previewPosition.y,
+              cursor: isDragging ? "grabbing" : "grab",
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="flex items-center justify-between p-2 border-b bg-gray-50 cursor-grab">
+              <span className="text-sm font-medium text-black">Vista Previa</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shadow-sm dark:bg-black hover:dark:bg-black/50"
+                onClick={() => setShowPreview(false)}
+              >
+                <X className="h-4 w-4 text-white" />
+              </Button>
+            </div>
+            <iframe
+              src={previewUrl}
+              className="flex-1 w-full rounded-md"
+              title="Vista Previa del CV"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="flex items-center flex-col gap-5 md:gap-0 md:justify-between md:flex-row mb-8 ">
-        <div className="flex items-center  md:gap-4 w-full md:w-fit justify-between md:justify-items-normal">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 w-full flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:justify-start lg:gap-4 w-full lg:w-auto">
           <Button
             variant="ghost"
-            className="self-start md:self-auto"
+            className="w-full sm:w-auto self-start"
             onClick={() => router.push("/admin")}
           >
             <ArrowLeft className="size-6 md:size-4 mr-2" />
             <span className="hidden md:block">Volver</span>
           </Button>
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">{user.fullName}</h1>
-            <p className="text-muted-foreground text-xs md:text-base">
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold wrap-break-word">{user.fullName}</h1>
+            <p className="text-muted-foreground text-xs md:text-base wrap-break-word">
               {user.email}
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-fit ">
-          <div className="flex gap-2 ">
+        <div className="flex flex-col gap-2 w-full lg:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-2">
             <Button
               variant="outline"
               onClick={handleSave}
-              className={`${hasUnsavedChanges && "border-2 border-red-500"}`}
+              className={`${hasUnsavedChanges && "border-2 border-red-500"} w-full`}
               loading={saving}
             >
               <Save className="size-6 md:size-4 mr-2" />
-              <span className="">Guardar</span>
+              <span>Guardar</span>
             </Button>
             <Button
               variant="outline"
@@ -754,10 +811,10 @@ export default function AdminCVPage() {
                 {showPreview ? "Ocultar" : "Preview"}
               </span>
             </Button>
-            <a href={previewUrl} target="_blank">
-              <Button variant="default">
+            <a href={previewUrl} target="_blank" className="w-full lg:w-auto">
+              <Button variant="default" className="w-full lg:w-auto">
                 <Download className="size-6 md:size-4 mr-2 " />
-                <span className="">Descargar PDF</span>
+                <span>Descargar PDF</span>
               </Button>
             </a>
           </div>
@@ -769,7 +826,7 @@ export default function AdminCVPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* <div
         className="border-2 border-dashed rounded-lg p-4 mb-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
@@ -793,7 +850,12 @@ export default function AdminCVPage() {
         />
       </div> */}
 
-      <div className="flex gap-2 mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="flex flex-wrap gap-2 mb-6"
+      >
         <Button
           variant={user.status === "reviewed" ? "default" : "outline"}
           size="sm"
@@ -810,9 +872,9 @@ export default function AdminCVPage() {
           <CheckCircle className="h-4 w-4 mr-1" />
           Completado
         </Button>
-      </div>
+      </motion.div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -883,36 +945,39 @@ export default function AdminCVPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {user.experience.map((exp: any) => (
-                <div key={exp.id} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex justify-between">
-                    <div>
-
-                    
-                    <Input
-                      placeholder="Empresa"
-                      value={exp.company}
-                      onChange={(e) =>
-                        updateExperience(exp.id, "company", e.target.value)
-                      }
-                      className="w-full"
-                    />
+                <motion.div
+                  key={exp.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 border rounded-lg space-y-3"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <Input
+                        placeholder="Empresa"
+                        value={exp.company}
+                        onChange={(e) =>
+                          updateExperience(exp.id, "company", e.target.value)
+                        }
+                        className="w-full"
+                      />
+                      <Input
+                        placeholder="Puesto"
+                        value={exp.position}
+                        onChange={(e) =>
+                          updateExperience(exp.id, "position", e.target.value)
+                        }
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="self-end sm:self-start shrink-0"
                       onClick={() => removeExperience(exp.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                  <Input
-                    placeholder="Puesto"
-                    value={exp.position}
-                    onChange={(e) =>
-                      updateExperience(exp.id, "position", e.target.value)
-                    }
-                    />
-
-                    </div>
                   <ExperienceLocationSelector
                     experienciaId={exp.id}
                     initialProvincia={exp.provincia}
@@ -921,7 +986,7 @@ export default function AdminCVPage() {
                     onChange={updateExperienceLocation}
                   />
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
                       type="date"
                       value={exp.startDate}
@@ -956,7 +1021,7 @@ export default function AdminCVPage() {
                       onClick={() => improveDescription(exp.id)}
                       disabled={improvingText === exp.id}
                       title="Mejorar descripción con IA"
-                      className="gap-2 flex"
+                      className="gap-2 flex w-full sm:w-auto"
                     >
                       {improvingText === exp.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -979,7 +1044,7 @@ export default function AdminCVPage() {
                       className="flex-1"
                     />
                   </div>
-                </div>
+                </motion.div>
               ))}
               <Button variant="outline" onClick={addExperience}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -994,22 +1059,25 @@ export default function AdminCVPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {user.education.map((edu: any, index: number) => (
-                <div
+                <motion.div
                   key={index + "educacion"}
                   className="p-4 border rounded-lg space-y-3"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="flex justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <Input
                       placeholder="Institución"
                       value={edu.institution}
                       onChange={(e) =>
                         updateEducation(edu.id, "institution", e.target.value)
                       }
-                      className="w-full"
+                      className="w-full flex-1"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="self-end sm:self-start shrink-0"
                       onClick={() => removeEducation(edu.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -1029,7 +1097,7 @@ export default function AdminCVPage() {
                     initialLocalidad={edu.localidad}
                     onChange={updateEducationLocation}
                   />
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
                       type="date"
                       value={edu.startDate}
@@ -1045,7 +1113,7 @@ export default function AdminCVPage() {
                       }
                     />
                   </div>
-                </div>
+                </motion.div>
               ))}
               <Button variant="outline" onClick={addEducation}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -1059,11 +1127,12 @@ export default function AdminCVPage() {
               <CardTitle>Habilidades</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between mb-4">
-                <div className="flex gap-2">
-                  <Input placeholder="Agregar habilidad" id="newSkill" />
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <Input placeholder="Agregar habilidad" id="newSkill" className="w-full" />
                   <Button
                     type="button"
+                    className="w-full sm:w-auto"
                     onClick={() => {
                       const input = document.getElementById(
                         "newSkill",
@@ -1077,6 +1146,7 @@ export default function AdminCVPage() {
                 </div>
                 <Button
                   variant="outline"
+                  className="w-full lg:w-auto"
                   onClick={generateSkillsWithAI}
                   disabled={generatingProfile}
                 >
@@ -1108,7 +1178,7 @@ export default function AdminCVPage() {
               <CardTitle>Idiomas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   placeholder="Idioma (ej: Inglés)"
                   id="newLanguage"
@@ -1116,7 +1186,7 @@ export default function AdminCVPage() {
                 />
                 <select
                   id="newLanguageLevel"
-                  className="flex h-10 w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full sm:w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="" disabled hidden>Idioma</option>
                   <option value="Básico">Básico</option>
@@ -1126,6 +1196,7 @@ export default function AdminCVPage() {
                 </select>
                 <Button
                   type="button"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     const input = document.getElementById(
                       "newLanguage",
@@ -1145,7 +1216,7 @@ export default function AdminCVPage() {
                 {user.languages.map((lang: any) => (
                   <div
                     key={lang.id}
-                    className="flex items-center gap-2 p-2 border rounded"
+                    className="flex flex-col gap-2 p-2 border rounded sm:flex-row sm:items-center"
                   >
                     <Input
                       value={lang.language || ""}
@@ -1159,7 +1230,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateLanguage(lang.id, "level", e.target.value)
                       }
-                      className="flex h-10 w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full sm:w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="" disabled hidden>Nivel</option>
                       <option value="Básico">Básico</option>
@@ -1170,6 +1241,7 @@ export default function AdminCVPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="self-end sm:self-auto"
                       onClick={() => removeLanguage(lang.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -1185,7 +1257,7 @@ export default function AdminCVPage() {
               <CardTitle>Perfil / Resumen</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex mb-2 justify-between">
+              <div className="flex flex-col gap-2 mb-2 lg:flex-row lg:items-center lg:justify-between">
                 <Input
                   placeholder="Puesto aspirado (para generar perfil ATS)"
                   value={user.targetJob || ""}
@@ -1197,6 +1269,7 @@ export default function AdminCVPage() {
                   onClick={generateProfileWithAI}
                   disabled={generatingProfile || user.experience.length === 0}
                   title="Generar perfil con IA"
+                  className="w-full lg:w-auto"
                 >
                   {generatingProfile ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1497,11 +1570,13 @@ export default function AdminCVPage() {
                       : "border-transparent",
                   )}
                 >
-                  {photoPreview || user.photo ? (
-                    <img
-                      src={photoPreview || user.photo}
+                  {currentPhoto ? (
+                    <Image
+                      src={currentPhoto}
                       alt={user.fullName}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="128px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -1548,7 +1623,7 @@ export default function AdminCVPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

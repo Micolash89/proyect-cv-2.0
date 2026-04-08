@@ -175,6 +175,20 @@ function RegistroPageContent() {
     loadProvincias();
   }, []);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: zodResolver(basicInfoSchema),
+    defaultValues: formData,
+  });
+
+  const updateFormData = useCallback((data: Partial<FormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  }, []);
+
   useEffect(() => {
     const googleDataParam = searchParams.get("google_data");
     const errorParam = searchParams.get("error");
@@ -207,21 +221,7 @@ function RegistroPageContent() {
         toast.error("Error al procesar datos de Google");
       }
     }
-  }, [searchParams]);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(basicInfoSchema),
-    defaultValues: formData,
-  });
-
-  const updateFormData = useCallback((data: Partial<FormData>) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-  }, []);
+  }, [searchParams, updateFormData]);
 
   const availableTemplateColors = getTemplatePalette(formData.selectedTemplate);
 
@@ -442,10 +442,12 @@ function RegistroPageContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 text-center"
+          className="mb-6 md:mb-8 text-center"
         >
-          <h1 className="text-3xl font-bold mb-2">Crea tu CV</h1>
-          <p className="text-muted-foreground">Completa los siguientes pasos</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Crea tu CV</h1>
+          <p className="text-sm md:text-base text-muted-foreground px-2">
+            Completa los siguientes pasos
+          </p>
         </motion.div>
 
         <div className="hidden md:flex justify-center mb-8 overflow-x-auto pb-2">

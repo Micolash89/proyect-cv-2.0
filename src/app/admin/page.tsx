@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search, Filter, Eye, CheckCircle, Clock, XCircle,
   FileText, Users, Plus, ChevronLeft, ChevronRight
@@ -30,11 +31,7 @@ export default function AdminDashboard() {
   const [total, setTotal] = useState(0);
   const limit = 10;
 
-  useEffect(() => {
-    fetchUsers();
-  }, [debouncedSearch, statusFilter, currentPage]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getCVs({ 
@@ -51,7 +48,11 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, debouncedSearch, currentPage]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -75,6 +76,8 @@ export default function AdminDashboard() {
     reviewed: users.filter((u) => u.status === "reviewed").length,
     completed: users.filter((u) => u.status === "completed").length,
   };
+
+  const tableSkeletonRows = Array.from({ length: 6 }, (_, index) => index);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -197,81 +200,120 @@ export default function AdminDashboard() {
                 <th className="text-left p-4 font-medium">Acciones</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto" />
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                    No se encontraron registros
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => {
-                  const status = statusConfig[user.status];
-                  return (
-                    <tr
-                      key={user._id}
-                      className={cn(
-                        "border-t hover:bg-muted/50 transition-colors",
-                        !user.viewed && "bg-primary/5"
-                      )}
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          {user.photo && (
-                            <img
-                              src={user.photo}
-                              alt={user.fullName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium">{user.fullName}</p>
-                            {!user.viewed && (
-                              <Badge variant="info" className="text-xs">Nuevo</Badge>
-                            )}
+            <AnimatePresence mode="wait">
+              <tbody>
+                {loading ? (
+                  <motion.tr
+                    key="skeletons"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <td colSpan={6} className="p-0">
+                      <div>
+                        {tableSkeletonRows.map((row) => (
+                          <div
+                            key={row}
+                            className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto_auto_auto] gap-4 items-center border-t p-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                              <div className="space-y-2 flex-1 min-w-0">
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-20" />
+                              </div>
+                            </div>
+                            <div className="hidden md:block">
+                              <Skeleton className="h-4 w-32" />
+                            </div>
+                            <div className="hidden lg:block">
+                              <Skeleton className="h-4 w-48" />
+                            </div>
+                            <Skeleton className="h-6 w-24" />
+                            <Skeleton className="hidden sm:block h-4 w-24" />
+                            <Skeleton className="h-9 w-20 justify-self-start md:justify-self-end" />
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4 hidden md:table-cell">
-                        <a
-                          href={`https://wa.me/${user.phone.replace(/\D/g, "")}`}
-                          target="_blank"
-                          className="text-primary hover:underline"
-                        >
-                          {formatPhone(user.phone)}
-                        </a>
-                      </td>
-                      <td className="p-4 hidden lg:table-cell text-muted-foreground">
-                        {user.email}
-                      </td>
-                      <td className="p-4">
-                        <Badge variant={status.variant}>
-                          <status.icon className="h-3 w-3 mr-1" />
-                          {status.label}
-                        </Badge>
-                      </td>
-                      <td className="p-4 hidden sm:table-cell text-muted-foreground text-sm">
-                        {formatDate(user.createdAt)}
-                      </td>
-                      <td className="p-4">
-                        <Link href={`/admin/cv/${user._id}`}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ver
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
+                        ))}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ) : users.length === 0 ? (
+                  <motion.tr
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      No se encontraron registros
+                    </td>
+                  </motion.tr>
+                ) : (
+                  users.map((user, index) => {
+                    const status = statusConfig[user.status];
+                    return (
+                      <motion.tr
+                        key={user._id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className={cn(
+                          "border-t hover:bg-muted/50 transition-colors",
+                          !user.viewed && "bg-primary/5"
+                        )}
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            {user.photo && (
+                              <img
+                                src={user.photo}
+                                alt={user.fullName}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium">{user.fullName}</p>
+                              {!user.viewed && (
+                                <Badge variant="info" className="text-xs">Nuevo</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <a
+                            href={`https://wa.me/${user.phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            className="text-primary hover:underline"
+                          >
+                            {formatPhone(user.phone)}
+                          </a>
+                        </td>
+                        <td className="p-4 hidden lg:table-cell text-muted-foreground">
+                          {user.email}
+                        </td>
+                        <td className="p-4">
+                          <Badge variant={status.variant}>
+                            <status.icon className="h-3 w-3 mr-1" />
+                            {status.label}
+                          </Badge>
+                        </td>
+                        <td className="p-4 hidden sm:table-cell text-muted-foreground text-sm">
+                          {formatDate(user.createdAt)}
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/admin/cv/${user._id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ver
+                            </Button>
+                          </Link>
+                        </td>
+                      </motion.tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </AnimatePresence>
           </table>
         </div>
         
