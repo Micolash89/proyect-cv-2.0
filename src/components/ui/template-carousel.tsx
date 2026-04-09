@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import type { TemplateOption } from "@/lib/constants/templates";
+import Image from "next/image";
 
 interface TemplateCarouselProps {
   templates: TemplateOption[];
@@ -46,12 +47,17 @@ export function TemplateCarousel({
         ? "grid-cols-2"
         : "grid-cols-4";
 
+  const getMobileStep = (container: HTMLDivElement): number => {
+    const firstCard = container.querySelector<HTMLElement>("[data-template-card='true']");
+    if (!firstCard) return container.clientWidth;
+
+    const width = firstCard.getBoundingClientRect().width;
+    return width > 0 ? width : container.clientWidth;
+  };
+
   const handleMobileScroll: React.UIEventHandler<HTMLDivElement> = (event) => {
     const container = event.currentTarget;
-    const firstCard = container.querySelector<HTMLElement>("[data-template-card='true']");
-    if (!firstCard) return;
-
-    const step = firstCard.offsetWidth;
+    const step = getMobileStep(container);
     if (step <= 0) return;
 
     const nextIndex = Math.max(
@@ -78,9 +84,11 @@ export function TemplateCarousel({
     const nextTemplate = templates[nextIndex];
     if (!container || !nextTemplate) return;
 
+    const step = getMobileStep(container);
+
     onSelectTemplate(nextTemplate.id);
     container.scrollTo({
-      left: container.clientWidth * nextIndex,
+      left: step * nextIndex,
       behavior: "smooth",
     });
   };
@@ -90,10 +98,10 @@ export function TemplateCarousel({
       <div className="md:hidden space-y-3">
         <div
           ref={mobileScrollRef}
-          className="overflow-x-auto snap-x snap-mandatory scroll-smooth"
+          className="w-full min-w-0 overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-smooth"
           onScroll={handleMobileScroll}
         >
-          <div className="flex">
+          <div className="flex w-full">
           {templates.map((template) => (
             <button
               key={template.id}
@@ -101,17 +109,20 @@ export function TemplateCarousel({
               type="button"
               onClick={() => onSelectTemplate(template.id)}
               className={cn(
-                "w-full shrink-0 snap-start p-2 border-2 rounded-lg transition-all cursor-pointer",
+                "min-w-full shrink-0 snap-start p-2 border-2 rounded-lg transition-all cursor-pointer",
                 selectedTemplate === template.id
                   ? "border-foreground bg-muted"
                   : "border-border hover:border-muted-foreground",
               )}
             >
               <div className="aspect-3/4 bg-muted rounded overflow-hidden">
-                <img
+                <Image
                   src={template.img}
                   alt={template.name}
                   className="w-full h-full object-cover"
+                  width={300}
+                  height={400}
+                  sizes="(max-width: 640px) calc(100vw - 4rem), 300px"
                 />
               </div>
               <p className="text-sm text-center mt-2 font-medium">{template.name}</p>
@@ -120,19 +131,19 @@ export function TemplateCarousel({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 min-w-0 px-2 min-[360px]:px-3"
             onClick={() => scrollMobileToIndex(Math.max(0, mobileIndex - 1))}
             disabled={mobileIndex === 0}
           >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Anterior
+            <ChevronLeft className="h-4 w-4 min-[360px]:mr-1" />
+            <span className="hidden min-[360px]:inline">Anterior</span>
           </Button>
-          <div className="flex items-center gap-1">
+          <div className="hidden shrink-0 items-center gap-1 min-[360px]:flex">
             {templates.map((template, index) => (
               <button
                 key={template.id}
@@ -150,17 +161,17 @@ export function TemplateCarousel({
             type="button"
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 min-w-0 px-2 min-[360px]:px-3"
             onClick={() => scrollMobileToIndex(Math.min(templates.length - 1, mobileIndex + 1))}
             disabled={mobileIndex >= templates.length - 1}
           >
-            Siguiente
-            <ChevronRight className="h-4 w-4 ml-1" />
+            <span className="hidden min-[360px]:inline">Siguiente</span>
+            <ChevronRight className="h-4 w-4 min-[360px]:ml-1" />
           </Button>
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden min-w-0 md:flex items-center gap-2">
         <Button
           variant="outline"
           size="icon"
@@ -172,7 +183,7 @@ export function TemplateCarousel({
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        <div className={cn("grid gap-3 flex-1", desktopGridClass)}>
+        <div className={cn("grid min-w-0 flex-1 gap-3", desktopGridClass)}>
           {visibleDesktopTemplates.map((template) => (
             <button
               key={template.id}
@@ -186,10 +197,13 @@ export function TemplateCarousel({
               )}
             >
               <div className="aspect-3/4 bg-muted rounded overflow-hidden">
-                <img
+                <Image
                   src={template.img}
                   alt={template.name}
                   className="w-full h-full object-cover"
+                  width={300}
+                  height={400}
+                  sizes="(max-width: 1279px) 22vw, 180px"
                 />
               </div>
               <p className="text-xs text-center mt-1">{template.name}</p>

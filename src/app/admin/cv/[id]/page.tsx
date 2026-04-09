@@ -771,28 +771,31 @@ export default function AdminCVPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 w-full flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:justify-start lg:gap-4 w-full lg:w-auto">
+        <div className="flex w-full min-w-0 flex-row items-start gap-3 sm:items-center sm:justify-between lg:w-auto lg:justify-start lg:gap-4">
           <Button
             variant="ghost"
-            className="w-full sm:w-auto self-start"
+            className="shrink-0 self-start"
             onClick={() => router.push("/admin")}
           >
             <ArrowLeft className="size-6 md:size-4 mr-2" />
             <span className="hidden md:block">Volver</span>
           </Button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 lg:flex-none">
             <h1 className="text-xl md:text-2xl font-bold wrap-break-word">{user.fullName}</h1>
             <p className="text-muted-foreground text-xs md:text-base wrap-break-word">
               {user.email}
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 w-full lg:w-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-2">
+        <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[18rem]">
+          <div className="flex w-full flex-col gap-2 md:flex-row md:flex-wrap md:justify-end">
             <Button
               variant="outline"
               onClick={handleSave}
-              className={`${hasUnsavedChanges && "border-2 border-red-500"} w-full`}
+              className={cn(
+                "w-full md:w-auto",
+                hasUnsavedChanges && "border-2 border-red-500"
+              )}
               loading={saving}
             >
               <Save className="size-6 md:size-4 mr-2" />
@@ -804,15 +807,15 @@ export default function AdminCVPage() {
                 setShowPreview(!showPreview);
                 setPreviewKey((prev) => prev + 1);
               }}
-              className="hidden md:flex"
+              className="hidden md:inline-flex"
             >
               <Eye className="size-6 md:size-4 md:mr-2" />
               <span className="hidden md:block">
                 {showPreview ? "Ocultar" : "Preview"}
               </span>
             </Button>
-            <a href={previewUrl} target="_blank" className="w-full lg:w-auto">
-              <Button variant="default" className="w-full lg:w-auto">
+            <a href={previewUrl} target="_blank" className="w-full md:w-auto">
+              <Button variant="default" className="w-full md:w-auto">
                 <Download className="size-6 md:size-4 mr-2 " />
                 <span>Descargar PDF</span>
               </Button>
@@ -874,7 +877,7 @@ export default function AdminCVPage() {
         </Button>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid lg:grid-cols-3 gap-8">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid lg:grid-cols-3 gap-8 ">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -951,7 +954,7 @@ export default function AdminCVPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 border rounded-lg space-y-3"
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <div className="flex-1 space-y-2 min-w-0">
                       <Input
                         placeholder="Empresa"
@@ -1003,7 +1006,7 @@ export default function AdminCVPage() {
                       disabled={exp.current}
                     />
                   </div>
-                  <div className="flex justify-between ">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -1021,7 +1024,7 @@ export default function AdminCVPage() {
                       onClick={() => improveDescription(exp.id)}
                       disabled={improvingText === exp.id}
                       title="Mejorar descripción con IA"
-                      className="gap-2 flex w-full sm:w-auto"
+                      className="flex w-full gap-2 sm:w-auto"
                     >
                       {improvingText === exp.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1065,14 +1068,14 @@ export default function AdminCVPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <Input
                       placeholder="Institución"
                       value={edu.institution}
                       onChange={(e) =>
                         updateEducation(edu.id, "institution", e.target.value)
                       }
-                      className="w-full flex-1"
+                      className="w-full flex-1 min-w-0"
                     />
                     <Button
                       variant="ghost"
@@ -1178,15 +1181,15 @@ export default function AdminCVPage() {
               <CardTitle>Idiomas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex w-full min-w-0 flex-col gap-2 md:flex-row">
                 <Input
                   placeholder="Idioma (ej: Inglés)"
                   id="newLanguage"
-                  className="flex-1"
+                  className="w-full md:flex-1"
                 />
                 <select
                   id="newLanguageLevel"
-                  className="flex h-10 w-full sm:w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                 >
                   <option value="" disabled hidden>Idioma</option>
                   <option value="Básico">Básico</option>
@@ -1196,7 +1199,7 @@ export default function AdminCVPage() {
                 </select>
                 <Button
                   type="button"
-                  className="w-full sm:w-auto"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     const input = document.getElementById(
                       "newLanguage",
@@ -1214,23 +1217,20 @@ export default function AdminCVPage() {
               </div>
               <div className="space-y-2">
                 {user.languages.map((lang: any) => (
-                  <div
-                    key={lang.id}
-                    className="flex flex-col gap-2 p-2 border rounded sm:flex-row sm:items-center"
-                  >
+                  <div key={lang.id} className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center">
                     <Input
                       value={lang.language || ""}
                       onChange={(e) =>
                         updateLanguage(lang.id, "language", e.target.value)
                       }
-                      className="flex-1"
+                      className="w-full md:flex-1"
                     />
                     <select
                       value={lang.level || "Básico"}
                       onChange={(e) =>
                         updateLanguage(lang.id, "level", e.target.value)
                       }
-                      className="flex h-10 w-full sm:w-36 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                     >
                       <option value="" disabled hidden>Nivel</option>
                       <option value="Básico">Básico</option>
@@ -1241,7 +1241,7 @@ export default function AdminCVPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="self-end sm:self-auto"
+                      className="self-end md:self-auto"
                       onClick={() => removeLanguage(lang.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -1393,7 +1393,7 @@ export default function AdminCVPage() {
                 </Label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Tamaño fuente título</Label>
                   <Select
@@ -1448,7 +1448,7 @@ export default function AdminCVPage() {
                 </Label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="flex items-center gap-2 text-sm">
                     <input
@@ -1489,7 +1489,7 @@ export default function AdminCVPage() {
                 </Label>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -1536,7 +1536,7 @@ export default function AdminCVPage() {
                 </Label>
               </div>
 
-              <div
+              {/* <div
                 className="p-4 rounded-lg"
                 style={{
                   backgroundColor: user.templateSettings.primaryColor + "20",
@@ -1549,7 +1549,7 @@ export default function AdminCVPage() {
                     backgroundColor: user.templateSettings.primaryColor,
                   }}
                 />
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 
