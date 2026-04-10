@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense } from "react";
-import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,7 +33,7 @@ import {
   Plus,
   X,
   FileText,
-  Image,
+  Image as ImageIcon,
   Link2,
   ExternalLink,
   CheckCircle,
@@ -50,6 +48,7 @@ import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import type { Experience, Education, Language, TemplateType, FontSize, LayoutOrder } from "@/types";
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
+import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 import {
   getTemplateDefaultColor,
   getTemplatePalette,
@@ -59,7 +58,7 @@ import {
 
 const steps = [
   { id: 1, title: "Datos Personales", icon: User },
-  { id: 2, title: "Foto", icon: Image },
+  { id: 2, title: "Foto", icon: ImageIcon },
   { id: 3, title: "Experiencia", icon: Briefcase },
   { id: 4, title: "Educación", icon: GraduationCap },
   { id: 5, title: "Habilidades", icon: FileText },
@@ -84,12 +83,11 @@ const levelOptions = [
   { value: "Nativo", label: "Nativo" },
 ];
 
-const basicInfoSchema = z.object({
-  fullName: z.string().min(2, "Nombre muy corto"),
-  phone: z.string().min(10, "Teléfono muy corto"),
-});
-
-type FormData = z.infer<typeof basicInfoSchema> & {
+type FormData = {
+  name: string;
+  lastName: string;
+  fullName: string;
+  phone: string;
   dni?: string;
   email?: string;
   location?: string;
@@ -113,6 +111,8 @@ type FormData = z.infer<typeof basicInfoSchema> & {
 };
 
 const defaultFormData: FormData = {
+  name: "",
+  lastName: "",
   fullName: "",
   phone: "",
   dni: "",
@@ -162,6 +162,9 @@ function RegistroPageContent() {
   const [selectedProvincia, setSelectedProvincia] = useState<string>("");
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
   const [selectedLocalidad, setSelectedLocalidad] = useState<string>("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   useEffect(() => {
     const loadProvincias = async () => {
@@ -175,19 +178,32 @@ function RegistroPageContent() {
     loadProvincias();
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(basicInfoSchema),
-    defaultValues: formData,
-  });
-
-  const updateFormData = useCallback((data: Partial<FormData>) => {
-    setFormData((prev) => ({ ...prev, ...data }));
+  const validateRealtime = useCallback((nextData: FormData) => {
+    const validation = validateCVPayload(nextData);
+    setFieldErrors(validation.success ? {} : validation.errors);
+    return validation.success;
   }, []);
+
+  const updateFormData = useCallback((data: Partial<FormData>, touchedPath?: string) => {
+    setFormData((prev) => {
+      const merged = { ...prev, ...data };
+      merged.fullName = buildFullName(merged.name, merged.lastName);
+      validateRealtime(merged);
+      return merged;
+    });
+
+    if (touchedPath) {
+      setTouchedFields((prev) => ({ ...prev, [touchedPath]: true }));
+    }
+  }, [validateRealtime]);
+
+  const getFieldError = useCallback((path: string) => {
+    if (!submitAttempted && !touchedFields[path]) {
+      return "";
+    }
+
+    return fieldErrors[path] ?? "";
+  }, [fieldErrors, submitAttempted, touchedFields]);
 
   useEffect(() => {
     const googleDataParam = searchParams.get("google_data");
@@ -205,7 +221,12 @@ function RegistroPageContent() {
         );
 
         if (decoded.name) {
-          updateFormData({ fullName: decoded.name });
+          const splitName = splitFullName(decoded.name);
+          updateFormData({
+            name: splitName.name,
+            lastName: splitName.lastName,
+            fullName: buildFullName(splitName.name, splitName.lastName),
+          });
         }
         if (decoded.email) {
           updateFormData({ email: decoded.email });
@@ -266,13 +287,29 @@ function RegistroPageContent() {
     }));
   };
 
-  const updateExperience = (id: string, field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((exp) =>
-        exp.id === id ? { ...exp, [field]: value } : exp,
-      ),
-    }));
+  const updateExperience = (id: string, field: string, value: unknown) => {
+    setFormData((prev) => {
+      const nextExperience = prev.experience.map((exp) =>
+        exp.id === id
+          ? {
+              ...exp,
+              [field]: value,
+              ...(field === "current" && value === true ? { endDate: "" } : {}),
+            }
+          : exp,
+      );
+      const nextState = { ...prev, experience: nextExperience };
+      validateRealtime(nextState);
+      return nextState;
+    });
+
+    const index = formData.experience.findIndex((exp) => exp.id === id);
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`experience.${index}.${field}`]: true,
+      }));
+    }
   };
 
   const updateExperienceLocation = (
@@ -314,13 +351,29 @@ function RegistroPageContent() {
     }));
   };
 
-  const updateEducation = (id: string, field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) =>
-        edu.id === id ? { ...edu, [field]: value } : edu,
-      ),
-    }));
+  const updateEducation = (id: string, field: string, value: unknown) => {
+    setFormData((prev) => {
+      const nextEducation = prev.education.map((edu) =>
+        edu.id === id
+          ? {
+              ...edu,
+              [field]: value,
+              ...(field === "current" && value === true ? { endDate: "" } : {}),
+            }
+          : edu,
+      );
+      const nextState = { ...prev, education: nextEducation };
+      validateRealtime(nextState);
+      return nextState;
+    });
+
+    const index = formData.education.findIndex((edu) => edu.id === id);
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`education.${index}.${field}`]: true,
+      }));
+    }
   };
 
   const updateEducationLocation = (
@@ -406,6 +459,13 @@ function RegistroPageContent() {
   };
 
   const onSubmit = async () => {
+    setSubmitAttempted(true);
+    const isValid = validateRealtime(formData);
+    if (!isValid) {
+      toast.error("Revisá los campos marcados en rojo");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let photoUrl = "";
@@ -416,10 +476,11 @@ function RegistroPageContent() {
 
       await createCV({
         ...formData,
+        fullName: buildFullName(formData.name, formData.lastName),
         photo: photoUrl,
         email: formData.email || "",
-      } as any);
-      window.location.href = `/success?phone=${encodeURIComponent(formData.phone)}&name=${encodeURIComponent(formData.fullName)}`;
+      });
+      window.location.href = `/success?phone=${encodeURIComponent(formData.phone)}&name=${encodeURIComponent(buildFullName(formData.name, formData.lastName))}`;
     } catch (error: any) {
       toast.error(error.message || "Error al enviar el formulario");
     } finally {
@@ -430,7 +491,7 @@ function RegistroPageContent() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return formData.fullName && formData.phone;
+        return !fieldErrors.name && !fieldErrors.lastName && !fieldErrors.phone && !!formData.name && !!formData.lastName && !!formData.phone;
       default:
         return true;
     }
@@ -529,16 +590,38 @@ function RegistroPageContent() {
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="fullName">Nombre completo *</Label>
+                          <Label htmlFor="name">Nombre *</Label>
                           <Input
-                            id="fullName"
-                            value={formData.fullName}
+                            id="name"
+                            value={formData.name}
                             onChange={(e) =>
-                              updateFormData({ fullName: e.target.value })
+                              updateFormData({ name: e.target.value }, "name")
                             }
-                            placeholder="Juan Pérez"
+                            placeholder="Juan"
+                            className={cn(getFieldError("name") && "border-red-500 focus-visible:ring-red-500")}
                           />
+                          {getFieldError("name") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("name")}</p>
+                          )}
                         </div>
+                        <div>
+                          <Label htmlFor="lastName">Apellido *</Label>
+                          <Input
+                            id="lastName"
+                            value={formData.lastName}
+                            onChange={(e) =>
+                              updateFormData({ lastName: e.target.value }, "lastName")
+                            }
+                            placeholder="Pérez"
+                            className={cn(getFieldError("lastName") && "border-red-500 focus-visible:ring-red-500")}
+                          />
+                          {getFieldError("lastName") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("lastName")}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="phone">Teléfono *</Label>
                           <Input
@@ -546,24 +629,29 @@ function RegistroPageContent() {
                             type="tel"
                             value={formData.phone}
                             onChange={(e) =>
-                              updateFormData({ phone: e.target.value })
+                              updateFormData({ phone: e.target.value }, "phone")
                             }
                             placeholder="5491112345678"
+                            className={cn(getFieldError("phone") && "border-red-500 focus-visible:ring-red-500")}
                           />
+                          {getFieldError("phone") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("phone")}</p>
+                          )}
                         </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="dni">DNI (opcional)</Label>
                           <Input
                             id="dni"
                             value={formData.dni}
                             onChange={(e) =>
-                              updateFormData({ dni: e.target.value })
+                              updateFormData({ dni: e.target.value }, "dni")
                             }
                             placeholder="12.345.678"
+                            className={cn(getFieldError("dni") && "border-red-500 focus-visible:ring-red-500")}
                           />
+                          {getFieldError("dni") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
+                          )}
                         </div>
                         <div>
                           <Label htmlFor="email">Email (opcional)</Label>
@@ -572,10 +660,14 @@ function RegistroPageContent() {
                             type="email"
                             value={formData.email}
                             onChange={(e) =>
-                              updateFormData({ email: e.target.value })
+                              updateFormData({ email: e.target.value }, "email")
                             }
                             placeholder="juan@email.com"
+                            className={cn(getFieldError("email") && "border-red-500 focus-visible:ring-red-500")}
                           />
+                          {getFieldError("email") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("email")}</p>
+                          )}
                         </div>
                       </div>
 
@@ -672,10 +764,14 @@ function RegistroPageContent() {
                           <Textarea
                             value={formData.links}
                             onChange={(e) =>
-                              updateFormData({ links: e.target.value })
+                              updateFormData({ links: e.target.value }, "links")
                             }
                             placeholder="linkedin.com/in/tu-perfil, github.com/tu-usuario"
+                            className={cn(getFieldError("links") && "border-red-500 focus-visible:ring-red-500")}
                           />
+                          {getFieldError("links") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("links")}</p>
+                          )}
                           <p className="text-xs text-muted-foreground">
                             Separa varios links con comas
                           </p>
@@ -707,9 +803,12 @@ function RegistroPageContent() {
                       >
                         {photoPreview ? (
                           <div className="relative">
-                            <img
+                            <Image
                               src={photoPreview}
                               alt="Foto de perfil"
+                              width={128}
+                              height={128}
+                              unoptimized
                               className="w-32 h-32 rounded-full object-cover border-4 border-foreground"
                             />
                             <button
@@ -725,7 +824,7 @@ function RegistroPageContent() {
                           </div>
                         ) : (
                           <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-dashed border-muted-foreground">
-                            <Image className="h-8 w-8 text-muted-foreground" />
+                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
                           </div>
                         )}
                         <Label htmlFor="photo" className="mt-4 cursor-pointer">
@@ -784,6 +883,7 @@ function RegistroPageContent() {
                           onChange={(e) =>
                             updateExperience(exp.id, "company", e.target.value)
                           }
+                          className={cn(getFieldError(`experience.${index}.company`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                         <Input
                           placeholder="Puesto"
@@ -791,7 +891,14 @@ function RegistroPageContent() {
                           onChange={(e) =>
                             updateExperience(exp.id, "position", e.target.value)
                           }
+                          className={cn(getFieldError(`experience.${index}.position`) && "border-red-500 focus-visible:ring-red-500")}
                         />
+                        {getFieldError(`experience.${index}.company`) && (
+                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.company`)}</p>
+                        )}
+                        {getFieldError(`experience.${index}.position`) && (
+                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.position`)}</p>
+                        )}
                         <ExperienceLocationSelector
                           experienciaId={exp.id}
                           initialProvincia={exp.provincia}
@@ -811,6 +918,7 @@ function RegistroPageContent() {
                               e.target.value,
                             )
                           }
+                          className={cn(getFieldError(`experience.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                         <Input
                           type="date"
@@ -819,8 +927,15 @@ function RegistroPageContent() {
                             updateExperience(exp.id, "endDate", e.target.value)
                           }
                           disabled={exp.current}
+                          className={cn(getFieldError(`experience.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                       </div>
+                      {getFieldError(`experience.${index}.startDate`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.startDate`)}</p>
+                      )}
+                      {getFieldError(`experience.${index}.endDate`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.endDate`)}</p>
+                      )}
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -895,6 +1010,7 @@ function RegistroPageContent() {
                               e.target.value,
                             )
                           }
+                          className={cn(getFieldError(`education.${index}.institution`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                         <Input
                           placeholder="Título"
@@ -902,8 +1018,15 @@ function RegistroPageContent() {
                           onChange={(e) =>
                             updateEducation(edu.id, "degree", e.target.value)
                           }
+                          className={cn(getFieldError(`education.${index}.degree`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                       </div>
+                      {getFieldError(`education.${index}.institution`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.institution`)}</p>
+                      )}
+                      {getFieldError(`education.${index}.degree`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.degree`)}</p>
+                      )}
                       <EducationLocationSelector
                         educacionId={edu.id}
                         initialProvincia={edu.provincia}
@@ -918,6 +1041,7 @@ function RegistroPageContent() {
                           onChange={(e) =>
                             updateEducation(edu.id, "startDate", e.target.value)
                           }
+                          className={cn(getFieldError(`education.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                         <Input
                           type="date"
@@ -926,8 +1050,15 @@ function RegistroPageContent() {
                             updateEducation(edu.id, "endDate", e.target.value)
                           }
                           disabled={edu.current}
+                          className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                       </div>
+                      {getFieldError(`education.${index}.startDate`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.startDate`)}</p>
+                      )}
+                      {getFieldError(`education.${index}.endDate`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
+                      )}
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -1082,10 +1213,16 @@ function RegistroPageContent() {
                       placeholder="Breve descripción de tu perfil profesional..."
                       value={formData.summary}
                       onChange={(e) =>
-                        updateFormData({ summary: e.target.value })
+                        updateFormData({ summary: e.target.value }, "summary")
                       }
-                      className="h-20"
+                      className={cn(
+                        "h-20",
+                        getFieldError("summary") && "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
+                    {getFieldError("summary") && (
+                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("summary")}</p>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -1153,7 +1290,7 @@ function RegistroPageContent() {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Nombre:</span>
-                        <span>{formData.fullName || "No especificado"}</span>
+                        <span>{buildFullName(formData.name, formData.lastName) || "No especificado"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Teléfono:</span>
@@ -1198,9 +1335,12 @@ function RegistroPageContent() {
                       {(photoPreview || formData.photo) && (
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-muted-foreground">Foto:</span>
-                          <img
-                            src={photoPreview || formData.photo}
+                          <Image
+                            src={photoPreview || formData.photo || ""}
                             alt="Foto"
+                            width={40}
+                            height={40}
+                            unoptimized
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         </div>

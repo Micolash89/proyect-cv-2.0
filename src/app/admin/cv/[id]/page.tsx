@@ -63,6 +63,7 @@ import {
   templateOptions,
 } from "@/lib/constants/templates";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
+import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 
 export default function AdminCVPage() {
   const params = useParams();
@@ -83,6 +84,10 @@ export default function AdminCVPage() {
   const [previewPosition, setPreviewPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [nameFields, setNameFields] = useState({ name: "", lastName: "" });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   // Location state for Datos Personales
   const [provincias, setProvincias] = useState<Provincia[]>([]);
@@ -128,6 +133,7 @@ export default function AdminCVPage() {
     try {
       const { user } = await getCV(params.id as string);
       setUser(user);
+      setNameFields(splitFullName(user.fullName));
       setOriginalUser(JSON.parse(JSON.stringify(user)));
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -140,6 +146,24 @@ export default function AdminCVPage() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  const validateRealtime = useCallback((candidate: UserCV, names = nameFields) => {
+    const validation = validateCVPayload({
+      ...candidate,
+      name: names.name,
+      lastName: names.lastName,
+    });
+    setFieldErrors(validation.success ? {} : validation.errors);
+    return validation.success;
+  }, [nameFields]);
+
+  const getFieldError = useCallback((path: string) => {
+    if (!submitAttempted && !touchedFields[path]) {
+      return "";
+    }
+
+    return fieldErrors[path] ?? "";
+  }, [fieldErrors, submitAttempted, touchedFields]);
 
   const handleStatusChange = useCallback(async (status: CVStatus) => {
     if (!user) return;
@@ -175,6 +199,13 @@ export default function AdminCVPage() {
 
   const handleSave = async () => {
     if (!user) return;
+
+    setSubmitAttempted(true);
+    const isValid = validateRealtime(user);
+    if (!isValid) {
+      toast.error("Revisá los campos marcados en rojo");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -481,9 +512,31 @@ export default function AdminCVPage() {
     toast.success("Foto eliminada");
   };
 
-  const updateField = (field: string, value: any) => {
+  const updateField = (field: string, value: unknown) => {
     if (!user) return;
-    setUser({ ...user, [field]: value });
+    const nextUser = { ...user, [field]: value } as UserCV;
+    setUser(nextUser);
+    validateRealtime(nextUser);
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const updateNameField = (field: "name" | "lastName", value: string) => {
+    if (!user) return;
+
+    const nextNameFields = {
+      ...nameFields,
+      [field]: value,
+    };
+    setNameFields(nextNameFields);
+
+    const nextUser = {
+      ...user,
+      fullName: buildFullName(nextNameFields.name, nextNameFields.lastName),
+    };
+
+    setUser(nextUser);
+    validateRealtime(nextUser, nextNameFields);
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
   };
 
   const updatePersonalLocation = (location: { provincia: string; municipio: string; localidad: string }) => {
@@ -555,14 +608,31 @@ export default function AdminCVPage() {
     });
   };
 
-  const updateExperience = (id: string, field: string, value: any) => {
+  const updateExperience = (id: string, field: string, value: unknown) => {
     if (!user) return;
-    setUser({
+    const index = user.experience.findIndex((e: any) => e.id === id);
+    const nextUser = {
       ...user,
       experience: user.experience.map((e: any) =>
-        e.id === id ? { ...e, [field]: value } : e,
+        e.id === id
+          ? {
+              ...e,
+              [field]: value,
+              ...(field === "current" && value === true ? { endDate: "" } : {}),
+            }
+          : e,
       ),
-    });
+    };
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
+
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`experience.${index}.${field}`]: true,
+      }));
+    }
   };
 
   const updateExperienceLocation = (
@@ -607,14 +677,31 @@ export default function AdminCVPage() {
     });
   };
 
-  const updateEducation = (id: string, field: string, value: any) => {
+  const updateEducation = (id: string, field: string, value: unknown) => {
     if (!user) return;
-    setUser({
+    const index = user.education.findIndex((e: any) => e.id === id);
+    const nextUser = {
       ...user,
       education: user.education.map((e: any) =>
-        e.id === id ? { ...e, [field]: value } : e,
+        e.id === id
+          ? {
+              ...e,
+              [field]: value,
+              ...(field === "current" && value === true ? { endDate: "" } : {}),
+            }
+          : e,
       ),
-    });
+    };
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
+
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`education.${index}.${field}`]: true,
+      }));
+    }
   };
 
   const updateEducationLocation = (
@@ -886,18 +973,37 @@ export default function AdminCVPage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Nombre completo</Label>
+                  <Label>Nombre *</Label>
                   <Input
-                    value={user.fullName}
-                    onChange={(e) => updateField("fullName", e.target.value)}
+                    value={nameFields.name}
+                    onChange={(e) => updateNameField("name", e.target.value)}
+                    className={cn(getFieldError("name") && "border-red-500 focus-visible:ring-red-500")}
                   />
+                  {getFieldError("name") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("name")}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Apellido *</Label>
+                  <Input
+                    value={nameFields.lastName}
+                    onChange={(e) => updateNameField("lastName", e.target.value)}
+                    className={cn(getFieldError("lastName") && "border-red-500 focus-visible:ring-red-500")}
+                  />
+                  {getFieldError("lastName") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("lastName")}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Email</Label>
                   <Input
                     value={user.email}
                     onChange={(e) => updateField("email", e.target.value)}
+                    className={cn(getFieldError("email") && "border-red-500 focus-visible:ring-red-500")}
                   />
+                  {getFieldError("email") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("email")}</p>
+                  )}
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
@@ -906,7 +1012,11 @@ export default function AdminCVPage() {
                   <Input
                     value={user.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
+                    className={cn(getFieldError("phone") && "border-red-500 focus-visible:ring-red-500")}
                   />
+                  {getFieldError("phone") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("phone")}</p>
+                  )}
                 </div>
                 <div>
                   <Label>DNI (opcional)</Label>
@@ -914,7 +1024,11 @@ export default function AdminCVPage() {
                     value={user.dni || ""}
                     onChange={(e) => updateField("dni", e.target.value)}
                     placeholder="Ej: 12345678"
+                    className={cn(getFieldError("dni") && "border-red-500 focus-visible:ring-red-500")}
                   />
+                  {getFieldError("dni") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
+                  )}
                 </div>
               </div>
               <div>
@@ -937,7 +1051,11 @@ export default function AdminCVPage() {
                   value={user.links || ""}
                   onChange={(e) => updateField("links", e.target.value)}
                   placeholder="linkedin.com/in/..., instagram.com/..."
+                  className={cn(getFieldError("links") && "border-red-500 focus-visible:ring-red-500")}
                 />
+                {getFieldError("links") && (
+                  <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("links")}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -947,7 +1065,7 @@ export default function AdminCVPage() {
               <CardTitle>Experiencia Laboral</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {user.experience.map((exp: any) => (
+              {user.experience.map((exp: any, index: number) => (
                 <motion.div
                   key={exp.id}
                   initial={{ opacity: 0, y: 12 }}
@@ -962,15 +1080,25 @@ export default function AdminCVPage() {
                         onChange={(e) =>
                           updateExperience(exp.id, "company", e.target.value)
                         }
-                        className="w-full"
+                        className={cn(
+                          "w-full",
+                          getFieldError(`experience.${index}.company`) && "border-red-500 focus-visible:ring-red-500",
+                        )}
                       />
+                      {getFieldError(`experience.${index}.company`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.company`)}</p>
+                      )}
                       <Input
                         placeholder="Puesto"
                         value={exp.position}
                         onChange={(e) =>
                           updateExperience(exp.id, "position", e.target.value)
                         }
+                        className={cn(getFieldError(`experience.${index}.position`) && "border-red-500 focus-visible:ring-red-500")}
                       />
+                      {getFieldError(`experience.${index}.position`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.position`)}</p>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
@@ -996,6 +1124,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateExperience(exp.id, "startDate", e.target.value)
                       }
+                      className={cn(getFieldError(`experience.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
                     />
                     <Input
                       type="date"
@@ -1004,8 +1133,15 @@ export default function AdminCVPage() {
                         updateExperience(exp.id, "endDate", e.target.value)
                       }
                       disabled={exp.current}
+                      className={cn(getFieldError(`experience.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                     />
                   </div>
+                  {getFieldError(`experience.${index}.startDate`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.startDate`)}</p>
+                  )}
+                  {getFieldError(`experience.${index}.endDate`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.endDate`)}</p>
+                  )}
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2">
                       <input
@@ -1075,7 +1211,10 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "institution", e.target.value)
                       }
-                      className="w-full flex-1 min-w-0"
+                      className={cn(
+                        "w-full flex-1 min-w-0",
+                        getFieldError(`education.${index}.institution`) && "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                     <Button
                       variant="ghost"
@@ -1092,7 +1231,14 @@ export default function AdminCVPage() {
                     onChange={(e) =>
                       updateEducation(edu.id, "degree", e.target.value)
                     }
+                    className={cn(getFieldError(`education.${index}.degree`) && "border-red-500 focus-visible:ring-red-500")}
                   />
+                  {getFieldError(`education.${index}.institution`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.institution`)}</p>
+                  )}
+                  {getFieldError(`education.${index}.degree`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.degree`)}</p>
+                  )}
                   <EducationLocationSelector
                     educacionId={edu.id}
                     initialProvincia={edu.provincia}
@@ -1107,6 +1253,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "startDate", e.target.value)
                       }
+                      className={cn(getFieldError(`education.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
                     />
                     <Input
                       type="date"
@@ -1114,8 +1261,15 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "endDate", e.target.value)
                       }
+                      className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                     />
                   </div>
+                  {getFieldError(`education.${index}.startDate`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.startDate`)}</p>
+                  )}
+                  {getFieldError(`education.${index}.endDate`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
+                  )}
                 </motion.div>
               ))}
               <Button variant="outline" onClick={addEducation}>
@@ -1262,7 +1416,10 @@ export default function AdminCVPage() {
                   placeholder="Puesto aspirado (para generar perfil ATS)"
                   value={user.targetJob || ""}
                   onChange={(e) => updateField("targetJob", e.target.value)}
-                  className="flex-1"
+                  className={cn(
+                    "flex-1",
+                    getFieldError("targetJob") && "border-red-500 focus-visible:ring-red-500",
+                  )}
                 />
                 <Button
                   variant="outline"
@@ -1283,8 +1440,17 @@ export default function AdminCVPage() {
                 value={user.summary || ""}
                 onChange={(e) => updateField("summary", e.target.value)}
                 placeholder="Resumen del perfil profesional..."
-                className="min-h-25"
+                className={cn(
+                  "min-h-25",
+                  getFieldError("summary") && "border-red-500 focus-visible:ring-red-500",
+                )}
               />
+              {getFieldError("targetJob") && (
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("targetJob")}</p>
+              )}
+              {getFieldError("summary") && (
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("summary")}</p>
+              )}
             </CardContent>
           </Card>
         </div>

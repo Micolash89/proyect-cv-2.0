@@ -10,16 +10,20 @@ interface ThemeContextType extends Theme {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const [theme, setThemeState] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
 
-  useEffect(() => {
     const stored = localStorage.getItem("theme") as "light" | "dark" | null;
     if (stored) {
-      setThemeState(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setThemeState("dark");
+      return stored;
     }
-  }, []);
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  });
 
   useEffect(() => {
     const root = document.documentElement;

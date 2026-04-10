@@ -1,6 +1,5 @@
 "use server";
 
-import { z } from "zod";
 import { getCurrentAdmin } from "@/lib/auth/jwt";
 import {
   createUser,
@@ -17,6 +16,7 @@ import { sendNewCVNotification } from "@/lib/email/nodemailer";
 import type { CVFormData, CVStatus } from "@/types";
 import { renderToStream } from "@react-pdf/renderer";
 import CVTemplate from "@/components/cv/templates/CVTemplate";
+import { normalizeCVPayload, validateCVPayload } from "@/lib/validations";
 
 export async function getCVs(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
   const admin = await getCurrentAdmin();
@@ -68,35 +68,19 @@ export async function getCV(id: string) {
   return { user: { ...user, viewed: true } };
 }
 
-const cvSchema = z.object({
-  phone: z.string().min(1, "Teléfono requerido"),
-  fullName: z.string().min(1, "Nombre requerido"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  photo: z.string().optional(),
-  location: z.string().optional(),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
-  summary: z.string().optional(),
-  experience: z.array(z.any()).default([]),
-  education: z.array(z.any()).default([]),
-  skills: z.array(z.string()).default([]),
-  languages: z.array(z.any()).default([]),
-  projects: z.array(z.any()).optional(),
-  certifications: z.array(z.any()).optional(),
-  selectedTemplate: z.string().default("modern"),
-  templateSettings: z.any().optional(),
-});
-
 export async function createCV(data: CVFormData) {
-  const validated = cvSchema.safeParse(data);
-  
+  const validated = validateCVPayload(data);
+
   if (!validated.success) {
-    throw new Error(validated.error.issues[0].message);
+    const firstError = Object.values(validated.errors)[0] ?? "Datos inválidos";
+    throw new Error(firstError);
   }
 
-  const user = await createUser(validated.data as CVFormData);
+  const { name, lastName, ...payload } = validated.data;
+
+  const user = await createUser(payload as CVFormData);
   
-  sendNewCVNotification(validated.data.fullName, validated.data.phone).catch(console.error);
+  sendNewCVNotification(`${name} ${lastName}`.trim(), payload.phone).catch(console.error);
 
   return { success: true, id: user._id };
 }
@@ -107,7 +91,29 @@ export async function updateCV(id: string, data: Partial<CVFormData & { status?:
     throw new Error("No autorizado");
   }
 
-  const user = await updateUser(id, data);
+  const existing = await getUserById(id);
+  if (!existing) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  const mergedPayload = normalizeCVPayload({
+    ...existing,
+    ...data,
+  });
+
+  const validated = validateCVPayload(mergedPayload);
+  if (!validated.success) {
+    const firstError = Object.values(validated.errors)[0] ?? "Datos inválidos";
+    throw new Error(firstError);
+  }
+
+  const { name: _name, lastName: _lastName, ...safePayload } = validated.data;
+
+  const user = await updateUser(id, {
+    ...safePayload,
+    status: data.status ?? safePayload.status,
+    viewed: data.viewed ?? safePayload.viewed,
+  });
   if (!user) {
     throw new Error("Usuario no encontrado");
   }
