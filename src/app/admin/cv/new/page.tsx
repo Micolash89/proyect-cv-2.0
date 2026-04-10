@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AITextExtractor, type ExtractedCVData } from "@/components/ui/ai-text-extractor";
+import { AITextExtractor } from "@/components/ui/ai-text-extractor";
 import {
   ArrowLeft,
   Save,
@@ -27,14 +27,14 @@ import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
-  languageOptions,
-  levelOptions,
+  languageSelectOptions,
+  levelSelectOptions,
   fontSizeOptions,
   layoutOptions,
   registroSteps,
+  ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
 } from "@/lib/constants";
 import {
-  getTemplateDefaultColor,
   getTemplatePalette,
   sanitizeTemplatePrimaryColor,
   templateOptions,
@@ -42,25 +42,18 @@ import {
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
-import type { TemplateType, Experience, Education, Language, TemplateSettings, FontSize } from "@/types";
+import type {
+  TemplateType,
+  Experience,
+  Education,
+  Language,
+  TemplateSettings,
+  FontSize,
+  ExtractedCVData,
+} from "@/types";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
-
-const DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
-  primaryColor: getTemplateDefaultColor("harvard"),
-  fontSize: "medium",
-  fontFamily: "Helvetica",
-  layout: "descending",
-  padding: 40,
-  margin: 20,
-  fullName: true,
-  showPhoto: true,
-  showSummary: true,
-  showSkills: true,
-  showLanguages: true,
-  reverseExperience: false,
-  reverseEducation: false,
-};
+import { validateImageFile } from "@/lib/validations/files";
 
 export default function AdminNewCVPage() {
   const router = useRouter();
@@ -84,7 +77,7 @@ export default function AdminNewCVPage() {
     skills: [] as string[],
     languages: [] as Language[],
     selectedTemplate: "harvard" as TemplateType,
-    templateSettings: DEFAULT_TEMPLATE_SETTINGS,
+    templateSettings: ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
     targetJob: "",
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -150,12 +143,9 @@ export default function AdminNewCVPage() {
   };
 
   const processPhotoFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("El archivo debe ser una imagen");
-      return;
-    }
-    if (file.size > 1 * 1024 * 1024) {
-      toast.error("La imagen debe ser menor a 1MB");
+    const validation = validateImageFile(file);
+    if (!validation.success) {
+      toast.error(validation.error);
       return;
     }
 
@@ -1084,24 +1074,14 @@ export default function AdminNewCVPage() {
                                 e.target.value,
                               )
                             }
-                            options={
-                              languageOptions as unknown as {
-                                value: string;
-                                label: string;
-                              }[]
-                            }
+                            options={languageSelectOptions}
                           />
                           <Select
                             value={lang.level}
                             onChange={(e) =>
                               updateLanguage(lang.id, "level", e.target.value)
                             }
-                            options={
-                              levelOptions as unknown as {
-                                value: string;
-                                label: string;
-                              }[]
-                            }
+                            options={levelSelectOptions}
                           />
                           <Button
                             variant="ghost"

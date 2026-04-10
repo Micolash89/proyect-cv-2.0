@@ -1,14 +1,15 @@
 "use server";
 
-import { z } from "zod";
 import { redirect } from "next/navigation";
 import { getAdminByEmail, verifyPassword } from "@/lib/db/models/admin";
-import { createToken, setAuthCookie, getCurrentAdmin } from "@/lib/auth/jwt";
-
-const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
-});
+import {
+  createToken,
+  setAuthCookie,
+  getCurrentAdmin,
+  removeAuthCookie,
+} from "@/lib/auth/jwt";
+import { AUTH_ERROR_MESSAGES } from "@/lib/constants/auth";
+import { loginSchema } from "@/lib/validations/auth";
 
 export type LoginState = {
   success?: boolean;
@@ -38,18 +39,24 @@ export async function login(
         errors.password = issue.message;
       }
     });
-    return { error: "Validation failed", errors };
+    return { error: AUTH_ERROR_MESSAGES.validationFailed, errors };
   }
 
   try {
     const admin = await getAdminByEmail(validated.data.email);
     if (!admin) {
-      return { error: "Credenciales inválidas", errors: { email: "Credenciales inválidas" } };
+      return {
+        error: AUTH_ERROR_MESSAGES.invalidCredentials,
+        errors: { email: AUTH_ERROR_MESSAGES.invalidCredentials },
+      };
     }
 
     const isValid = await verifyPassword(admin, validated.data.password);
     if (!isValid) {
-      return { error: "Credenciales inválidas", errors: { password: "Credenciales inválidas" } };
+      return {
+        error: AUTH_ERROR_MESSAGES.invalidCredentials,
+        errors: { password: AUTH_ERROR_MESSAGES.invalidCredentials },
+      };
     }
 
     const token = await createToken({
@@ -63,14 +70,12 @@ export async function login(
     return { success: true };
   } catch (error) {
     console.error("Auth error:", error);
-    return { error: "Error interno del servidor" };
+    return { error: AUTH_ERROR_MESSAGES.internalServerError };
   }
 }
 
 export async function logout(): Promise<void> {
-  const { cookies } = await import("next/headers");
-  const cookieStore = await cookies();
-  cookieStore.delete("cv-admin-token");
+  await removeAuthCookie();
   redirect("/login");
 }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth/jwt";
+import { AUTH_COOKIE_NAME } from "@/lib/constants/auth";
 
 const protectedRoutes = ["/admin"];
 const publicRoutes = ["/login", "/registro", "/success"];
@@ -16,7 +17,7 @@ export async function proxy(request: NextRequest) {
     pathname === route || pathname.startsWith(route)
   );
 
-  const token = request.cookies.get("cv-admin-token")?.value;
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
   if (isProtectedRoute) {
     if (!token) {

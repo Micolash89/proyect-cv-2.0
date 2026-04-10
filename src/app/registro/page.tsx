@@ -46,101 +46,26 @@ import { EducationLocationSelector } from "@/components/admin/cv/EducationLocati
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
-import type { Experience, Education, Language, TemplateType, FontSize, LayoutOrder } from "@/types";
+import type { Experience, Education, Language, TemplateType, CVFormDraft } from "@/types";
 import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 import {
-  getTemplateDefaultColor,
   getTemplatePalette,
   sanitizeTemplatePrimaryColor,
   templateOptions,
 } from "@/lib/constants/templates";
-
-const steps = [
-  { id: 1, title: "Datos Personales", icon: User },
-  { id: 2, title: "Foto", icon: ImageIcon },
-  { id: 3, title: "Experiencia", icon: Briefcase },
-  { id: 4, title: "Educación", icon: GraduationCap },
-  { id: 5, title: "Habilidades", icon: FileText },
-  { id: 6, title: "Diseño & Color", icon: CheckCircle },
-  { id: 7, title: "Confirmar", icon: CheckCircle },
-];
-
-const languageOptions = [
-  { value: "Español", label: "Español" },
-  { value: "Inglés", label: "Inglés" },
-  { value: "Portugués", label: "Portugués" },
-  { value: "Francés", label: "Francés" },
-  { value: "Alemán", label: "Alemán" },
-  { value: "Italiano", label: "Italiano" },
-  { value: "Otro", label: "Otro" },
-];
-
-const levelOptions = [
-  { value: "Básico", label: "Básico" },
-  { value: "Intermedio", label: "Intermedio" },
-  { value: "Avanzado", label: "Avanzado" },
-  { value: "Nativo", label: "Nativo" },
-];
-
-type FormData = {
-  name: string;
-  lastName: string;
-  fullName: string;
-  phone: string;
-  dni?: string;
-  email?: string;
-  location?: string;
-  links?: string;
-  photo?: string;
-  summary?: string;
-  targetJob?: string;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-  languages: Language[];
-  selectedTemplate: TemplateType;
-  templateSettings: {
-    primaryColor: string;
-    fontSize: FontSize;
-    fontFamily: string;
-    layout: LayoutOrder;
-    padding: number;
-    margin: number;
-  };
-};
-
-const defaultFormData: FormData = {
-  name: "",
-  lastName: "",
-  fullName: "",
-  phone: "",
-  dni: "",
-  email: "",
-  location: "",
-  links: "",
-  photo: "",
-  summary: "",
-  targetJob: "",
-  experience: [],
-  education: [],
-  skills: [],
-  languages: [],
-  selectedTemplate: "harvard",
-  templateSettings: {
-    primaryColor: getTemplateDefaultColor("harvard"),
-    fontSize: "medium",
-    fontFamily: "Inter",
-    layout: "descending",
-    padding: 20,
-    margin: 15,
-  },
-};
+import {
+  languageSelectOptions,
+  levelSelectOptions,
+  registroSteps,
+  REGISTRO_DEFAULT_FORM_DATA,
+} from "@/lib/constants";
+import { validateImageFile } from "@/lib/validations/files";
 
 function RegistroPageContent() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>(defaultFormData);
+  const [formData, setFormData] = useState<CVFormDraft>(REGISTRO_DEFAULT_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -178,13 +103,13 @@ function RegistroPageContent() {
     loadProvincias();
   }, []);
 
-  const validateRealtime = useCallback((nextData: FormData) => {
+  const validateRealtime = useCallback((nextData: CVFormDraft) => {
     const validation = validateCVPayload(nextData);
     setFieldErrors(validation.success ? {} : validation.errors);
     return validation.success;
   }, []);
 
-  const updateFormData = useCallback((data: Partial<FormData>, touchedPath?: string) => {
+  const updateFormData = useCallback((data: Partial<CVFormDraft>, touchedPath?: string) => {
     setFormData((prev) => {
       const merged = { ...prev, ...data };
       merged.fullName = buildFullName(merged.name, merged.lastName);
@@ -427,8 +352,10 @@ function RegistroPageContent() {
 
   const handlePhotoUpload = (file: File) => {
     if (!file) return;
-    if (file.size > 1 * 1024 * 1024) {
-      toast.error("La imagen debe ser menor a 1MB");
+
+    const validation = validateImageFile(file);
+    if (!validation.success) {
+      toast.error(validation.error);
       return;
     }
 
@@ -513,7 +440,7 @@ function RegistroPageContent() {
 
         <div className="hidden md:flex justify-center mb-8 overflow-x-auto pb-2">
           <div className="flex items-center gap-2">
-            {steps.map((step, index) => (
+            {registroSteps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
                   onClick={() =>
@@ -536,7 +463,7 @@ function RegistroPageContent() {
                   )}
                   <span>{step.title}</span>
                 </button>
-                {index < steps.length - 1 && (
+                {index < registroSteps.length - 1 && (
                   <div className="w-8 h-0.5 bg-border mx-2" />
                 )}
               </div>
@@ -1150,7 +1077,7 @@ function RegistroPageContent() {
                             language: e.target.value,
                           })
                         }
-                        options={languageOptions}
+                        options={languageSelectOptions}
                         className="flex-1"
                       />
                       {newLanguage.language === "Otro" && (
@@ -1174,7 +1101,7 @@ function RegistroPageContent() {
                             level: e.target.value,
                           })
                         }
-                        options={levelOptions}
+                        options={levelSelectOptions}
                         className="sm:w-32"
                       />
                       <Button type="button" onClick={addLanguage}>
@@ -1369,10 +1296,10 @@ function RegistroPageContent() {
                 Anterior
               </Button>
 
-              {currentStep < steps.length ? (
+              {currentStep < registroSteps.length ? (
                 <Button
                   onClick={() =>
-                    setCurrentStep((prev) => Math.min(steps.length, prev + 1))
+                    setCurrentStep((prev) => Math.min(registroSteps.length, prev + 1))
                   }
                   disabled={!canProceed()}
                   className="w-full sm:w-auto"

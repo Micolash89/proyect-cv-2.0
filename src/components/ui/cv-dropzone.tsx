@@ -4,36 +4,27 @@ import { useCallback, useState } from "react";
 import { Upload, FileText, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { extractCVAction } from "@/app/actions/ia";
-import type { Experience, Education, Language } from "@/types";
+import type { ExtractedCVData, ProcessingStatus } from "@/types";
 import { cn } from "@/lib/utils/cn";
+import {
+  CV_IMPORT_ACCEPT,
+  CV_IMPORT_MIME_TYPES,
+  FILE_ERROR_MESSAGES,
+} from "@/lib/constants";
 
 interface CVDropzoneProps {
   onDataExtracted?: (data: ExtractedCVData) => void;
   className?: string;
 }
 
-export interface ExtractedCVData {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-  languages: Language[];
-}
-
 export function CVDropzone({ onDataExtracted, className }: CVDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<"idle" | "processing" | "success" | "error">("idle");
+  const [uploadProgress, setUploadProgress] = useState<ProcessingStatus>("idle");
 
   const processFile = useCallback(async (file: File) => {
-    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-    
-    if (!validTypes.includes(file.type)) {
-      toast.error("Tipo de archivo no válido. Solo PDF, JPEG, PNG o WebP");
+    if (!CV_IMPORT_MIME_TYPES.includes(file.type as (typeof CV_IMPORT_MIME_TYPES)[number])) {
+      toast.error(FILE_ERROR_MESSAGES.invalidCVType);
       return;
     }
 
@@ -157,7 +148,7 @@ export function CVDropzone({ onDataExtracted, className }: CVDropzoneProps) {
       >
         <input
           type="file"
-          accept=".pdf,image/jpeg,image/png,image/webp"
+          accept={CV_IMPORT_ACCEPT}
           onChange={handleFileSelect}
           className="hidden"
           id="cv-dropzone"

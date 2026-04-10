@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AdminCVPageSkeleton } from "@/components/admin/cv/AdminCVPageSkeleton";
 import {
   ArrowLeft,
   Save,
@@ -64,6 +64,7 @@ import {
 } from "@/lib/constants/templates";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
+import { validateImageFile } from "@/lib/validations/files";
 
 export default function AdminCVPage() {
   const params = useParams();
@@ -456,12 +457,9 @@ export default function AdminCVPage() {
 
   const processPhotoFile = async (file: File) => {
     if (!user) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("El archivo debe ser una imagen");
-      return;
-    }
-    if (file.size > 1 * 1024 * 1024) {
-      toast.error("La imagen debe ser menor a 1MB");
+    const validation = validateImageFile(file);
+    if (!validation.success) {
+      toast.error(validation.error);
       return;
     }
 
@@ -758,58 +756,7 @@ export default function AdminCVPage() {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 space-y-4 animate-in">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-80 max-w-full" />
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
-          <div className="flex gap-2 flex-wrap">
-            <Skeleton className="h-10 w-28" />
-            <Skeleton className="h-10 w-28" />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Skeleton className="h-10 w-full sm:w-40" />
-            <Skeleton className="h-10 w-full sm:w-40" />
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-40" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminCVPageSkeleton />;
   }
 
   if (!user) return null;

@@ -179,6 +179,40 @@ export interface CVFormData {
   targetJob?: string;
 }
 
+export interface CVFormDraft {
+  name: string;
+  lastName: string;
+  fullName: string;
+  phone: string;
+  dni?: string;
+  email?: string;
+  location?: string;
+  links?: string;
+  photo?: string;
+  summary?: string;
+  targetJob?: string;
+  experience: Experience[];
+  education: Education[];
+  skills: string[];
+  languages: Language[];
+  selectedTemplate: TemplateType;
+  templateSettings: TemplateSettings;
+}
+
+export interface ExtractedCVData {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+  experience: Experience[];
+  education: Education[];
+  skills: string[];
+  languages: Language[];
+}
+
+export type ProcessingStatus = "idle" | "processing" | "success" | "error";
+
 export interface Theme {
   mode: "light" | "dark";
   setTheme: (theme: "light" | "dark") => void;

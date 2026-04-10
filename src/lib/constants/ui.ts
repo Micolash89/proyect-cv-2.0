@@ -32,6 +32,21 @@ export const levelOptions = [
   { value: "Nativo", label: "Nativo" },
 ] as const;
 
+export type SelectOption = {
+  value: string;
+  label: string;
+};
+
+export const languageSelectOptions: SelectOption[] = languageOptions.map((option) => ({
+  value: option.value,
+  label: option.label,
+}));
+
+export const levelSelectOptions: SelectOption[] = levelOptions.map((option) => ({
+  value: option.value,
+  label: option.label,
+}));
+
 export const fontSizeOptions = [
   { value: "small", label: "Pequeño" },
   { value: "medium", label: "Mediano" },

@@ -4,30 +4,21 @@ import { useCallback, useState } from "react";
 import { Upload, Loader2, AlertCircle, CheckCircle, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { extractCVAction, extractFromTextAction } from "@/app/actions/ia";
-import type { Experience, Education, Language } from "@/types";
+import type { ExtractedCVData, ProcessingStatus } from "@/types";
 import { cn } from "@/lib/utils/cn";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  CV_IMPORT_ACCEPT,
+  CV_IMPORT_MIME_TYPES,
+  FILE_ERROR_MESSAGES,
+} from "@/lib/constants";
 
 interface AITextExtractorProps {
   onDataExtracted?: (data: ExtractedCVData) => void;
   className?: string;
 }
-
-export interface ExtractedCVData {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-  languages: Language[];
-}
-
-type ProcessingStatus = "idle" | "processing" | "success" | "error";
 
 export function AITextExtractor({ onDataExtracted, className }: AITextExtractorProps) {
   const [textInput, setTextInput] = useState("");
@@ -40,9 +31,8 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
     const files = e.target.files;
     if (files && files.length > 0) {
       const selectedFile = files[0];
-      const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-      if (!validTypes.includes(selectedFile.type)) {
-        toast.error("Tipo de archivo no válido. Solo PDF, JPEG, PNG o WebP");
+      if (!CV_IMPORT_MIME_TYPES.includes(selectedFile.type as (typeof CV_IMPORT_MIME_TYPES)[number])) {
+        toast.error(FILE_ERROR_MESSAGES.invalidCVType);
         return;
       }
       setFile(selectedFile);
@@ -192,7 +182,7 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
             <label className="flex flex-col items-center gap-2 cursor-pointer">
               <input
                 type="file"
-                accept=".pdf,image/jpeg,image/png,image/webp"
+                accept={CV_IMPORT_ACCEPT}
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={isProcessing}
