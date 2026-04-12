@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout1Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -77,11 +83,13 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const certificationEntries = (user.certifications || []).map((cert, index) => (
     <View key={index} style={styles.certificationItem}>
-      <Text style={styles.certificationName}>{cert.name}</Text>
-      <Text style={styles.certificationIssuer}>{cert.issuer}</Text>
-      <Text style={styles.certificationDate}>{parseDate(cert.date)}</Text>
+      <Text style={styles.certificationName}>{formatCertificationTitle(cert)}</Text>
+      <Text style={styles.certificationIssuer}>{formatCertificationInstitution(cert)}</Text>
+      <Text style={styles.certificationDate}>{formatCertificationDate(cert)}</Text>
     </View>
   ));
+
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const orderedExperience = options.reverseExperience 
     ? [...experienceEntries].reverse() 
@@ -120,8 +128,19 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
 
       {options.showCertifications && orderedCertifications.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>CERTIFICACIONES</Text>
+          <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
           {orderedCertifications}
+        </View>
+      )}
+
+      {additionalInfoItems.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>INFORMACIÓN ADICIONAL</Text>
+          {additionalInfoItems.map((item, index) => (
+            <Text key={index} style={styles.description}>
+              • {item}
+            </Text>
+          ))}
         </View>
       )}
     </View>

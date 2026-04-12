@@ -1,6 +1,6 @@
 import { getDatabase } from "@/lib/db/mongodb";
 import { ObjectId } from "mongodb";
-import type { Experience, Education, Language, Project, Certification, CVStatus, TemplateType, TemplateSettings, CVFormData } from "@/types";
+import type { Experience, Education, Language, Certification, CVStatus, TemplateType, TemplateSettings, CVFormData } from "@/types";
 
 interface UserCVDoc {
   _id: ObjectId;
@@ -16,7 +16,6 @@ interface UserCVDoc {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
@@ -24,6 +23,11 @@ interface UserCVDoc {
   viewed: boolean;
   createdAt: string;
   updatedAt: string;
+  licencia?: string;
+  movilidad?: boolean;
+  incorporacionInmediata?: boolean;
+  disponibilidad?: "fullTime" | "partTime" | string;
+  office?: boolean;
 }
 
 interface UserCVResponse {
@@ -40,7 +44,6 @@ interface UserCVResponse {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
@@ -48,6 +51,11 @@ interface UserCVResponse {
   viewed: boolean;
   createdAt: string;
   updatedAt: string;
+  licencia?: string;
+  movilidad?: boolean;
+  incorporacionInmediata?: boolean;
+  disponibilidad?: "fullTime" | "partTime" | string;
+  office?: boolean;
 }
 
 export type { UserCVDoc, UserCVResponse };
@@ -78,16 +86,15 @@ export async function createUser(data: CVFormData): Promise<UserCVResponse> {
     education: data.education || [],
     skills: data.skills || [],
     languages: data.languages || [],
-    projects: data.projects,
-    certifications: data.certifications,
+    certifications: data.certifications || [],
+    licencia: data.licencia,
+    movilidad: data.movilidad,
+    incorporacionInmediata: data.incorporacionInmediata,
+    disponibilidad: data.disponibilidad,
+    office: data.office,
     selectedTemplate: data.selectedTemplate || "harvard",
     templateSettings: data.templateSettings || {
       primaryColor: "#1e3a5f",
-      fontSize: "medium",
-      fontFamily: "Helvetica",
-      layout: "descending",
-      padding: 40,
-      margin: 20,
     },
     status: "pending",
     viewed: false,

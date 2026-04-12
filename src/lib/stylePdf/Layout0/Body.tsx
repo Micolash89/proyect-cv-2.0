@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout0Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -42,6 +48,7 @@ const toBulletLines = (text?: string) => {
 
 export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout0Styles(options);
+  const additionalInfoLines = buildAdditionalInfoLines(user);
 
   const experienceEntries = user.experience.map((exp, index) => (
     <View key={index} style={styles.entryContainer}>
@@ -99,6 +106,20 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     ? [...educationEntries].reverse()
     : educationEntries;
 
+  const certificationEntries = (user.certifications || []).map((cert, index) => (
+    <View key={index} style={styles.certificationItem}>
+      <Text style={styles.certificationTitle}>{formatCertificationTitle(cert)}</Text>
+      <Text style={styles.certificationMeta}>
+        {formatCertificationInstitution(cert)}
+        {formatCertificationDate(cert) ? ` · ${formatCertificationDate(cert)}` : ""}
+      </Text>
+    </View>
+  ));
+
+  const orderedCertifications = options.reverseCourses
+    ? [...certificationEntries].reverse()
+    : certificationEntries;
+
   return (
     <View>
       {options.showSummary && user.summary && (
@@ -144,6 +165,24 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
               <Text>{lang.language}</Text>
               <Text style={styles.dates}>{lang.level}</Text>
             </View>
+          ))}
+        </View>
+      )}
+
+      {options.showCertifications && orderedCertifications.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
+          {orderedCertifications}
+        </View>
+      )}
+
+      {additionalInfoLines.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>INFORMACIÓN ADICIONAL</Text>
+          {additionalInfoLines.map((item, index) => (
+            <Text key={index} style={styles.additionalInfoItem}>
+              • {item}
+            </Text>
           ))}
         </View>
       )}

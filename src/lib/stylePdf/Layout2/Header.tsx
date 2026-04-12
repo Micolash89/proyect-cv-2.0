@@ -10,11 +10,6 @@ interface HeaderProps {
   options: OptionsPDF;
 }
 
-const formatBooleanValue = (value: boolean | undefined, enabledLabel: string, disabledLabel?: string) => {
-  if (value === undefined) return "";
-  return value ? enabledLabel : disabledLabel || "";
-};
-
 const buildLocationLabel = (user: UserCV) => {
   return formatPdfLocation({
     localidad: user.localidad,
@@ -41,14 +36,7 @@ export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
     user.phone ? `Tel: ${user.phone}` : "",
     user.email || "",
     buildLocationLabel(user),
-  ].filter(Boolean);
-
-  const additionalInfoItems = [
-    formatBooleanValue(user.movilidad, "Vehiculo propio", "Sin movilidad"),
-    user.disponibilidad || "",
-    formatBooleanValue(user.office, "Jornada completa", "Modalidad flexible"),
-    user.licencia || "",
-    user.incorporacion || "",
+    user.links || "",
   ].filter(Boolean);
 
   return (
@@ -95,16 +83,6 @@ export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
         </View>
       )}
 
-      {additionalInfoItems.length > 0 && (
-        <View style={styles.sidebarSection}>
-          <Text style={styles.sidebarSectionTitle}>Información Adicional</Text>
-          {additionalInfoItems.map((item, index) => (
-            <Text key={index} style={styles.sidebarListItem}>
-              {item}
-            </Text>
-          ))}
-        </View>
-      )}
     </View>
   );
 };

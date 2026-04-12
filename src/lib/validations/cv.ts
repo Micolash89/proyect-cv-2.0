@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CVStatus, TemplateSettings, TemplateType } from "@/types";
+import type { AvailabilityType, Certification, CVStatus, TemplateSettings, TemplateType } from "@/types";
 
 const nameRegex = /^[a-zA-Z\u00C0-\u024F\s'-]+$/;
 const phoneRegex = /^[0-9+()\s-]+$/;
@@ -15,6 +15,23 @@ const TEMPLATE_VALUES: [TemplateType, ...TemplateType[]] = [
   "layout6",
   "elegant",
 ];
+const AVAILABILITY_VALUES: [AvailabilityType, ...AvailabilityType[]] = ["fullTime", "partTime"];
+const MONTH_VALUES = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] as const;
+
+const MONTH_LABELS: Record<string, string> = {
+  "01": "Enero",
+  "02": "Febrero",
+  "03": "Marzo",
+  "04": "Abril",
+  "05": "Mayo",
+  "06": "Junio",
+  "07": "Julio",
+  "08": "Agosto",
+  "09": "Septiembre",
+  "10": "Octubre",
+  "11": "Noviembre",
+  "12": "Diciembre",
+};
 
 function toDate(value: string): Date | null {
   if (!value) {
@@ -43,6 +60,23 @@ function isFutureDate(value: string): boolean {
 
 function hasValue(value?: string): boolean {
   return Boolean(value && value.trim().length > 0);
+}
+
+function parseMonthYearFromDate(value?: string): { startMonth?: string; startYear?: string } {
+  if (!value) {
+    return {};
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return {};
+  }
+
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  return {
+    startMonth: MONTH_LABELS[month] ? month : undefined,
+    startYear: String(parsed.getFullYear()),
+  };
 }
 
 function optionalTextField(
@@ -197,33 +231,76 @@ const languageSchema = z.object({
     .max(20, "Nivel: puede contener hasta 20 caracteres"),
 });
 
+const certificationSchema = z
+  .object({
+    id: z.string().min(1, "Curso: ID inválido"),
+    title: optionalTextField("Título del curso", 2, 120).optional(),
+    institution: optionalTextField("Institución", 2, 120).optional(),
+    startMonth: z.enum(MONTH_VALUES).optional(),
+    startYear: z
+      .string()
+      .trim()
+      .regex(/^$|^[0-9]{4}$/, "Año de inicio: debe tener 4 dígitos")
+      .optional(),
+    name: optionalTextField("Título del curso", 2, 120).optional(),
+    issuer: optionalTextField("Institución", 2, 120).optional(),
+    date: z.string().trim().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const title = value.title ?? value.name ?? "";
+    const institution = value.institution ?? value.issuer ?? "";
+    const derivedDate = value.date ? parseMonthYearFromDate(value.date) : {};
+    const startMonth = value.startMonth ?? derivedDate.startMonth;
+    const startYear = value.startYear ?? derivedDate.startYear;
+    const hasLegacyDate = hasValue(value.date);
+
+    if (!hasValue(title)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["title"],
+        message: "Título del curso: es obligatorio",
+      });
+    }
+
+    if (!hasValue(startMonth) && !hasLegacyDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["startMonth"],
+        message: "Mes de inicio: es obligatorio",
+      });
+    }
+
+    if (!hasValue(startYear) && !hasLegacyDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["startYear"],
+        message: "Año de inicio: es obligatorio",
+      });
+    }
+
+    if (hasValue(startYear) && !/^\d{4}$/.test(startYear ?? "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["startYear"],
+        message: "Año de inicio: debe tener 4 dígitos",
+      });
+    }
+
+    if (!hasValue(institution) && value.issuer) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["institution"],
+        message: "Institución: es inválida",
+      });
+    }
+  });
+
 const templateSettingsSchema: z.ZodType<TemplateSettings> = z.object({
   primaryColor: z
     .string()
     .trim()
     .min(4, "Color: inválido")
     .max(20, "Color: inválido"),
-  headerBackground: z.string().optional(),
-  fontSize: z.enum(["small", "medium", "large"]),
-  headerFontSize: z.number().optional(),
-  bodyFontSize: z.number().optional(),
-  fontFamily: z.string().trim().min(2).max(60),
-  layout: z.enum(["ascending", "descending"]),
-  padding: z.number().min(10).max(80),
-  margin: z.number().min(0).max(80),
-  headerPadding: z.number().optional(),
-  bodyPadding: z.number().optional(),
-  showPhoto: z.boolean().optional(),
-  showSummary: z.boolean().optional(),
-  showSkills: z.boolean().optional(),
-  showLanguages: z.boolean().optional(),
-  showProjects: z.boolean().optional(),
-  showCertifications: z.boolean().optional(),
-  fullName: z.boolean().optional(),
-  spaceBetween: z.boolean().optional(),
-  reverseExperience: z.boolean().optional(),
-  reverseEducation: z.boolean().optional(),
-  reverseCourses: z.boolean().optional(),
 });
 
 export const cvFormValidationSchema = z
@@ -233,13 +310,15 @@ export const cvFormValidationSchema = z
       .trim()
       .min(2, "Nombre: debe tener al menos 2 caracteres")
       .max(25, "Nombre: puede contener hasta 25 caracteres")
-      .regex(nameRegex, "Nombre: solo se permiten letras y espacios"),
+      .regex(nameRegex, "Nombre: solo se permiten letras y espacios")
+      .transform((val) => val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()),
     lastName: z
       .string()
       .trim()
       .min(2, "Apellido: debe tener al menos 2 caracteres")
       .max(25, "Apellido: puede contener hasta 25 caracteres")
-      .regex(nameRegex, "Apellido: solo se permiten letras y espacios"),
+      .regex(nameRegex, "Apellido: solo se permiten letras y espacios")
+      .transform((val) => val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()),
     fullName: z.string().trim().optional(),
     phone: z
       .string()
@@ -261,12 +340,18 @@ export const cvFormValidationSchema = z
     photo: z.string().trim().optional(),
     summary: optionalTextField("Resumen", 10, 1000).optional(),
     targetJob: optionalTextField("Puesto aspirado", 2, 120).optional(),
+    licencia: optionalTextField("Licencia de conducir", 2, 30).optional(),
+    movilidad: z.boolean().optional(),
+    incorporacionInmediata: z.boolean().optional(),
+    disponibilidad: z.string().trim().optional(),
+    office: z.boolean().optional(),
     experience: z.array(experienceSchema).default([]),
     education: z.array(educationSchema).default([]),
     skills: z
       .array(optionalTextField("Habilidad", 2, 50))
       .default([]),
     languages: z.array(languageSchema).default([]),
+    certifications: z.array(certificationSchema).default([]),
     selectedTemplate: z.enum(TEMPLATE_VALUES),
     templateSettings: templateSettingsSchema,
     status: z.enum(STATUS_VALUES).optional(),
@@ -275,6 +360,22 @@ export const cvFormValidationSchema = z
   .transform((value) => ({
     ...value,
     fullName: buildFullName(value.name, value.lastName),
+    certifications: value.certifications.map((cert) => {
+      const derivedDate = cert.date ? parseMonthYearFromDate(cert.date) : {};
+      const title = cert.title ?? cert.name ?? "";
+      const institution = cert.institution ?? cert.issuer;
+
+      return {
+        id: cert.id,
+        title,
+        institution,
+        startMonth: cert.startMonth ?? derivedDate.startMonth ?? "",
+        startYear: cert.startYear ?? derivedDate.startYear ?? "",
+        name: cert.name,
+        issuer: cert.issuer,
+        date: cert.date,
+      } satisfies Certification;
+    }),
   }));
 
 export type CVValidatedPayload = z.infer<typeof cvFormValidationSchema>;
@@ -296,8 +397,15 @@ export function splitFullName(fullName?: string): { name: string; lastName: stri
   };
 }
 
+function capitalizeFirst(str: string): string {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 export function buildFullName(name?: string, lastName?: string): string {
-  return [name?.trim() ?? "", lastName?.trim() ?? ""]
+  const normalizedName = capitalizeFirst(name?.trim() ?? "");
+  const normalizedLastName = capitalizeFirst(lastName?.trim() ?? "");
+  return [normalizedName, normalizedLastName]
     .filter(Boolean)
     .join(" ")
     .trim();

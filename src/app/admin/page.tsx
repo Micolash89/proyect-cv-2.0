@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
@@ -230,10 +231,12 @@ export default function AdminDashboard() {
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             {user.photo && (
-                              <img
+                              <Image
                                 src={user.photo}
                                 alt={user.fullName}
-                                className="w-10 h-10 rounded-full object-cover"
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full object-cover"
                               />
                             )}
                             <div>

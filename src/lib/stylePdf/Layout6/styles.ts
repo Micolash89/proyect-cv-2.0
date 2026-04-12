@@ -111,6 +111,21 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       color: "#2E211A",
       lineHeight: 1.35,
     },
+    courseList: {
+      marginTop: 2,
+    },
+    courseItem: {
+      marginBottom: 6,
+    },
+    courseTitle: {
+      fontSize: opts.bodyFontSize + 1,
+      fontWeight: "bold",
+      color: accentColor,
+    },
+    courseMeta: {
+      fontSize: opts.bodyFontSize,
+      color: "#5C514A",
+    },
     skillList: {
       marginTop: 4,
     },

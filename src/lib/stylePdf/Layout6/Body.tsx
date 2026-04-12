@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout6Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -41,13 +47,8 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const orderedExperience = options.reverseExperience ? [...user.experience].reverse() : user.experience;
   const orderedEducation = options.reverseEducation ? [...user.education].reverse() : user.education;
-  const additionalInfoLines = [
-    user.licencia || "",
-    user.disponibilidad || "",
-    user.movilidad ? "Cuenta con movilidad propia" : "",
-    user.office ? "Disponible para oficina" : "",
-    user.incorporacion ? `Incorporación: ${user.incorporacion}` : "",
-  ].filter(Boolean);
+  const additionalInfoLines = buildAdditionalInfoLines(user);
+  const orderedCourses = options.reverseCourses ? [...(user.certifications || [])].reverse() : user.certifications || [];
 
   return (
     <View style={styles.mainContent}>
@@ -137,6 +138,21 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
                 </View>
               );
             })}
+          </View>
+        </View>
+      )}
+
+      {options.showCertifications && orderedCourses.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
+          <View style={styles.courseList}>
+            {orderedCourses.map((course, index) => (
+              <View key={index} style={styles.courseItem}>
+                <Text style={styles.courseTitle}>{formatCertificationTitle(course)}</Text>
+                <Text style={styles.courseMeta}>{formatCertificationInstitution(course)}</Text>
+                <Text style={styles.courseMeta}>{formatCertificationDate(course)}</Text>
+              </View>
+            ))}
           </View>
         </View>
       )}

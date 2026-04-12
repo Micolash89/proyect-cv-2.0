@@ -16,16 +16,10 @@ interface CVFormData {
   education: any[];
   skills: string[];
   languages: any[];
-  projects?: any[];
   certifications?: any[];
   selectedTemplate: string;
   templateSettings: {
     primaryColor: string;
-    fontSize: string;
-    fontFamily: string;
-    layout: string;
-    padding: number;
-    margin: number;
   };
 }
 
@@ -48,16 +42,10 @@ export async function createCV(data: CVFormData) {
     education: data.education || [],
     skills: data.skills || [],
     languages: data.languages || [],
-    projects: data.projects || [],
     certifications: data.certifications || [],
     selectedTemplate: data.selectedTemplate || "harvard",
     templateSettings: data.templateSettings || {
       primaryColor: "#0ea5e9",
-      fontSize: "medium",
-      fontFamily: "Inter",
-      layout: "descending",
-      padding: 20,
-      margin: 15,
     },
     status: "pending",
     viewed: false,

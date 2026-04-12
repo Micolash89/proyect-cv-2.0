@@ -131,10 +131,28 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       paddingRight: 2,
       fontStyle: "italic",
     },
+    additionalInfoItem: {
+      fontSize: opts.bodyFontSize,
+      color: "#2a2a2a",
+      lineHeight: 1.35,
+      marginBottom: 2,
+    },
     languageItem: {
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 4,
+    },
+    certificationItem: {
+      marginBottom: 8,
+    },
+    certificationTitle: {
+      fontSize: opts.bodyFontSize + 1,
+      fontWeight: "bold",
+      color: "#1d1d1d",
+    },
+    certificationMeta: {
+      fontSize: opts.bodyFontSize - 1,
+      color: "#56657A",
     },
     bulletItem: {
       flexDirection: "row",

@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout5Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -57,6 +63,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout5Styles(options);
 
   const contactItems = buildContactItems(user);
+  const additionalInfoItems = buildAdditionalInfoLines(user);
   const orderedExperience = options.reverseExperience ? [...user.experience].reverse() : user.experience;
   const orderedEducation = options.reverseEducation ? [...user.education].reverse() : user.education;
   const orderedCourses = options.reverseCourses
@@ -70,6 +77,17 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
           <View style={styles.leftSection}>
             <Text style={styles.leftSectionTitle}>INFORMACIÓN</Text>
             {contactItems.map((item, index) => (
+              <Text key={index} style={styles.leftText}>
+                {item}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {additionalInfoItems.length > 0 && (
+          <View style={styles.leftSection}>
+            <Text style={styles.leftSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+            {additionalInfoItems.map((item, index) => (
               <Text key={index} style={styles.leftText}>
                 {item}
               </Text>
@@ -124,12 +142,12 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
 
         {options.showCertifications && orderedCourses.length > 0 && (
           <View style={styles.leftSection}>
-            <Text style={styles.leftSectionTitle}>CERTIFICACIONES</Text>
+            <Text style={styles.leftSectionTitle}>CURSOS Y CERTIFICACIONES</Text>
             {orderedCourses.map((course, index) => (
               <View key={index} style={styles.courseItem}>
-                <Text style={styles.leftText}>{course.name}</Text>
-                <Text style={styles.leftMetaText}>{course.issuer}</Text>
-                <Text style={styles.leftMetaText}>{parseDate(course.date)}</Text>
+                <Text style={styles.leftText}>{formatCertificationTitle(course)}</Text>
+                <Text style={styles.leftMetaText}>{formatCertificationInstitution(course)}</Text>
+                <Text style={styles.leftMetaText}>{formatCertificationDate(course)}</Text>
               </View>
             ))}
           </View>

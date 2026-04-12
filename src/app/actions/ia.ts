@@ -54,7 +54,21 @@ El JSON debe tener esta estructura exacta:
     }
   ],
   "skills": ["skill1", "skill2", "skill3"],
-  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}]
+  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}],
+  "licencia": "tipo de licencia o string vacío",
+  "movilidad": true/false,
+  "incorporacionInmediata": true/false,
+  "office": true/false,
+  "disponibilidad": "fullTime" | "partTime" | "",
+  "certifications": [
+    {
+      "id": "id único generado",
+      "title": "título del curso/certificación",
+      "institution": "institución o string vacío",
+      "startMonth": "mes de inicio en minúscula en español o string vacío",
+      "startYear": "año de inicio (YYYY) o string vacío"
+    }
+  ]
 }
 
 Usa timestamps únicos para cada id (Date.now() + random).
@@ -216,10 +230,19 @@ export async function extractFromTextAction(text: string) {
     const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
     const prompt = `
-Eres un asistente experto en extraer información de currículums vitae. 
-Analiza el siguiente texto que contiene datos de un CV y extrae los datos en formato JSON.
+  Eres un asistente experto en extraer información de currículums vitae.
+  Analiza el siguiente texto y extrae datos en JSON aunque el texto sea desordenado, informal o incompleto.
 
-El texto puede estar en cualquier formato (ordenado o no), extrae la mayor cantidad de información posible.
+  Reglas de interpretación obligatorias:
+  - El texto NO tiene formato fijo: puede tener frases sueltas, errores de redacción, orden mezclado o campos sin etiqueta.
+  - Debes inferir experiencia laboral aunque esté escrita en una sola línea.
+  - En experiencia identifica: empresa, puesto, fechas y tareas aunque estén mezcladas.
+  - Si una experiencia contiene tareas separadas por comas, unifícalas en description en una frase coherente.
+  - Si hay rango de fechas invertido por error (ej: desde 2026 hasta 2025), corrígelo intercambiando inicio/fin.
+  - Si solo hay mes y año (ej: febrero-2026 o 04/2025), usa día 01 y formatea como YYYY-MM-DD.
+  - Si dice "actual", "actualidad" o "presente", endDate debe ser string vacío y current=true.
+  - Si falta algún dato puntual, no descartes el registro: completa faltantes con string vacío.
+  - Devuelve siempre estructura completa aunque algunos campos queden vacíos.
 
 El JSON debe tener esta estructura exacta:
 {
@@ -250,10 +273,32 @@ El JSON debe tener esta estructura exacta:
     }
   ],
   "skills": ["skill1", "skill2", "skill3"],
-  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}]
+  "languages": [{"id": "id único generado", "language": "idioma", "level": "nivel"}],
+  "licencia": "tipo de licencia o string vacío",
+  "movilidad": true/false,
+  "incorporacionInmediata": true/false,
+  "office": true/false,
+  "disponibilidad": "fullTime" | "partTime" | "",
+  "certifications": [
+    {
+      "id": "id único generado",
+      "title": "título del curso/certificación",
+      "institution": "institución o string vacío",
+      "startMonth": "mes de inicio en minúscula en español o string vacío",
+      "startYear": "año de inicio (YYYY) o string vacío"
+    }
+  ]
 }
 
 Usa timestamps únicos para cada id (Date.now() + random).
+
+Ejemplo de entrada libre y cómo interpretarla:
+"experiencia: empresa de bolsas aperin, ayudante de extrusor desde febrero-2026 hasta abril-2025. limpieza, organización, orden, mezcla de material"
+Debes generar una experiencia con:
+- company: "Empresa de Bolsas Aperin"
+- position: "Ayudante de extrusor"
+- startDate/endDate corregidas y normalizadas (YYYY-MM-DD)
+- description con las tareas detectadas.
 
 Texto del CV:
 ${text}

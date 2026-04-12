@@ -11,6 +11,7 @@ export type TemplateType =
 export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";
+export type AvailabilityType = "fullTime" | "partTime";
 
 export interface Settings {
   whatsappNumber: string;
@@ -23,16 +24,6 @@ export interface Settings {
   emailUser: string;
   emailPassword: string;
   emailFrom: string;
-  defaultFontSize: FontSize;
-  defaultLayout: LayoutOrder;
-  defaultPadding: number;
-  defaultMargin: number;
-  showPhoto: boolean;
-  showSummary: boolean;
-  showSkills: boolean;
-  showLanguages: boolean;
-  showProjects: boolean;
-  showCertifications: boolean;
 }
 
 export interface Experience {
@@ -66,43 +57,19 @@ export interface Language {
   level: string;
 }
 
-export interface Project {
-  id: string;
-  name: string;
-  description: string;
-  url?: string;
-}
-
 export interface Certification {
   id: string;
-  name: string;
-  issuer: string;
-  date: string;
+  title: string;
+  institution?: string;
+  startMonth: string;
+  startYear: string;
+  name?: string;
+  issuer?: string;
+  date?: string;
 }
 
 export interface TemplateSettings {
   primaryColor: string;
-  headerBackground?: string;
-  fontSize: FontSize;
-  headerFontSize?: number;
-  bodyFontSize?: number;
-  fontFamily: string;
-  layout: LayoutOrder;
-  padding: number;
-  margin: number;
-  headerPadding?: number;
-  bodyPadding?: number;
-  showPhoto?: boolean;
-  showSummary?: boolean;
-  showSkills?: boolean;
-  showLanguages?: boolean;
-  showProjects?: boolean;
-  showCertifications?: boolean;
-  fullName?: boolean;
-  spaceBetween?: boolean;
-  reverseExperience?: boolean;
-  reverseEducation?: boolean;
-  reverseCourses?: boolean;
 }
 
 export interface UserCV {
@@ -119,7 +86,6 @@ export interface UserCV {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
@@ -132,8 +98,8 @@ export interface UserCV {
   fechaNacimiento?: string;
   licencia?: string;
   movilidad?: boolean;
-  incorporacion?: string;
-  disponibilidad?: string;
+  incorporacionInmediata?: boolean;
+  disponibilidad?: AvailabilityType | string;
   office?: boolean;
   links?: string;
   provincia?: string;
@@ -172,11 +138,15 @@ export interface CVFormData {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
   targetJob?: string;
+  disponibilidad?: AvailabilityType | string;
+  incorporacionInmediata?: boolean;
+  licencia?: string;
+  movilidad?: boolean;
+  office?: boolean;
 }
 
 export interface CVFormDraft {
@@ -195,6 +165,12 @@ export interface CVFormDraft {
   education: Education[];
   skills: string[];
   languages: Language[];
+  certifications?: Certification[];
+  disponibilidad?: AvailabilityType | string;
+  incorporacionInmediata?: boolean;
+  licencia?: string;
+  movilidad?: boolean;
+  office?: boolean;
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
 }
@@ -209,6 +185,12 @@ export interface ExtractedCVData {
   education: Education[];
   skills: string[];
   languages: Language[];
+  certifications?: Certification[];
+  disponibilidad?: AvailabilityType | string;
+  incorporacionInmediata?: boolean;
+  licencia?: string;
+  movilidad?: boolean;
+  office?: boolean;
 }
 
 export type ProcessingStatus = "idle" | "processing" | "success" | "error";

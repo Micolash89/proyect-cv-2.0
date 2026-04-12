@@ -1,4 +1,4 @@
-import type { CVStatus, TemplateType, TemplateSettings, Experience, Education, Language, Project, Certification, IAType, FontSize, LayoutOrder } from "./index";
+import type { CVStatus, TemplateType, TemplateSettings, Experience, Education, Language, Certification, IAType, AvailabilityType } from "./index";
 
 export interface UserCVDoc {
   _id: string;
@@ -14,7 +14,6 @@ export interface UserCVDoc {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
@@ -27,8 +26,8 @@ export interface UserCVDoc {
   fechaNacimiento?: string;
   licencia?: string;
   movilidad?: boolean;
-  incorporacion?: string;
-  disponibilidad?: string;
+  incorporacionInmediata?: boolean;
+  disponibilidad?: AvailabilityType | string;
   office?: boolean;
 }
 
@@ -46,7 +45,6 @@ export interface UserCVResponse {
   education: Education[];
   skills: string[];
   languages: Language[];
-  projects?: Project[];
   certifications?: Certification[];
   selectedTemplate: TemplateType;
   templateSettings: TemplateSettings;
@@ -59,8 +57,8 @@ export interface UserCVResponse {
   fechaNacimiento?: string;
   licencia?: string;
   movilidad?: boolean;
-  incorporacion?: string;
-  disponibilidad?: string;
+  incorporacionInmediata?: boolean;
+  disponibilidad?: AvailabilityType | string;
   office?: boolean;
 }
 
@@ -75,25 +73,10 @@ export interface Settings {
   emailUser: string;
   emailPassword: string;
   emailFrom: string;
-  defaultFontSize: FontSize;
-  defaultLayout: LayoutOrder;
-  defaultPadding: number;
-  defaultMargin: number;
-  showPhoto: boolean;
-  showSummary: boolean;
-  showSkills: boolean;
-  showLanguages: boolean;
-  showProjects: boolean;
-  showCertifications: boolean;
 }
 
 export const DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = {
   primaryColor: "#1e3a5f",
-  fontSize: "medium",
-  fontFamily: "Helvetica",
-  layout: "descending",
-  padding: 40,
-  margin: 20,
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -107,14 +90,4 @@ export const DEFAULT_SETTINGS: Settings = {
   emailUser: "",
   emailPassword: "",
   emailFrom: "",
-  defaultFontSize: "medium",
-  defaultLayout: "descending",
-  defaultPadding: 40,
-  defaultMargin: 20,
-  showPhoto: true,
-  showSummary: true,
-  showSkills: true,
-  showLanguages: true,
-  showProjects: false,
-  showCertifications: false,
 };

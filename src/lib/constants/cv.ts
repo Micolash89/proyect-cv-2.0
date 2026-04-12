@@ -3,27 +3,10 @@ import { getTemplateDefaultColor } from "@/lib/constants/templates";
 
 export const REGISTRO_DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = {
   primaryColor: getTemplateDefaultColor("harvard"),
-  fontSize: "medium",
-  fontFamily: "Inter",
-  layout: "descending",
-  padding: 20,
-  margin: 15,
 };
 
 export const ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
   primaryColor: getTemplateDefaultColor("harvard"),
-  fontSize: "medium",
-  fontFamily: "Helvetica",
-  layout: "descending",
-  padding: 40,
-  margin: 20,
-  fullName: true,
-  showPhoto: true,
-  showSummary: true,
-  showSkills: true,
-  showLanguages: true,
-  reverseExperience: false,
-  reverseEducation: false,
 };
 
 export const REGISTRO_DEFAULT_FORM_DATA: CVFormDraft = {
@@ -38,10 +21,16 @@ export const REGISTRO_DEFAULT_FORM_DATA: CVFormDraft = {
   photo: "",
   summary: "",
   targetJob: "",
+  licencia: "",
+  movilidad: false,
+  incorporacionInmediata: false,
+  disponibilidad: "fullTime",
+  office: false,
   experience: [],
   education: [],
   skills: [],
   languages: [],
+  certifications: [],
   selectedTemplate: "harvard",
   templateSettings: REGISTRO_DEFAULT_TEMPLATE_SETTINGS,
 };

@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Select } from "@/components/ui/select";
-import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
+import {
+  getProvincias,
+  getDepartamentos,
+  getMunicipiosLocalidad,
+  type Provincia,
+  type Departamento,
+  type Localidad,
+} from "@/lib/api/georef";
 
 interface LocationSelectorProps {
   value?: {
@@ -10,36 +17,47 @@ interface LocationSelectorProps {
     municipio?: string;
     localidad?: string;
   };
-  onChange?: (location: { provincia: string; municipio: string; localidad: string }) => void;
+  onChange?: (location: {
+    provincia: string;
+    municipio: string;
+    localidad: string;
+  }) => void;
   disabled?: boolean;
   showLabels?: boolean;
 }
 
-export function LocationSelector({ 
-  value = {}, 
+export function LocationSelector({
+  value = {},
   onChange,
   disabled = false,
-  showLabels = true 
+  showLabels = true,
 }: LocationSelectorProps) {
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [localidades, setLocalidadess] = useState<Localidad[]>([]);
-  
+
   const [selectedProvinciaId, setSelectedProvinciaId] = useState("");
   const [selectedProvinciaNombre, setSelectedProvinciaNombre] = useState("");
   const [selectedDepartamentoId, setSelectedDepartamentoId] = useState("");
-  const [selectedDepartamentoNombre, setSelectedDepartamentoNombre] = useState("");
+  const [selectedDepartamentoNombre, setSelectedDepartamentoNombre] =
+    useState("");
   const [selectedLocalidadNombre, setSelectedLocalidadNombre] = useState("");
-  
-  const initRef = useRef({ provincia: false, municipio: false, localidad: false });
+
+  const initRef = useRef({
+    provincia: false,
+    municipio: false,
+    localidad: false,
+  });
 
   useEffect(() => {
     const loadProvincias = async () => {
       const data = await getProvincias();
       setProvincias(data);
-      
+
       if (value.provincia && !initRef.current.provincia) {
-        const provinciaEncontrada = data.find(p => p.nombre === value.provincia);
+        const provinciaEncontrada = data.find(
+          (p) => p.nombre === value.provincia,
+        );
         if (provinciaEncontrada) {
           setSelectedProvinciaId(provinciaEncontrada.id);
           setSelectedProvinciaNombre(value.provincia);
@@ -59,9 +77,13 @@ export function LocationSelector({
       }
       const data = await getDepartamentos(selectedProvinciaId);
       setDepartamentos(data);
-      
-      if (value.municipio && !initRef.current.municipio && selectedProvinciaId) {
-        const deptoEncontrado = data.find(d => d.nombre === value.municipio);
+
+      if (
+        value.municipio &&
+        !initRef.current.municipio &&
+        selectedProvinciaId
+      ) {
+        const deptoEncontrado = data.find((d) => d.nombre === value.municipio);
         if (deptoEncontrado) {
           setSelectedDepartamentoId(deptoEncontrado.id);
           setSelectedDepartamentoNombre(value.municipio);
@@ -78,10 +100,17 @@ export function LocationSelector({
         setLocalidadess([]);
         return;
       }
-      const data = await getMunicipiosLocalidad(selectedProvinciaId, selectedDepartamentoId || undefined);
+      const data = await getMunicipiosLocalidad(
+        selectedProvinciaId,
+        selectedDepartamentoId || undefined,
+      );
       setLocalidadess(data);
-      
-      if (value.localidad && !initRef.current.localidad && selectedProvinciaId) {
+
+      if (
+        value.localidad &&
+        !initRef.current.localidad &&
+        selectedProvinciaId
+      ) {
         setSelectedLocalidadNombre(value.localidad);
         initRef.current.localidad = true;
       }
@@ -91,7 +120,7 @@ export function LocationSelector({
 
   const handleProvinciaChange = (nombreProvincia: string) => {
     setSelectedProvinciaNombre(nombreProvincia);
-    const provincia = provincias.find(p => p.nombre === nombreProvincia);
+    const provincia = provincias.find((p) => p.nombre === nombreProvincia);
     setSelectedProvinciaId(provincia?.id || "");
     setSelectedDepartamentoId("");
     setSelectedDepartamentoNombre("");
@@ -99,28 +128,30 @@ export function LocationSelector({
     setDepartamentos([]);
     setLocalidadess([]);
     initRef.current = { provincia: true, municipio: false, localidad: false };
-    
+
     if (onChange) {
       onChange({
         provincia: nombreProvincia,
         municipio: "",
-        localidad: ""
+        localidad: "",
       });
     }
   };
 
   const handleDepartamentoChange = (nombreDepartamento: string) => {
     setSelectedDepartamentoNombre(nombreDepartamento);
-    const departamento = departamentos.find(d => d.nombre === nombreDepartamento);
+    const departamento = departamentos.find(
+      (d) => d.nombre === nombreDepartamento,
+    );
     setSelectedDepartamentoId(departamento?.id || "");
     setSelectedLocalidadNombre("");
     initRef.current = { provincia: true, municipio: true, localidad: false };
-    
+
     if (onChange) {
       onChange({
         provincia: selectedProvinciaNombre,
         municipio: nombreDepartamento,
-        localidad: ""
+        localidad: "",
       });
     }
   };
@@ -128,12 +159,12 @@ export function LocationSelector({
   const handleLocalidadChange = (nombreLocalidad: string) => {
     setSelectedLocalidadNombre(nombreLocalidad);
     initRef.current = { provincia: true, municipio: true, localidad: true };
-    
+
     if (onChange) {
       onChange({
         provincia: selectedProvinciaNombre,
         municipio: selectedDepartamentoNombre,
-        localidad: nombreLocalidad
+        localidad: nombreLocalidad,
       });
     }
   };
@@ -142,29 +173,23 @@ export function LocationSelector({
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
       <Select
         value={selectedProvinciaNombre}
+        placeholder={showLabels ? "Provincia" : "Seleccioná una provincia"}
         onChange={(e) => handleProvinciaChange(e.target.value)}
-        options={[
-          { value: "", label: showLabels ? "Provincia" : "" },
-          ...provincias.map((p) => ({ value: p.nombre, label: p.nombre }))
-        ]}
+        options={provincias.map((p) => ({ value: p.nombre, label: p.nombre }))}
         disabled={disabled}
       />
       <Select
         value={selectedDepartamentoNombre}
+        placeholder={showLabels ? "Municipio" : "Seleccioná un municipio"}
         onChange={(e) => handleDepartamentoChange(e.target.value)}
-        options={[
-          { value: "", label: showLabels ? "Municipio" : "" },
-          ...departamentos.map((d) => ({ value: d.nombre, label: d.nombre }))
-        ]}
+        options={departamentos.map((d) => ({ value: d.nombre, label: d.nombre }))}
         disabled={disabled || !selectedProvinciaId}
       />
       <Select
         value={selectedLocalidadNombre}
+        placeholder={showLabels ? "Localidad" : "Seleccioná una localidad"}
         onChange={(e) => handleLocalidadChange(e.target.value)}
-        options={[
-          { value: "", label: showLabels ? "Localidad" : "" },
-          ...localidades.map((l) => ({ value: l.nombre, label: l.nombre }))
-        ]}
+        options={localidades.map((l) => ({ value: l.nombre, label: l.nombre }))}
         disabled={disabled || !selectedProvinciaId}
       />
     </div>

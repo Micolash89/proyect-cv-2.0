@@ -4,22 +4,17 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout4Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface HeaderProps {
   user: UserCV;
   options: OptionsPDF;
 }
-
-const parseDate = (dateStr: string | undefined) => {
-  if (!dateStr) return "";
-
-  try {
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getFullYear()}`;
-  } catch {
-    return dateStr;
-  }
-};
 
 const buildLocationLabel = (user: UserCV) => {
   return formatPdfLocation({
@@ -40,6 +35,8 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
     user.email || "",
     buildLocationLabel(user),
   ].filter(Boolean);
+
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const orderedCourses = options.reverseCourses
     ? [...(user.certifications || [])].reverse()
@@ -66,14 +63,25 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
         </View>
       )}
 
+      {additionalInfoItems.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.leftSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+          {additionalInfoItems.map((item, index) => (
+            <Text key={index} style={styles.leftText}>
+              {item}
+            </Text>
+          ))}
+        </View>
+      )}
+
       {options.showCertifications && orderedCourses.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.leftSectionTitle}>CURSOS</Text>
+          <Text style={styles.leftSectionTitle}>CURSOS Y CERTIFICACIONES</Text>
           {orderedCourses.map((course, index) => (
             <View key={index} style={styles.leftItemGroup}>
-              <Text style={styles.leftItemTitle}>{course.name}</Text>
-              <Text style={styles.leftText}>{course.issuer}</Text>
-              <Text style={styles.leftMeta}>{parseDate(course.date)}</Text>
+              <Text style={styles.leftItemTitle}>{formatCertificationTitle(course)}</Text>
+              <Text style={styles.leftText}>{formatCertificationInstitution(course)}</Text>
+              <Text style={styles.leftMeta}>{formatCertificationDate(course)}</Text>
             </View>
           ))}
         </View>

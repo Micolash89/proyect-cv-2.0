@@ -28,6 +28,8 @@ import {
   // FileText,
   Loader2,
   Wand2,
+  ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
@@ -62,6 +64,7 @@ import {
   sanitizeTemplatePrimaryColor,
   templateOptions,
 } from "@/lib/constants/templates";
+import { availabilityOptions, monthSelectOptions } from "@/lib/constants";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 import { validateImageFile } from "@/lib/validations/files";
@@ -89,6 +92,14 @@ export default function AdminCVPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [showCertificationForm, setShowCertificationForm] = useState(false);
+  const [showLicenseInput, setShowLicenseInput] = useState(false);
+  const [newCertification, setNewCertification] = useState({
+    title: "",
+    institution: "",
+    startMonth: "",
+    startYear: "",
+  });
 
   // Location state for Datos Personales
   const [provincias, setProvincias] = useState<Provincia[]>([]);
@@ -197,6 +208,12 @@ export default function AdminCVPage() {
       setHasUnsavedChanges(isDifferent);
     }
   }, [user, originalUser]);
+
+  useEffect(() => {
+    if (user?.licencia) {
+      setShowLicenseInput(true);
+    }
+  }, [user?.licencia]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -516,6 +533,45 @@ export default function AdminCVPage() {
     setUser(nextUser);
     validateRealtime(nextUser);
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const addCertification = () => {
+    if (!user) return;
+
+    if (!newCertification.title.trim() || !newCertification.startMonth || !newCertification.startYear.trim()) {
+      toast.error("Completá el título, mes y año de inicio");
+      return;
+    }
+
+    const nextUser = {
+      ...user,
+      certifications: [
+        ...(user.certifications || []),
+        {
+          id: generateId(),
+          title: newCertification.title.trim(),
+          institution: newCertification.institution.trim(),
+          startMonth: newCertification.startMonth,
+          startYear: newCertification.startYear.trim(),
+        },
+      ],
+    } as UserCV;
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
+    setShowCertificationForm(false);
+    setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
+  };
+
+  const removeCertification = (id: string) => {
+    if (!user) return;
+    const nextUser = {
+      ...user,
+      certifications: (user.certifications || []).filter((item) => item.id !== id),
+    } as UserCV;
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
   };
 
   const updateNameField = (field: "name" | "lastName", value: string) => {
@@ -1008,6 +1064,166 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
+            <CardHeader className="items-center pb-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-center text-base font-semibold">Información adicional</p>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={!!user.licencia}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        updateField("licencia", "B");
+                      } else {
+                        updateField("licencia", "");
+                      }
+                    }}
+                  />
+                  <span className="text-sm">Licencia</span>
+                </label>
+                <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={!!user.movilidad}
+                    onChange={(e) => updateField("movilidad", e.target.checked)}
+                  />
+                  <span className="text-sm">Movilidad propia</span>
+                </label>
+                <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={!!user.incorporacionInmediata}
+                    onChange={(e) => updateField("incorporacionInmediata", e.target.checked)}
+                  />
+                  <span className="text-sm">Incorporación inmediata</span>
+                </label>
+                <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={!!user.office}
+                    onChange={(e) => updateField("office", e.target.checked)}
+                  />
+                  <span className="text-sm">Microsoft Office</span>
+                </label>
+              </div>
+              {user.licencia && (
+                <div>
+                  <Label>Tipo de licencia</Label>
+                  <Input
+                    value={user.licencia}
+                    onChange={(e) => updateField("licencia", e.target.value)}
+                    placeholder="Ej: B1, profesional, etc."
+                  />
+                </div>
+              )}
+              <div>
+                <Label>Disponibilidad horaria</Label>
+                <Select
+                  value={user.disponibilidad || ""}
+                  onChange={(e) => updateField("disponibilidad", e.target.value)}
+                  options={availabilityOptions}
+                  placeholder="Seleccionar disponibilidad"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="items-center pb-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <p className="w-full text-center text-base font-semibold">Cursos y certificaciones</p>
+                {!showCertificationForm ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar
+                  </Button>
+                ) : null}
+              </div>
+
+              {!showCertificationForm ? (
+                <div className="text-sm text-muted-foreground">Completá tus cursos y certificaciones para destacarlos en el CV.</div>
+              ) : (
+                <div className="grid gap-3 rounded-md border p-4">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <Label>Título del curso</Label>
+                      <Input
+                        value={newCertification.title}
+                        onChange={(e) => setNewCertification((prev) => ({ ...prev, title: e.target.value }))}
+                        placeholder="Ej: Excel avanzado"
+                      />
+                    </div>
+                    <div>
+                      <Label>Institución</Label>
+                      <Input
+                        value={newCertification.institution}
+                        onChange={(e) => setNewCertification((prev) => ({ ...prev, institution: e.target.value }))}
+                        placeholder="Ej: Universidad X"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <Label>Mes de inicio</Label>
+                      <Select
+                        value={newCertification.startMonth}
+                        onChange={(e) => setNewCertification((prev) => ({ ...prev, startMonth: e.target.value }))}
+                        options={monthSelectOptions}
+                        placeholder="Seleccionar mes"
+                      />
+                    </div>
+                    <div>
+                      <Label>Año de inicio</Label>
+                      <Input
+                        value={newCertification.startYear}
+                        onChange={(e) => setNewCertification((prev) => ({ ...prev, startYear: e.target.value }))}
+                        placeholder="2024"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" onClick={addCertification}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Agregar
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => {
+                      setShowCertificationForm(false);
+                      setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
+                    }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {(user.certifications || []).length > 0 ? (
+                  (user.certifications || []).map((course) => (
+                    <div key={course.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+                      <div>
+                        <p className="font-medium">{course.title}</p>
+                        {course.institution ? <p className="text-sm text-muted-foreground">{course.institution}</p> : null}
+                        <p className="text-xs text-muted-foreground">{course.startMonth}/{course.startYear}</p>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Aún no agregaste cursos ni certificaciones.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle>Experiencia Laboral</CardTitle>
             </CardHeader>
@@ -1442,227 +1658,6 @@ export default function AdminCVPage() {
                   ))}
                 </div>
               </div>
-
-              <div>
-                <Label>Tamaño de fuente</Label>
-                <Select
-                  value={user.templateSettings.fontSize}
-                  onChange={(e) =>
-                    updateTemplateSettings("fontSize", e.target.value)
-                  }
-                  options={[
-                    { value: "small", label: "Pequeño" },
-                    { value: "medium", label: "Mediano" },
-                    { value: "large", label: "Grande" },
-                  ]}
-                />
-              </div>
-
-              <div>
-                <Label>Orden de experiencia</Label>
-                <Select
-                  value={user.templateSettings.layout}
-                  onChange={(e) =>
-                    updateTemplateSettings("layout", e.target.value)
-                  }
-                  options={[
-                    { value: "descending", label: "Más reciente primero" },
-                    { value: "ascending", label: "Más antiguo primero" },
-                  ]}
-                />
-              </div>
-
-              <div>
-                <Label>Padding: {user.templateSettings.padding}px</Label>
-                <input
-                  type="range"
-                  min="10"
-                  max="40"
-                  value={user.templateSettings.padding}
-                  onChange={(e) =>
-                    updateTemplateSettings("padding", parseInt(e.target.value))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <Label>Margin: {user.templateSettings.margin}px</Label>
-                <input
-                  type="range"
-                  min="10"
-                  max="30"
-                  value={user.templateSettings.margin}
-                  onChange={(e) =>
-                    updateTemplateSettings("margin", parseInt(e.target.value))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">
-                  Configuración Avanzada
-                </Label>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Tamaño fuente título</Label>
-                  <Select
-                    value={user.templateSettings.fontSize || "medium"}
-                    onChange={(e) =>
-                      updateTemplateSettings("fontSize", e.target.value)
-                    }
-                    options={[
-                      { value: "small", label: "Pequeño (20px)" },
-                      { value: "medium", label: "Mediano (24px)" },
-                      { value: "large", label: "Grande (28px)" },
-                    ]}
-                  />
-                </div>
-
-                <div>
-                  <Label>Padding general</Label>
-                  <Select
-                    value={String(user.templateSettings.padding || 40)}
-                    onChange={(e) =>
-                      updateTemplateSettings(
-                        "padding",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    options={[
-                      { value: "30", label: "Compact (30px)" },
-                      { value: "40", label: "Normal (40px)" },
-                      { value: "50", label: "Espacioso (50px)" },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={user.templateSettings.fullName !== false}
-                    onChange={(e) =>
-                      updateTemplateSettings("fullName", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  Mostrar nombre completo
-                </Label>
-              </div>
-
-              <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">
-                  Orden de contenido
-                </Label>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={user.templateSettings.reverseExperience || false}
-                      onChange={(e) =>
-                        updateTemplateSettings(
-                          "reverseExperience",
-                          e.target.checked,
-                        )
-                      }
-                      className="w-4 h-4"
-                    />
-                    Invertir experiencia
-                  </Label>
-                </div>
-                <div>
-                  <Label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={user.templateSettings.reverseEducation || false}
-                      onChange={(e) =>
-                        updateTemplateSettings(
-                          "reverseEducation",
-                          e.target.checked,
-                        )
-                      }
-                      className="w-4 h-4"
-                    />
-                    Invertir educación
-                  </Label>
-                </div>
-              </div>
-
-              <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold">
-                  Mostrar secciones
-                </Label>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={user.templateSettings.showPhoto !== false}
-                    onChange={(e) =>
-                      updateTemplateSettings("showPhoto", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  Foto
-                </Label>
-                <Label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={user.templateSettings.showSummary !== false}
-                    onChange={(e) =>
-                      updateTemplateSettings("showSummary", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  Resumen
-                </Label>
-                <Label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={user.templateSettings.showSkills !== false}
-                    onChange={(e) =>
-                      updateTemplateSettings("showSkills", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  Habilidades
-                </Label>
-                <Label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={user.templateSettings.showLanguages !== false}
-                    onChange={(e) =>
-                      updateTemplateSettings("showLanguages", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  Idiomas
-                </Label>
-              </div>
-
-              {/* <div
-                className="p-4 rounded-lg"
-                style={{
-                  backgroundColor: user.templateSettings.primaryColor + "20",
-                }}
-              >
-                <p className="text-sm font-medium mb-2">Preview color</p>
-                <div
-                  className="h-8 rounded"
-                  style={{
-                    backgroundColor: user.templateSettings.primaryColor,
-                  }}
-                />
-              </div> */}
             </CardContent>
           </Card>
 

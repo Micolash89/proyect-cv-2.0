@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout3Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -54,23 +60,11 @@ const buildInfoItems = (user: UserCV) => {
   ].filter(Boolean);
 };
 
-const buildAdditionalItems = (user: UserCV) => {
-  const items = [
-    user.movilidad ? "Vehiculo propio" : "",
-    user.disponibilidad || "",
-    user.office ? "Jornada completa" : "",
-    user.licencia || "",
-    user.incorporacion || "",
-  ].filter(Boolean);
-
-  return items;
-};
-
 export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout3Styles(options);
 
   const infoItems = buildInfoItems(user);
-  const additionalInfoItems = buildAdditionalItems(user);
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const experienceEntries = user.experience.map((exp, index) => {
     const location = formatPdfLocation({
@@ -118,10 +112,10 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const certificationEntries = (user.certifications || []).map((cert, index) => (
     <View key={index} style={styles.entryContainer}>
-      <Text style={styles.institution}>{cert.name}</Text>
+      <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
       <Text style={styles.certificationMeta}>
-        {cert.issuer}
-        {cert.date ? ` | ${parseDate(cert.date)}` : ""}
+        {formatCertificationInstitution(cert)}
+        {formatCertificationDate(cert) ? ` | ${formatCertificationDate(cert)}` : ""}
       </Text>
     </View>
   ));
@@ -203,7 +197,7 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
 
         {options.showCertifications && orderedCourses.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>CURSOS</Text>
+            <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
             {orderedCourses}
           </View>
         )}

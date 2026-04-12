@@ -38,6 +38,10 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
+  ShieldCheck,
+  BookOpen,
+  Zap,
+  Globe,
 } from "lucide-react";
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
@@ -47,7 +51,6 @@ import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLoca
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import type { Experience, Education, Language, TemplateType, CVFormDraft } from "@/types";
-import { getProvincias, getDepartamentos, getMunicipiosLocalidad, type Provincia, type Departamento, type Localidad } from "@/lib/api/georef";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 import {
   getTemplatePalette,
@@ -57,6 +60,8 @@ import {
 import {
   languageSelectOptions,
   levelSelectOptions,
+  availabilityOptions,
+  monthSelectOptions,
   registroSteps,
   REGISTRO_DEFAULT_FORM_DATA,
 } from "@/lib/constants";
@@ -72,36 +77,24 @@ function RegistroPageContent() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
-  const [locationType, setLocationType] = useState<"caba" | "amba">("caba");
-  const [ambaZone, setAmbaZone] = useState("");
+  const [showLanguageForm, setShowLanguageForm] = useState(false);
   const [newLanguage, setNewLanguage] = useState({
     language: "Español",
-    level: "Intermedio",
+    level: "",
     custom: "",
+  });
+  const [showCertificationForm, setShowCertificationForm] = useState(false);
+  const [newCertification, setNewCertification] = useState({
+    title: "",
+    institution: "",
+    startMonth: "",
+    startYear: "",
   });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
-  const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
-  const [localidades, setLocalidades] = useState<Localidad[]>([]);
-  const [selectedProvincia, setSelectedProvincia] = useState<string>("");
-  const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
-  const [selectedLocalidad, setSelectedLocalidad] = useState<string>("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
-
-  useEffect(() => {
-    const loadProvincias = async () => {
-      try {
-        const data = await getProvincias();
-        setProvincias(data);
-      } catch (error) {
-        console.error("Error loading provincias:", error);
-      }
-    };
-    loadProvincias();
-  }, []);
 
   const validateRealtime = useCallback((nextData: CVFormDraft) => {
     const validation = validateCVPayload(nextData);
@@ -129,6 +122,21 @@ function RegistroPageContent() {
 
     return fieldErrors[path] ?? "";
   }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const handleMainLocationChange = useCallback(
+    (locationData: { provincia: string; municipio: string; localidad: string }) => {
+      const nextLocation = [
+        locationData.localidad,
+        locationData.municipio,
+        locationData.provincia,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      updateFormData({ location: nextLocation }, "location");
+    },
+    [updateFormData],
+  );
 
   useEffect(() => {
     const googleDataParam = searchParams.get("google_data");
@@ -331,7 +339,7 @@ function RegistroPageContent() {
 
   const addLanguage = () => {
     const lang = newLanguage.custom || newLanguage.language;
-    if (lang.trim()) {
+    if (lang.trim() && newLanguage.level.trim()) {
       setFormData((prev) => ({
         ...prev,
         languages: [
@@ -339,8 +347,39 @@ function RegistroPageContent() {
           { id: generateId(), language: lang, level: newLanguage.level },
         ],
       }));
-      setNewLanguage({ language: "Español", level: "Intermedio", custom: "" });
+      setNewLanguage({ language: "Español", level: "", custom: "" });
+      setShowLanguageForm(false);
     }
+  };
+
+  const addCertification = () => {
+    if (!newCertification.title.trim() || !newCertification.startMonth || !newCertification.startYear.trim()) {
+      toast.error("Completá el título, mes y año de inicio");
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      certifications: [
+        ...(prev.certifications || []),
+        {
+          id: generateId(),
+          title: newCertification.title.trim(),
+          institution: newCertification.institution.trim(),
+          startMonth: newCertification.startMonth,
+          startYear: newCertification.startYear.trim(),
+        },
+      ],
+    }));
+    setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
+    setShowCertificationForm(false);
+  };
+
+  const removeCertification = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      certifications: (prev.certifications || []).filter((item) => item.id !== id),
+    }));
   };
 
   const removeLanguage = (id: string) => {
@@ -609,69 +648,19 @@ function RegistroPageContent() {
                           Agregar ubicación
                         </Button>
                       ) : (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            <select
-                              value={selectedProvincia}
-                              onChange={(e) => setSelectedProvincia(e.target.value)}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <option value="" hidden>
-                                Seleccioná una provincia
-                              </option>
-                              {provincias.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.nombre}
-                                </option>
-                              ))}
-                            </select>
-
-                            {departamentos.length > 0 && (
-                              <select
-                                value={selectedDepartamento}
-                                onChange={(e) =>
-                                  setSelectedDepartamento(e.target.value)
-                                }
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="" hidden>
-                                  Seleccioná un municipio
-                                </option>
-                                {departamentos.map((d) => (
-                                  <option key={d.id} value={d.nombre}>
-                                    {d.nombre}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
-
-                            {localidades.length > 0 && (
-                              <select
-                                value={selectedLocalidad}
-                                onChange={(e) =>
-                                  setSelectedLocalidad(e.target.value)
-                                }
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="" hidden>
-                                  Seleccioná una localidad
-                                </option>
-                                {localidades.map((l) => (
-                                  <option key={l.id} value={l.nombre}>
-                                    {l.nombre}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="default"
-                            size="sm"
-                            onClick={() => setShowLocation(false)}
-                          >
-                            Listo
-                          </Button>
+                        <div className="space-y-2">
+                          <LocationSelector
+                            value={{
+                              provincia: formData.location?.split(", ").at(-1) || "",
+                              municipio: formData.location?.split(", ").at(-2) || "",
+                              localidad: formData.location?.split(", ").at(-3) || "",
+                            }}
+                            onChange={handleMainLocationChange}
+                            showLabels={false}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Selecciona provincia, municipio y localidad (opcional).
+                          </p>
                         </div>
                       )}
 
@@ -1019,109 +1008,350 @@ function RegistroPageContent() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div>
-                    <Label>Habilidades</Label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.skills.map((skill, index) => (
-                        <Badge
-                          key={`${skill}-${index}`}
-                          variant="secondary"
-                          className="cursor-pointer"
-                          onClick={() => removeSkill(skill)}
-                        >
-                          {skill} <X className="h-3 w-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Escribe una habilidad"
-                        id="newSkill"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
+                  <Card>
+                    <CardHeader className="items-center pb-2">
+                      <BookOpen className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-center text-base font-semibold">Cursos y certificaciones</p>
+                      <div className="flex items-center justify-between gap-4">
+                        {!showCertificationForm ? (
+                          <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)} className="w-full">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Agregar
+                          </Button>
+                        ) : null}
+                      </div>
+
+                      {showCertificationForm && (
+                        <div className="grid gap-3 rounded-md border bg-background p-4">
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <div>
+                              <Label>Título del curso</Label>
+                              <Input
+                                placeholder="Ej: Excel avanzado"
+                                value={newCertification.title}
+                                onChange={(e) => setNewCertification((prev) => ({ ...prev, title: e.target.value }))}
+                              />
+                            </div>
+                            <div>
+                              <Label>Institución</Label>
+                              <Input
+                                placeholder="Ej: Universidad X"
+                                value={newCertification.institution}
+                                onChange={(e) => setNewCertification((prev) => ({ ...prev, institution: e.target.value }))}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <div>
+                              <Label>Mes de inicio</Label>
+                              <Select
+                                value={newCertification.startMonth}
+                                placeholder="Seleccionar mes"
+                                onChange={(e) => setNewCertification((prev) => ({ ...prev, startMonth: e.target.value }))}
+                                options={monthSelectOptions}
+                              />
+                            </div>
+                            <div>
+                              <Label>Año de inicio</Label>
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="2024"
+                                value={newCertification.startYear}
+                                onChange={(e) => setNewCertification((prev) => ({ ...prev, startYear: e.target.value }))}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button type="button" onClick={addCertification}>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Agregar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setShowCertificationForm(false);
+                                setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.certifications && formData.certifications.length > 0 ? (
+                        <div className="space-y-3">
+                          {formData.certifications.map((course) => (
+                            <div key={course.id} className="flex items-start justify-between gap-3 rounded-md border bg-background p-3">
+                              <div>
+                                <p className="font-medium">{course.title}</p>
+                                {course.institution ? <p className="text-sm text-muted-foreground">{course.institution}</p> : null}
+                                <p className="text-xs text-muted-foreground">{course.startMonth}/{course.startYear}</p>
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Aún no agregaste cursos ni certificaciones.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {currentStep === 6 && (
+                <motion.div
+                  key="step6"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <Card>
+                    <CardHeader className="items-center pb-2">
+                      <Zap className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-center text-base font-semibold">Habilidades</p>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.skills.map((skill, index) => (
+                          <Badge
+                            key={`${skill}-${index}`}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={() => removeSkill(skill)}
+                          >
+                            {skill} <X className="h-3 w-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Escribe una habilidad"
+                          id="newSkill"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const input = document.getElementById(
+                                "newSkill",
+                              ) as HTMLInputElement;
+                              addSkill(input.value);
+                              input.value = "";
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
                             const input = document.getElementById(
                               "newSkill",
                             ) as HTMLInputElement;
                             addSkill(input.value);
                             input.value = "";
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const input = document.getElementById(
-                            "newSkill",
-                          ) as HTMLInputElement;
-                          addSkill(input.value);
-                          input.value = "";
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Ej: Atención al cliente, Ventas, Manipulación de alimentos
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label>Idiomas</Label>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                      <Select
-                        value={newLanguage.language}
-                        onChange={(e) =>
-                          setNewLanguage({
-                            ...newLanguage,
-                            language: e.target.value,
-                          })
-                        }
-                        options={languageSelectOptions}
-                        className="flex-1"
-                      />
-                      {newLanguage.language === "Otro" && (
-                        <Input
-                          placeholder="Especifica el idioma"
-                          value={newLanguage.custom}
-                          onChange={(e) =>
-                            setNewLanguage({
-                              ...newLanguage,
-                              custom: e.target.value,
-                            })
-                          }
-                          className="flex-1"
-                        />
-                      )}
-                      <Select
-                        value={newLanguage.level}
-                        onChange={(e) =>
-                          setNewLanguage({
-                            ...newLanguage,
-                            level: e.target.value,
-                          })
-                        }
-                        options={levelSelectOptions}
-                        className="sm:w-32"
-                      />
-                      <Button type="button" onClick={addLanguage}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {formData.languages.map((lang) => (
-                        <Badge
-                          key={lang.id}
-                          variant="outline"
-                          className="cursor-pointer"
-                          onClick={() => removeLanguage(lang.id)}
+                          }}
                         >
-                          {lang.language} ({lang.level}){" "}
-                          <X className="h-3 w-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {formData.skills.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Ej: Atención al cliente, Ventas, Manipulación de alimentos
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="items-center pb-2">
+                      <Globe className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-center text-base font-semibold">Idiomas</p>
+                      {!showLanguageForm ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowLanguageForm(true)}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Agregar idioma
+                        </Button>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Select
+                              value={newLanguage.language}
+                              placeholder="Idioma"
+                              onChange={(e) =>
+                                setNewLanguage({
+                                  ...newLanguage,
+                                  language: e.target.value,
+                                })
+                              }
+                              options={languageSelectOptions}
+                              className="flex-1"
+                            />
+                            {newLanguage.language === "Otro" && (
+                              <Input
+                                placeholder="Especifica el idioma"
+                                value={newLanguage.custom}
+                                onChange={(e) =>
+                                  setNewLanguage({
+                                    ...newLanguage,
+                                    custom: e.target.value,
+                                  })
+                                }
+                                className="flex-1"
+                              />
+                            )}
+                            <Select
+                              value={newLanguage.level}
+                              placeholder="Nivel"
+                              onChange={(e) =>
+                                setNewLanguage({
+                                  ...newLanguage,
+                                  level: e.target.value,
+                                })
+                              }
+                              options={levelSelectOptions}
+                              className="sm:w-32"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={addLanguage}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Agregar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowLanguageForm(false);
+                                setNewLanguage({ language: "Español", level: "", custom: "" });
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        {formData.languages.map((lang) => (
+                          <Badge
+                            key={lang.id}
+                            variant="outline"
+                            className="cursor-pointer"
+                            onClick={() => removeLanguage(lang.id)}
+                          >
+                            {lang.language} ({lang.level}){" "}
+                            <X className="h-3 w-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                      {formData.languages.length === 0 && (
+                        <p className="text-xs text-muted-foreground">Aún no agregaste idiomas.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {currentStep === 7 && (
+                <motion.div
+                  key="step7"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <Card>
+                    <CardHeader className="items-center pb-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-center text-base font-semibold">Información adicional</p>
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.licencia}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                updateFormData({ licencia: "B" }, "licencia");
+                              } else {
+                                updateFormData({ licencia: "" }, "licencia");
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Licencia</span>
+                        </label>
+                        <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.movilidad}
+                            onChange={(e) => updateFormData({ movilidad: e.target.checked }, "movilidad")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Movilidad propia</span>
+                        </label>
+                        <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.incorporacionInmediata}
+                            onChange={(e) => updateFormData({ incorporacionInmediata: e.target.checked }, "incorporacionInmediata")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Incorporación inmediata</span>
+                        </label>
+                        <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.office}
+                            onChange={(e) => updateFormData({ office: e.target.checked }, "office")}
+                            className="rounded"
+                          />
+                          <span className="text-sm">Microsoft Office</span>
+                        </label>
+                      </div>
+                      {formData.licencia && (
+                        <div>
+                          <Label>Tipo de licencia</Label>
+                          <Input
+                            placeholder="Ej: B1, profesional, etc."
+                            value={formData.licencia}
+                            onChange={(e) => updateFormData({ licencia: e.target.value }, "licencia")}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label>Disponibilidad horaria</Label>
+                        <Select
+                          value={formData.disponibilidad || ""}
+                          placeholder="Seleccionar disponibilidad"
+                          onChange={(e) => updateFormData({ disponibilidad: e.target.value as "fullTime" | "partTime" }, "disponibilidad")}
+                          options={availabilityOptions}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -1154,7 +1384,7 @@ function RegistroPageContent() {
                 </motion.div>
               )}
 
-              {currentStep === 6 && (
+              {currentStep === 8 && (
                 <motion.div
                   key="step6"
                   initial={{ opacity: 0, x: 20 }}
@@ -1204,9 +1434,9 @@ function RegistroPageContent() {
                 </motion.div>
               )}
 
-              {currentStep === 7 && (
+              {currentStep === 9 && (
                 <motion.div
-                  key="step7"
+                  key="step9"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}

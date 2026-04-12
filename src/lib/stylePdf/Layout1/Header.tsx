@@ -10,11 +10,6 @@ interface HeaderProps {
   options: OptionsPDF;
 }
 
-const formatBooleanValue = (value: boolean | undefined, enabledLabel: string, disabledLabel?: string) => {
-  if (value === undefined) return "";
-  return value ? enabledLabel : disabledLabel || "";
-};
-
 const buildLocationLabel = (user: UserCV) => {
   return formatPdfLocation({
     localidad: user.localidad,
@@ -40,15 +35,7 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
     user.phone ? `Tel: ${user.phone}` : "",
     user.email || "",
     buildLocationLabel(user),
-  ].filter(Boolean);
-
-  const additionalInfoItems = [
-    user.licencia ? `• ${user.licencia}` : "",
-    formatBooleanValue(user.movilidad, "• Vehículo propio", "• Sin movilidad"),
-    formatBooleanValue(user.office, "• Jornada oficina", "• Modalidad flexible"),
-    user.disponibilidad ? `• ${user.disponibilidad}` : "",
-    user.incorporacion ? `• ${user.incorporacion}` : "",
-    user.links ? `• ${user.links}` : "",
+    user.links || "",
   ].filter(Boolean);
 
   return (
@@ -88,17 +75,6 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
           {user.languages.map((lang, index) => (
             <Text key={index} style={styles.skillItem}>
               • {lang.language} - {lang.level}
-            </Text>
-          ))}
-        </>
-      )}
-
-      {additionalInfoItems.length > 0 && (
-        <>
-          <Text style={styles.sidebarSectionTitle}>INFORMACIÓN ADICIONAL</Text>
-          {additionalInfoItems.map((item, index) => (
-            <Text key={index} style={styles.additionalInfoItem}>
-              {item}
             </Text>
           ))}
         </>

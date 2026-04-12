@@ -20,6 +20,78 @@ interface AITextExtractorProps {
   className?: string;
 }
 
+type ExtractedPayload = Partial<ExtractedCVData>;
+
+function normalizeString(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function mergeUniqueStrings(first: string[] = [], second: string[] = []): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  [...first, ...second].forEach((item) => {
+    const cleanItem = normalizeString(item);
+    if (!cleanItem) {
+      return;
+    }
+
+    const key = cleanItem.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    merged.push(cleanItem);
+  });
+
+  return merged;
+}
+
+function mergeExtractedData(fileData: ExtractedPayload, textData: ExtractedPayload): ExtractedPayload {
+  return {
+    fullName: normalizeString(textData.fullName) || normalizeString(fileData.fullName),
+    email: normalizeString(textData.email) || normalizeString(fileData.email),
+    phone: normalizeString(textData.phone) || normalizeString(fileData.phone),
+    location: normalizeString(textData.location) || normalizeString(fileData.location),
+    summary: normalizeString(textData.summary) || normalizeString(fileData.summary),
+    experience: [...(fileData.experience || []), ...(textData.experience || [])],
+    education: [...(fileData.education || []), ...(textData.education || [])],
+    skills: mergeUniqueStrings(fileData.skills || [], textData.skills || []),
+    languages: [...(fileData.languages || []), ...(textData.languages || [])],
+    certifications: [...(fileData.certifications || []), ...(textData.certifications || [])],
+    licencia: normalizeString(textData.licencia) || normalizeString(fileData.licencia),
+    movilidad:
+      typeof textData.movilidad === "boolean"
+        ? textData.movilidad
+        : typeof fileData.movilidad === "boolean"
+          ? fileData.movilidad
+          : undefined,
+    incorporacionInmediata:
+      typeof textData.incorporacionInmediata === "boolean"
+        ? textData.incorporacionInmediata
+        : typeof fileData.incorporacionInmediata === "boolean"
+          ? fileData.incorporacionInmediata
+          : undefined,
+    office:
+      typeof textData.office === "boolean"
+        ? textData.office
+        : typeof fileData.office === "boolean"
+          ? fileData.office
+          : undefined,
+    disponibilidad:
+      textData.disponibilidad === "fullTime" || textData.disponibilidad === "partTime"
+        ? textData.disponibilidad
+        : fileData.disponibilidad === "fullTime" || fileData.disponibilidad === "partTime"
+          ? fileData.disponibilidad
+          : "",
+  };
+}
+
 export function AITextExtractor({ onDataExtracted, className }: AITextExtractorProps) {
   const [textInput, setTextInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -64,8 +136,13 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
       if (hasFile && hasText) {
         const fileResult = await extractCVAction(file);
         const textResult = await extractFromTextAction(textInput);
-        
-        if (fileResult.success && fileResult.extracted) {
+
+        if (fileResult.success && fileResult.extracted && textResult.success && textResult.extracted) {
+          result = {
+            success: true,
+            extracted: mergeExtractedData(fileResult.extracted, textResult.extracted),
+          };
+        } else if (fileResult.success && fileResult.extracted) {
           result = fileResult;
         } else if (textResult.success && textResult.extracted) {
           result = textResult;
@@ -114,13 +191,17 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
             level: lang.level || "",
           }));
 
-          const seenSkills = new Set<string>();
-          const skills = (result.extracted.skills || []).filter((skill: string) => {
-            const normalizedSkill = skill.toLowerCase().trim();
-            if (seenSkills.has(normalizedSkill)) return false;
-            seenSkills.add(normalizedSkill);
-            return true;
-          });
+          const certifications = (result.extracted.certifications || [])
+            .map((cert: any) => ({
+              id: cert.id || generateId(),
+              title: cert.title || cert.name || "",
+              institution: cert.institution || cert.entity || "",
+              startMonth: cert.startMonth || cert.month || "",
+              startYear: cert.startYear || cert.year || "",
+            }))
+            .filter((cert: any) => cert.title.trim().length > 0);
+
+          const skills = mergeUniqueStrings(result.extracted.skills || []);
 
           onDataExtracted({
             fullName: result.extracted.fullName || "",
@@ -132,6 +213,24 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
             education,
             skills,
             languages,
+            certifications,
+            licencia: result.extracted.licencia || "",
+            movilidad:
+              typeof result.extracted.movilidad === "boolean"
+                ? result.extracted.movilidad
+                : undefined,
+            incorporacionInmediata:
+              typeof result.extracted.incorporacionInmediata === "boolean"
+                ? result.extracted.incorporacionInmediata
+                : undefined,
+            office:
+              typeof result.extracted.office === "boolean"
+                ? result.extracted.office
+                : undefined,
+            disponibilidad:
+              result.extracted.disponibilidad === "fullTime" || result.extracted.disponibilidad === "partTime"
+                ? result.extracted.disponibilidad
+                : "",
           });
         }
       } else {

@@ -44,14 +44,7 @@ const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
   const SelectedLayout = templateMap[selectedTemplateId] || Layout0;
   
   const templateSettings = user.templateSettings || {};
-  
-  const fontSizeMap: Record<string, { header: number; body: number }> = {
-    small: { header: 20, body: 9 },
-    medium: { header: 24, body: 10 },
-    large: { header: 28, body: 11 },
-  };
-  
-  const fontSizePreset = fontSizeMap[templateSettings.fontSize as string] || fontSizeMap.medium;
+
   const primaryColor = sanitizeTemplatePrimaryColor(
     selectedTemplateId,
     templateSettings.primaryColor,
@@ -62,25 +55,8 @@ const CVTemplate: React.FC<CVTemplateProps> = ({ user }) => {
   const options = {
     ...DEFAULT_OPTIONS_PDF,
     primaryColor,
-    headerBackground: templateSettings.headerBackground || primaryColor,
-    headerFontSize: templateSettings.headerFontSize || fontSizePreset.header,
-    bodyFontSize: templateSettings.bodyFontSize || fontSizePreset.body,
+    headerBackground: primaryColor,
     fontFamily: enforcedFontFamily,
-    padding: templateSettings.padding || DEFAULT_OPTIONS_PDF.padding,
-    margin: templateSettings.margin || DEFAULT_OPTIONS_PDF.margin,
-    headerPadding: templateSettings.headerPadding || DEFAULT_OPTIONS_PDF.headerPadding,
-    bodyPadding: templateSettings.bodyPadding || DEFAULT_OPTIONS_PDF.bodyPadding,
-    showPhoto: templateSettings.showPhoto !== undefined ? templateSettings.showPhoto : DEFAULT_OPTIONS_PDF.showPhoto,
-    showSummary: templateSettings.showSummary !== undefined ? templateSettings.showSummary : DEFAULT_OPTIONS_PDF.showSummary,
-    showSkills: templateSettings.showSkills !== undefined ? templateSettings.showSkills : DEFAULT_OPTIONS_PDF.showSkills,
-    showLanguages: templateSettings.showLanguages !== undefined ? templateSettings.showLanguages : DEFAULT_OPTIONS_PDF.showLanguages,
-    showProjects: templateSettings.showProjects !== undefined ? templateSettings.showProjects : DEFAULT_OPTIONS_PDF.showProjects,
-    showCertifications: templateSettings.showCertifications !== undefined ? templateSettings.showCertifications : DEFAULT_OPTIONS_PDF.showCertifications,
-    fullName: templateSettings.fullName !== undefined ? templateSettings.fullName : DEFAULT_OPTIONS_PDF.fullName,
-    spaceBetween: templateSettings.spaceBetween !== undefined ? templateSettings.spaceBetween : DEFAULT_OPTIONS_PDF.spaceBetween,
-    reverseExperience: templateSettings.reverseExperience || DEFAULT_OPTIONS_PDF.reverseExperience,
-    reverseEducation: templateSettings.reverseEducation || DEFAULT_OPTIONS_PDF.reverseEducation,
-    reverseCourses: templateSettings.reverseCourses || DEFAULT_OPTIONS_PDF.reverseCourses,
   };
 
   return <SelectedLayout user={user} options={options} />;

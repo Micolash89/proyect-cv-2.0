@@ -4,6 +4,12 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout2Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  buildAdditionalInfoLines,
+  formatCertificationDate,
+  formatCertificationInstitution,
+  formatCertificationTitle,
+} from "../utils/certifications";
 
 interface BodyProps {
   user: UserCV;
@@ -90,12 +96,14 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
   const certificationEntries = (user.certifications || []).map((cert, index) => (
     <View key={index} style={styles.entryContainer}>
       <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{cert.name}</Text>
-        <Text style={styles.dates}>{parseDate(cert.date)}</Text>
+        <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
+        <Text style={styles.dates}>{formatCertificationDate(cert)}</Text>
       </View>
-      <Text style={styles.degree}>{cert.issuer}</Text>
+      <Text style={styles.degree}>{formatCertificationInstitution(cert)}</Text>
     </View>
   ));
+
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const orderedExperience = options.reverseExperience
     ? [...experienceEntries].reverse()
@@ -134,8 +142,20 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
 
       {options.showCertifications && orderedCertifications.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Certificaciones</Text>
+          <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
           {orderedCertifications}
+        </View>
+      )}
+
+      {additionalInfoItems.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información adicional</Text>
+          {additionalInfoItems.map((item, index) => (
+            <View key={index} style={styles.bulletItem}>
+              <Text style={styles.bulletDot}>•</Text>
+              <Text style={styles.bulletText}>{item}</Text>
+            </View>
+          ))}
         </View>
       )}
     </View>

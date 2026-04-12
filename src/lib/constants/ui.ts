@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
   User, Mail, Phone, MapPin, Briefcase, GraduationCap,
-  FileText, Image, CheckCircle, Clock, Eye, CheckCircle as CheckCircleIcon
+  FileText, Image, CheckCircle, Clock, Eye, CheckCircle as CheckCircleIcon,
+  ShieldCheck, Zap
 } from "lucide-react";
 
 export const colorPalette = [
@@ -58,12 +59,24 @@ export const layoutOptions = [
   { value: "ascending", label: "Más antiguo primero" },
 ] as const;
 
-export const disponibilidadOptions = [
-  { value: "NINGUNO", label: "Seleccionar disponibilidad" },
-  { value: "completa", label: "Jornada completa" },
-  { value: "partida", label: "Jornada parcial" },
-  { value: "horaria", label: "Por horas" },
-  { value: "rotativo", label: "Horario rotativo" },
+export const availabilityOptions = [
+  { value: "fullTime", label: "Tiempo completo (Full time)" },
+  { value: "partTime", label: "Tiempo parcial (Part time)" },
+] as const;
+
+export const monthSelectOptions = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
 ] as const;
 
 export type Step = {
@@ -77,9 +90,11 @@ export const registroSteps: Step[] = [
   { id: 2, title: "Foto", icon: Image },
   { id: 3, title: "Experiencia", icon: Briefcase },
   { id: 4, title: "Educación", icon: GraduationCap },
-  { id: 5, title: "Habilidades", icon: FileText },
-  { id: 6, title: "Diseño & Color", icon: CheckCircle },
-  { id: 7, title: "Confirmar", icon: CheckCircleIcon },
+  { id: 5, title: "Certificados", icon: FileText },
+  { id: 6, title: "Habilidades e Idiomas", icon: Zap },
+  { id: 7, title: "Información Adicional", icon: ShieldCheck },
+  { id: 8, title: "Diseño & Color", icon: CheckCircle },
+  { id: 9, title: "Confirmar", icon: CheckCircleIcon },
 ];
 
 export type StatusConfig = {
