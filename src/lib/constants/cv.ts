@@ -1,13 +1,22 @@
 import type { CVFormDraft, TemplateSettings } from "@/types";
 import { getTemplateDefaultColor } from "@/lib/constants/templates";
+import { DEFAULT_OPTIONS_PDF } from "@/lib/stylePdf/definitions";
 
-export const REGISTRO_DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = {
-  primaryColor: getTemplateDefaultColor("harvard"),
-};
+export function buildTemplateSettingsDefaults(primaryColor: string): TemplateSettings {
+  return {
+    ...DEFAULT_OPTIONS_PDF,
+    primaryColor,
+    headerBackground: primaryColor,
+  };
+}
 
-export const ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS: Partial<TemplateSettings> = {
-  primaryColor: getTemplateDefaultColor("harvard"),
-};
+export const REGISTRO_DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = buildTemplateSettingsDefaults(
+  getTemplateDefaultColor("harvard"),
+);
+
+export const ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = buildTemplateSettingsDefaults(
+  getTemplateDefaultColor("harvard"),
+);
 
 export const REGISTRO_DEFAULT_FORM_DATA: CVFormDraft = {
   name: "",

@@ -70,6 +70,26 @@ export interface Certification {
 
 export interface TemplateSettings {
   primaryColor: string;
+  headerBackground?: string;
+  headerFontSize?: number;
+  bodyFontSize?: number;
+  fontFamily?: string;
+  layout?: LayoutOrder;
+  padding?: number;
+  margin?: number;
+  headerPadding?: number;
+  bodyPadding?: number;
+  showPhoto?: boolean;
+  showSummary?: boolean;
+  showSkills?: boolean;
+  showLanguages?: boolean;
+  showCertifications?: boolean;
+  showOrientation?: boolean;
+  fullName?: boolean;
+  spaceBetween?: boolean;
+  reverseExperience?: boolean;
+  reverseEducation?: boolean;
+  reverseCourses?: boolean;
 }
 
 export interface UserCV {

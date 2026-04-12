@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
+import { ErrorSummary } from "@/components/admin/cv/ErrorSummary";
 import {
   ArrowLeft,
   Plus,
@@ -35,6 +36,7 @@ import {
   levelSelectOptions,
   availabilityOptions,
   monthSelectOptions,
+  yearSelectOptions,
   registroSteps,
   ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
 } from "@/lib/constants";
@@ -109,10 +111,13 @@ export default function AdminNewCVPage() {
     startMonth: "",
     startYear: "",
   });
+  const [editingCertificationId, setEditingCertificationId] = useState<string | null>(null);
+  const [editingCertificationSnapshot, setEditingCertificationSnapshot] = useState<Certification | null>(null);
 
   const validateRealtime = useCallback((nextData: typeof formData) => {
     const validation = validateCVPayload(nextData);
     setFieldErrors(validation.success ? {} : validation.errors);
+
     return validation.success;
   }, [setFieldErrors]);
 
@@ -136,6 +141,18 @@ export default function AdminNewCVPage() {
 
     return fieldErrors[path] ?? "";
   }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const scrollToField = useCallback((fieldPath: string) => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const exactTarget = document.querySelector(`[data-field-id="${fieldPath}"]`) as HTMLElement | null;
+    const sectionTarget = document.querySelector(`[data-section-id="${fieldPath.split(".")[0]}"]`) as HTMLElement | null;
+    const target = exactTarget ?? sectionTarget;
+
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   const availableTemplateColors = getTemplatePalette(formData.selectedTemplate);
 
@@ -322,8 +339,8 @@ export default function AdminNewCVPage() {
   };
 
   const addCertification = () => {
-    if (!newCertification.title.trim() || !newCertification.startMonth || !newCertification.startYear.trim()) {
-      toast.error("Completá el título, mes y año de inicio");
+    if (!newCertification.title.trim() || !newCertification.institution.trim()) {
+      toast.error("Completá el título y la institución");
       return;
     }
 
@@ -336,11 +353,55 @@ export default function AdminNewCVPage() {
           institution: newCertification.institution.trim(),
           startMonth: newCertification.startMonth,
           startYear: newCertification.startYear.trim(),
+          name: newCertification.title.trim(),
+          issuer: newCertification.institution.trim(),
+          date: "",
         },
       ],
     });
     setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
     setShowCertificationForm(false);
+  };
+
+  const startCertificationEdit = (certification: Certification) => {
+    setEditingCertificationId(certification.id);
+    setEditingCertificationSnapshot(JSON.parse(JSON.stringify(certification)) as Certification);
+  };
+
+  const cancelCertificationEdit = () => {
+    if (!editingCertificationSnapshot || !editingCertificationId) {
+      setEditingCertificationId(null);
+      setEditingCertificationSnapshot(null);
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.map((item) =>
+        item.id === editingCertificationId ? editingCertificationSnapshot : item,
+      ),
+    }));
+
+    setEditingCertificationId(null);
+    setEditingCertificationSnapshot(null);
+  };
+
+  const updateCertification = (id: string, field: keyof Certification, value: string) => {
+    setFormData((prev) => {
+      const nextCertifications = prev.certifications.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+              ...(field === "title" ? { name: value } : {}),
+              ...(field === "institution" ? { issuer: value } : {}),
+            }
+          : item,
+      );
+      const nextState = { ...prev, certifications: nextCertifications };
+      validateRealtime(nextState);
+      return nextState;
+    });
   };
 
   const removeCertification = (id: string) => {
@@ -420,8 +481,11 @@ export default function AdminNewCVPage() {
 
   const handleSubmit = async () => {
     setSubmitAttempted(true);
-    const isValid = validateRealtime(formData);
-    if (!isValid) {
+    const validation = validateCVPayload(formData);
+    setFieldErrors(validation.success ? {} : validation.errors);
+
+    if (!validation.success) {
+      scrollToField(Object.keys(validation.errors)[0] ?? "");
       toast.error("Revisá los campos marcados en rojo");
       return;
     }
@@ -429,7 +493,9 @@ export default function AdminNewCVPage() {
     setLoading(true);
     try {
       const finalTemplateSettings = {
+        ...formData.templateSettings,
         primaryColor: formData.templateSettings.primaryColor || "#1e3a5f",
+        headerBackground: formData.templateSettings.primaryColor || "#1e3a5f",
       };
       
       const result: { success: boolean; id?: string; error?: string } =
@@ -496,6 +562,12 @@ export default function AdminNewCVPage() {
           </p>
         </motion.div>
 
+        {submitAttempted && Object.keys(fieldErrors).length > 0 ? (
+          <div className="mb-6">
+            <ErrorSummary errors={fieldErrors} onErrorClick={scrollToField} />
+          </div>
+        ) : null}
+
         <div className="hidden md:flex justify-center mb-8 overflow-x-auto pb-2">
           <div className="flex items-center gap-2">
             {registroSteps.map((step, index) => (
@@ -536,6 +608,7 @@ export default function AdminNewCVPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
+                  data-section-id="personal"
                 >
                   <div className="flex justify-end">
                     <Button
@@ -716,7 +789,7 @@ export default function AdminNewCVPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <Card>
+                  <Card data-section-id="photo">
                     <CardHeader>
                       <CardTitle>Foto de Perfil</CardTitle>
                     </CardHeader>
@@ -777,7 +850,7 @@ export default function AdminNewCVPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <Card>
+                  <Card data-section-id="experience">
                     <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle>Experiencia Laboral</CardTitle>
                       <Button
@@ -923,7 +996,7 @@ export default function AdminNewCVPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <Card>
+                  <Card data-section-id="education">
                     <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle>Educación</CardTitle>
                       <Button
@@ -1053,7 +1126,7 @@ export default function AdminNewCVPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <Card>
+                  <Card data-section-id="certifications">
                     <CardHeader className="items-center pb-2">
                       <BookOpen className="h-5 w-5 text-primary" />
                     </CardHeader>
@@ -1074,6 +1147,7 @@ export default function AdminNewCVPage() {
                             <div>
                               <Label>Título del curso</Label>
                               <Input
+                                data-field-id="certifications.new.title"
                                 value={newCertification.title}
                                 onChange={(e) =>
                                   setNewCertification((prev) => ({
@@ -1087,6 +1161,7 @@ export default function AdminNewCVPage() {
                             <div>
                               <Label>Institución</Label>
                               <Input
+                                data-field-id="certifications.new.institution"
                                 value={newCertification.institution}
                                 onChange={(e) =>
                                   setNewCertification((prev) => ({
@@ -1102,6 +1177,7 @@ export default function AdminNewCVPage() {
                             <div>
                               <Label>Mes de inicio</Label>
                               <Select
+                                data-field-id="certifications.new.startMonth"
                                 value={newCertification.startMonth}
                                 onChange={(e) =>
                                   setNewCertification((prev) => ({
@@ -1115,7 +1191,8 @@ export default function AdminNewCVPage() {
                             </div>
                             <div>
                               <Label>Año de inicio</Label>
-                              <Input
+                              <Select
+                                data-field-id="certifications.new.startYear"
                                 value={newCertification.startYear}
                                 onChange={(e) =>
                                   setNewCertification((prev) => ({
@@ -1123,7 +1200,8 @@ export default function AdminNewCVPage() {
                                     startYear: e.target.value,
                                   }))
                                 }
-                                placeholder="2024"
+                                options={yearSelectOptions}
+                                placeholder="Seleccionar año"
                               />
                             </div>
                           </div>
@@ -1154,27 +1232,79 @@ export default function AdminNewCVPage() {
                       {formData.certifications.length > 0 ? (
                         <div className="space-y-3">
                           {formData.certifications.map((course) => (
-                            <div
-                              key={course.id}
-                              className="flex items-start justify-between gap-3 rounded-md border p-3"
-                            >
-                              <div>
-                                <p className="font-medium">{course.title}</p>
-                                {course.institution ? (
-                                  <p className="text-sm text-muted-foreground">{course.institution}</p>
-                                ) : null}
-                                <p className="text-xs text-muted-foreground">
-                                  {course.startMonth}/{course.startYear}
-                                </p>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeCertification(course.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                            <div key={course.id} className="rounded-md border p-3 space-y-3">
+                              {editingCertificationId === course.id ? (
+                                <div className="space-y-3">
+                                  <div className="grid gap-3 md:grid-cols-2">
+                                    <div>
+                                      <Label>Título del curso</Label>
+                                      <Input
+                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.title`}
+                                        value={course.title ?? ""}
+                                        onChange={(e) => updateCertification(course.id, "title", e.target.value)}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Institución</Label>
+                                      <Input
+                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.institution`}
+                                        value={course.institution ?? ""}
+                                        onChange={(e) => updateCertification(course.id, "institution", e.target.value)}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid gap-3 md:grid-cols-2">
+                                    <div>
+                                      <Label>Mes de inicio</Label>
+                                      <Select
+                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.startMonth`}
+                                        value={course.startMonth ?? ""}
+                                        onChange={(e) => updateCertification(course.id, "startMonth", e.target.value)}
+                                        options={monthSelectOptions}
+                                        placeholder="Seleccionar mes"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Año de inicio</Label>
+                                      <Select
+                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.startYear`}
+                                        value={course.startYear ?? ""}
+                                        onChange={(e) => updateCertification(course.id, "startYear", e.target.value)}
+                                        options={yearSelectOptions}
+                                        placeholder="Seleccionar año"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button type="button" onClick={() => setEditingCertificationId(null)}>
+                                      Guardar
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={cancelCertificationEdit}>
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="font-medium">{course.title || course.name || "Sin título"}</p>
+                                    {course.institution || course.issuer ? (
+                                      <p className="text-sm text-muted-foreground">{course.institution || course.issuer}</p>
+                                    ) : null}
+                                    <p className="text-xs text-muted-foreground">
+                                      {[course.startMonth, course.startYear].filter(Boolean).join("/") || "Sin fecha"}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => startCertificationEdit(course)}>
+                                      <Sparkles className="h-4 w-4" />
+                                    </Button>
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

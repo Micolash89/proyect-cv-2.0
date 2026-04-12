@@ -64,6 +64,16 @@ export const availabilityOptions = [
   { value: "partTime", label: "Tiempo parcial (Part time)" },
 ] as const;
 
+const currentYear = new Date().getFullYear();
+
+export const yearSelectOptions = Array.from(
+  { length: currentYear - 1950 + 1 },
+  (_, index) => {
+    const year = currentYear - index;
+    return { value: String(year), label: String(year) };
+  },
+);
+
 export const monthSelectOptions = [
   { value: "01", label: "Enero" },
   { value: "02", label: "Febrero" },

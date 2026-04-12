@@ -14,6 +14,7 @@ export interface OptionsPDF {
   showSkills: boolean;
   showLanguages: boolean;
   showCertifications: boolean;
+  showOrientation: boolean;
   fullName: boolean;
   spaceBetween: boolean;
   reverseExperience: boolean;
@@ -40,6 +41,7 @@ export const DEFAULT_OPTIONS_PDF: OptionsPDF = {
   showSkills: true,
   showLanguages: true,
   showCertifications: false,
+  showOrientation: true,
   fullName: true,
   spaceBetween: false,
   reverseExperience: false,

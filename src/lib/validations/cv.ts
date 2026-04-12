@@ -94,6 +94,23 @@ function optionalTextField(
     );
 }
 
+function normalizeCertificationField(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeCertificationInput(certification: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...certification,
+    title: normalizeCertificationField(certification.title ?? certification.name),
+    institution: normalizeCertificationField(certification.institution ?? certification.issuer),
+    startMonth: normalizeCertificationField(certification.startMonth),
+    startYear: normalizeCertificationField(certification.startYear),
+    name: normalizeCertificationField(certification.name),
+    issuer: normalizeCertificationField(certification.issuer),
+    date: normalizeCertificationField(certification.date),
+  };
+}
+
 const experienceSchema = z
   .object({
     id: z.string().min(1, "Experiencia: ID inválido"),
@@ -234,16 +251,16 @@ const languageSchema = z.object({
 const certificationSchema = z
   .object({
     id: z.string().min(1, "Curso: ID inválido"),
-    title: optionalTextField("Título del curso", 2, 120).optional(),
-    institution: optionalTextField("Institución", 2, 120).optional(),
-    startMonth: z.enum(MONTH_VALUES).optional(),
+    title: optionalTextField("Título del curso", 1, 120).optional(),
+    institution: optionalTextField("Institución", 1, 120).optional(),
+    startMonth: z.enum(MONTH_VALUES).or(z.literal("")).optional(),
     startYear: z
       .string()
       .trim()
       .regex(/^$|^[0-9]{4}$/, "Año de inicio: debe tener 4 dígitos")
       .optional(),
-    name: optionalTextField("Título del curso", 2, 120).optional(),
-    issuer: optionalTextField("Institución", 2, 120).optional(),
+    name: optionalTextField("Título del curso", 1, 120).optional(),
+    issuer: optionalTextField("Institución", 1, 120).optional(),
     date: z.string().trim().optional(),
   })
   .superRefine((value, ctx) => {
@@ -262,19 +279,11 @@ const certificationSchema = z
       });
     }
 
-    if (!hasValue(startMonth) && !hasLegacyDate) {
+    if (hasValue(startMonth) && !MONTH_VALUES.includes(startMonth as typeof MONTH_VALUES[number])) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["startMonth"],
-        message: "Mes de inicio: es obligatorio",
-      });
-    }
-
-    if (!hasValue(startYear) && !hasLegacyDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["startYear"],
-        message: "Año de inicio: es obligatorio",
+        message: "Mes de inicio: es inválido",
       });
     }
 
@@ -301,6 +310,26 @@ const templateSettingsSchema: z.ZodType<TemplateSettings> = z.object({
     .trim()
     .min(4, "Color: inválido")
     .max(20, "Color: inválido"),
+  headerBackground: z.string().trim().max(20).optional(),
+  headerFontSize: z.number().int().min(12).max(60).optional(),
+  bodyFontSize: z.number().int().min(7).max(24).optional(),
+  fontFamily: z.string().trim().max(50).optional(),
+  layout: z.enum(["ascending", "descending"] as const).optional(),
+  padding: z.number().int().min(0).max(80).optional(),
+  margin: z.number().int().min(0).max(80).optional(),
+  headerPadding: z.number().int().min(0).max(80).optional(),
+  bodyPadding: z.number().int().min(0).max(80).optional(),
+  showPhoto: z.boolean().optional(),
+  showSummary: z.boolean().optional(),
+  showSkills: z.boolean().optional(),
+  showLanguages: z.boolean().optional(),
+  showCertifications: z.boolean().optional(),
+  showOrientation: z.boolean().optional(),
+  fullName: z.boolean().optional(),
+  spaceBetween: z.boolean().optional(),
+  reverseExperience: z.boolean().optional(),
+  reverseEducation: z.boolean().optional(),
+  reverseCourses: z.boolean().optional(),
 });
 
 export const cvFormValidationSchema = z
@@ -414,10 +443,16 @@ export function buildFullName(name?: string, lastName?: string): string {
 export function normalizeCVPayload<T extends Record<string, unknown>>(payload: T): T & { name: string; lastName: string; fullName: string } {
   const nameValue = typeof payload.name === "string" ? payload.name.trim() : "";
   const lastNameValue = typeof payload.lastName === "string" ? payload.lastName.trim() : "";
+  const certifications = Array.isArray(payload.certifications)
+    ? payload.certifications.map((item) =>
+        normalizeCertificationInput((item ?? {}) as Record<string, unknown>),
+      )
+    : payload.certifications;
 
   if (nameValue && lastNameValue) {
     return {
       ...payload,
+      certifications,
       name: nameValue,
       lastName: lastNameValue,
       fullName: buildFullName(nameValue, lastNameValue),
@@ -430,6 +465,7 @@ export function normalizeCVPayload<T extends Record<string, unknown>>(payload: T
 
   return {
     ...payload,
+    certifications,
     name,
     lastName,
     fullName: buildFullName(name, lastName),

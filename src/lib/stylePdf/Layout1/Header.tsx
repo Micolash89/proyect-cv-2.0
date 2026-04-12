@@ -50,7 +50,9 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
       
       <Text style={styles.sidebarName}>{firstName}</Text>
       <Text style={styles.sidebarName}>{lastName}</Text>
-      {profession && <Text style={styles.profession}>{profession}</Text>}
+      {options.showOrientation && profession ? (
+        <Text style={styles.profession}>{profession}</Text>
+      ) : null}
 
       <View style={styles.sidebarContact}>
         {contactItems.map((item, index) => (

@@ -35,7 +35,7 @@ export const Layout5Header: React.FC<HeaderProps> = ({ user, options }) => {
       <View style={styles.headerNameColumn}>
         <Text style={styles.firstName}>{firstName.toUpperCase()}</Text>
         <Text style={styles.lastName}>{lastName.toUpperCase()}</Text>
-        {profileOrientation ? (
+        {options.showOrientation && profileOrientation ? (
           <Text style={styles.orientationText}>{profileOrientation}</Text>
         ) : null}
       </View>

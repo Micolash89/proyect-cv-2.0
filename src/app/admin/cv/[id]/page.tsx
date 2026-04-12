@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorSummary } from "@/components/admin/cv/ErrorSummary";
 import { AdminCVPageSkeleton } from "@/components/admin/cv/AdminCVPageSkeleton";
 import {
   ArrowLeft,
@@ -33,12 +34,12 @@ import {
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
-  // TemplateType,
-  // FontSize,
-  // LayoutOrder,
+  FontSize,
+  LayoutOrder,
   CVStatus,
   UserCV,
   Experience,
+  Certification,
   // Education,
   // Language,
 } from "@/types";
@@ -60,14 +61,39 @@ import {
 } from "@/app/actions/ia";
 import { generateSkills } from "@/lib/ia/factory";
 import {
+  getTemplateDefaultColor,
   getTemplatePalette,
   sanitizeTemplatePrimaryColor,
   templateOptions,
 } from "@/lib/constants/templates";
-import { availabilityOptions, monthSelectOptions } from "@/lib/constants";
+import {
+  availabilityOptions,
+  layoutOptions,
+  monthSelectOptions,
+  yearSelectOptions,
+} from "@/lib/constants";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
 import { validateImageFile } from "@/lib/validations/files";
+import { buildTemplateSettingsDefaults } from "@/lib/constants/cv";
+
+const VISIBILITY_SETTINGS: Array<{
+  key:
+    | "showPhoto"
+    | "showSummary"
+    | "showSkills"
+    | "showLanguages"
+    | "showCertifications"
+    | "showOrientation";
+  label: string;
+}> = [
+  { key: "showPhoto", label: "Foto" },
+  { key: "showSummary", label: "Resumen" },
+  { key: "showSkills", label: "Habilidades" },
+  { key: "showLanguages", label: "Idiomas" },
+  { key: "showCertifications", label: "Certificaciones" },
+  { key: "showOrientation", label: "Orientación profesional" },
+];
 
 export default function AdminCVPage() {
   const params = useParams();
@@ -100,6 +126,8 @@ export default function AdminCVPage() {
     startMonth: "",
     startYear: "",
   });
+  const [editingCertificationId, setEditingCertificationId] = useState<string | null>(null);
+  const [editingCertificationSnapshot, setEditingCertificationSnapshot] = useState<Certification | null>(null);
 
   // Location state for Datos Personales
   const [provincias, setProvincias] = useState<Provincia[]>([]);
@@ -107,6 +135,30 @@ export default function AdminCVPage() {
   const [selectedProvincia, setSelectedProvincia] = useState("");
   const [selectedDepartamento, setSelectedDepartamento] = useState("");
   const [selectedLocalidad, setSelectedLocalidad] = useState("");
+
+  const normalizeTemplateSettings = useCallback(
+    (
+      template: UserCV["selectedTemplate"],
+      settings?: Partial<UserCV["templateSettings"]>,
+    ): UserCV["templateSettings"] => {
+      const defaultColor = getTemplateDefaultColor(template);
+      const merged = {
+        ...buildTemplateSettingsDefaults(defaultColor),
+        ...settings,
+      };
+      const primaryColor = sanitizeTemplatePrimaryColor(
+        template,
+        merged.primaryColor || defaultColor,
+      );
+
+      return {
+        ...merged,
+        primaryColor,
+        headerBackground: primaryColor,
+      };
+    },
+    [],
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -143,17 +195,25 @@ export default function AdminCVPage() {
   const fetchUser = useCallback(async () => {
     if (!params.id) return;
     try {
-      const { user } = await getCV(params.id as string);
-      setUser(user);
-      setNameFields(splitFullName(user.fullName));
-      setOriginalUser(JSON.parse(JSON.stringify(user)));
+      const { user: fetchedUser } = await getCV(params.id as string);
+      const hydratedUser = {
+        ...fetchedUser,
+        templateSettings: normalizeTemplateSettings(
+          fetchedUser.selectedTemplate,
+          fetchedUser.templateSettings,
+        ),
+      };
+
+      setUser(hydratedUser);
+      setNameFields(splitFullName(hydratedUser.fullName));
+      setOriginalUser(JSON.parse(JSON.stringify(hydratedUser)));
     } catch (error) {
       console.error("Error fetching user:", error);
       router.push("/admin");
     } finally {
       setLoading(false);
     }
-  }, [params.id, router]);
+  }, [normalizeTemplateSettings, params.id, router]);
 
   useEffect(() => {
     fetchUser();
@@ -166,6 +226,7 @@ export default function AdminCVPage() {
       lastName: names.lastName,
     });
     setFieldErrors(validation.success ? {} : validation.errors);
+
     return validation.success;
   }, [nameFields]);
 
@@ -176,6 +237,18 @@ export default function AdminCVPage() {
 
     return fieldErrors[path] ?? "";
   }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const scrollToField = useCallback((fieldPath: string) => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const exactTarget = document.querySelector(`[data-field-id="${fieldPath}"]`) as HTMLElement | null;
+    const sectionTarget = document.querySelector(`[data-section-id="${fieldPath.split(".")[0]}"]`) as HTMLElement | null;
+    const target = exactTarget ?? sectionTarget;
+
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   const handleStatusChange = useCallback(async (status: CVStatus) => {
     if (!user) return;
@@ -219,8 +292,15 @@ export default function AdminCVPage() {
     if (!user) return;
 
     setSubmitAttempted(true);
-    const isValid = validateRealtime(user);
-    if (!isValid) {
+    const validation = validateCVPayload({
+      ...user,
+      name: nameFields.name,
+      lastName: nameFields.lastName,
+    });
+    setFieldErrors(validation.success ? {} : validation.errors);
+
+    if (!validation.success) {
+      scrollToField(Object.keys(validation.errors)[0] ?? "");
       toast.error("Revisá los campos marcados en rojo");
       return;
     }
@@ -538,8 +618,8 @@ export default function AdminCVPage() {
   const addCertification = () => {
     if (!user) return;
 
-    if (!newCertification.title.trim() || !newCertification.startMonth || !newCertification.startYear.trim()) {
-      toast.error("Completá el título, mes y año de inicio");
+    if (!newCertification.title.trim() || !newCertification.institution.trim()) {
+      toast.error("Completá el título y la institución");
       return;
     }
 
@@ -553,6 +633,9 @@ export default function AdminCVPage() {
           institution: newCertification.institution.trim(),
           startMonth: newCertification.startMonth,
           startYear: newCertification.startYear.trim(),
+          name: newCertification.title.trim(),
+          issuer: newCertification.institution.trim(),
+          date: "",
         },
       ],
     } as UserCV;
@@ -572,6 +655,60 @@ export default function AdminCVPage() {
 
     setUser(nextUser);
     validateRealtime(nextUser);
+  };
+
+  const startCertificationEdit = (certification: Certification) => {
+    setEditingCertificationId(certification.id);
+    setEditingCertificationSnapshot(JSON.parse(JSON.stringify(certification)) as Certification);
+  };
+
+  const cancelCertificationEdit = () => {
+    if (!user || !editingCertificationSnapshot || !editingCertificationId) {
+      setEditingCertificationId(null);
+      setEditingCertificationSnapshot(null);
+      return;
+    }
+
+    const nextUser = {
+      ...user,
+      certifications: (user.certifications || []).map((item) =>
+        item.id === editingCertificationId ? editingCertificationSnapshot : item,
+      ),
+    } as UserCV;
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
+    setEditingCertificationId(null);
+    setEditingCertificationSnapshot(null);
+  };
+
+  const updateCertification = (id: string, field: keyof Certification, value: string) => {
+    if (!user) return;
+
+    const index = (user.certifications || []).findIndex((item) => item.id === id);
+    const nextUser = {
+      ...user,
+      certifications: (user.certifications || []).map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+              ...(field === "title" ? { name: value } : {}),
+              ...(field === "institution" ? { issuer: value } : {}),
+            }
+          : item,
+      ),
+    } as UserCV;
+
+    setUser(nextUser);
+    validateRealtime(nextUser);
+
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`certifications.${index}.${String(field)}`]: true,
+      }));
+    }
   };
 
   const updateNameField = (field: "name" | "lastName", value: string) => {
@@ -610,29 +747,73 @@ export default function AdminCVPage() {
     setSelectedLocalidad(location.localidad);
   };
 
-  const updateTemplateSettings = (field: string, value: any) => {
+  const updateTemplateSettingsPartial = (
+    partial: Partial<UserCV["templateSettings"]>,
+  ) => {
     if (!user) return;
-    setUser({
+
+    const nextUser = {
       ...user,
-      templateSettings: { ...user.templateSettings, [field]: value },
-    });
+      templateSettings: normalizeTemplateSettings(user.selectedTemplate, {
+        ...user.templateSettings,
+        ...partial,
+      }),
+    };
+
+    setUser(nextUser);
+  };
+
+  const updateTemplateSettings = <K extends keyof UserCV["templateSettings"]>(
+    field: K,
+    value: UserCV["templateSettings"][K],
+  ) => {
+    updateTemplateSettingsPartial({
+      [field]: value,
+    } as Partial<UserCV["templateSettings"]>);
+  };
+
+  const updateRangeSetting = (
+    field: "headerFontSize" | "bodyFontSize" | "margin" | "padding" | "headerPadding" | "bodyPadding",
+    rawValue: string,
+  ) => {
+    const nextValue = Number.parseInt(rawValue, 10);
+
+    if (Number.isNaN(nextValue)) {
+      return;
+    }
+
+    updateTemplateSettings(field, nextValue);
+  };
+
+  const getSectionOrder = (
+    field: "reverseExperience" | "reverseEducation" | "reverseCourses",
+  ): LayoutOrder => (user?.templateSettings[field] ? "ascending" : "descending");
+
+  const updateSectionOrder = (
+    field: "reverseExperience" | "reverseEducation" | "reverseCourses",
+    order: LayoutOrder,
+  ) => {
+    updateTemplateSettings(field, order === "ascending");
   };
 
   const updateSelectedTemplate = (templateId: string) => {
     if (!user) return;
+    const nextTemplate = templateId as UserCV["selectedTemplate"];
     const primaryColor = sanitizeTemplatePrimaryColor(
-      templateId,
+      nextTemplate,
       user.templateSettings.primaryColor,
     );
 
-    setUser({
+    const nextUser = {
       ...user,
-      selectedTemplate: templateId as UserCV["selectedTemplate"],
-      templateSettings: {
+      selectedTemplate: nextTemplate,
+      templateSettings: normalizeTemplateSettings(nextTemplate, {
         ...user.templateSettings,
         primaryColor,
-      },
-    });
+      }),
+    };
+
+    setUser(nextUser);
   };
 
   const addExperience = () => {
@@ -921,6 +1102,12 @@ export default function AdminCVPage() {
         </div>
       </motion.div>
 
+      {submitAttempted && Object.keys(fieldErrors).length > 0 ? (
+        <div className="mb-6">
+          <ErrorSummary errors={fieldErrors} onErrorClick={scrollToField} />
+        </div>
+      ) : null}
+
       {/* <div
         className="border-2 border-dashed rounded-lg p-4 mb-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
         onDragOver={(e) => e.preventDefault()}
@@ -1131,7 +1318,7 @@ export default function AdminCVPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-section-id="certifications">
             <CardHeader className="items-center pb-2">
               <BookOpen className="h-5 w-5 text-primary" />
             </CardHeader>
@@ -1154,6 +1341,7 @@ export default function AdminCVPage() {
                     <div>
                       <Label>Título del curso</Label>
                       <Input
+                        data-field-id="certifications.new.title"
                         value={newCertification.title}
                         onChange={(e) => setNewCertification((prev) => ({ ...prev, title: e.target.value }))}
                         placeholder="Ej: Excel avanzado"
@@ -1162,6 +1350,7 @@ export default function AdminCVPage() {
                     <div>
                       <Label>Institución</Label>
                       <Input
+                        data-field-id="certifications.new.institution"
                         value={newCertification.institution}
                         onChange={(e) => setNewCertification((prev) => ({ ...prev, institution: e.target.value }))}
                         placeholder="Ej: Universidad X"
@@ -1172,6 +1361,7 @@ export default function AdminCVPage() {
                     <div>
                       <Label>Mes de inicio</Label>
                       <Select
+                        data-field-id="certifications.new.startMonth"
                         value={newCertification.startMonth}
                         onChange={(e) => setNewCertification((prev) => ({ ...prev, startMonth: e.target.value }))}
                         options={monthSelectOptions}
@@ -1180,10 +1370,12 @@ export default function AdminCVPage() {
                     </div>
                     <div>
                       <Label>Año de inicio</Label>
-                      <Input
+                      <Select
+                        data-field-id="certifications.new.startYear"
                         value={newCertification.startYear}
                         onChange={(e) => setNewCertification((prev) => ({ ...prev, startYear: e.target.value }))}
-                        placeholder="2024"
+                        options={yearSelectOptions}
+                        placeholder="Seleccionar año"
                       />
                     </div>
                   </div>
@@ -1205,15 +1397,79 @@ export default function AdminCVPage() {
               <div className="space-y-3">
                 {(user.certifications || []).length > 0 ? (
                   (user.certifications || []).map((course) => (
-                    <div key={course.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
-                      <div>
-                        <p className="font-medium">{course.title}</p>
-                        {course.institution ? <p className="text-sm text-muted-foreground">{course.institution}</p> : null}
-                        <p className="text-xs text-muted-foreground">{course.startMonth}/{course.startYear}</p>
-                      </div>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
-                        <X className="h-4 w-4" />
-                      </Button>
+                    <div key={course.id} className="rounded-md border p-3 space-y-3">
+                      {editingCertificationId === course.id ? (
+                        <div className="space-y-3">
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <div>
+                              <Label>Título del curso</Label>
+                              <Input
+                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.title`}
+                                value={course.title ?? ""}
+                                onChange={(e) => updateCertification(course.id, "title", e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>Institución</Label>
+                              <Input
+                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.institution`}
+                                value={course.institution ?? ""}
+                                onChange={(e) => updateCertification(course.id, "institution", e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <div>
+                              <Label>Mes de inicio</Label>
+                              <Select
+                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.startMonth`}
+                                value={course.startMonth ?? ""}
+                                onChange={(e) => updateCertification(course.id, "startMonth", e.target.value)}
+                                options={monthSelectOptions}
+                                placeholder="Seleccionar mes"
+                              />
+                            </div>
+                            <div>
+                              <Label>Año de inicio</Label>
+                              <Select
+                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.startYear`}
+                                value={course.startYear ?? ""}
+                                onChange={(e) => updateCertification(course.id, "startYear", e.target.value)}
+                                options={yearSelectOptions}
+                                placeholder="Seleccionar año"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button type="button" onClick={() => setEditingCertificationId(null)}>
+                              Guardar
+                            </Button>
+                            <Button type="button" variant="outline" onClick={cancelCertificationEdit}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{course.title || course.name || "Sin título"}</p>
+                            {course.institution || course.issuer ? (
+                              <p className="text-sm text-muted-foreground">{course.institution || course.issuer}</p>
+                            ) : null}
+                            <p className="text-xs text-muted-foreground">
+                              {[course.startMonth, course.startYear].filter(Boolean).join("/") || "Sin fecha"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button type="button" variant="ghost" size="icon" onClick={() => startCertificationEdit(course)}>
+                              <Sparkles className="h-4 w-4" />
+                            </Button>
+                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -1655,6 +1911,165 @@ export default function AdminCVPage() {
                       style={{ backgroundColor: color }}
                       title={color}
                     />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Tamaño de fuente</Label>
+                <div className="mt-2 space-y-3">
+                  <label className="block text-xs text-muted-foreground">
+                    Encabezado: {user.templateSettings.headerFontSize}
+                  </label>
+                  <input
+                    type="range"
+                    min={16}
+                    max={40}
+                    step={1}
+                    value={user.templateSettings.headerFontSize}
+                    onChange={(e) => updateRangeSetting("headerFontSize", e.target.value)}
+                    className="w-full"
+                  />
+                  <label className="block text-xs text-muted-foreground">
+                    Cuerpo: {user.templateSettings.bodyFontSize}
+                  </label>
+                  <input
+                    type="range"
+                    min={8}
+                    max={16}
+                    step={1}
+                    value={user.templateSettings.bodyFontSize}
+                    onChange={(e) => updateRangeSetting("bodyFontSize", e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Espaciado</Label>
+                <div className="mt-2 space-y-3">
+                  <label className="block text-xs text-muted-foreground">
+                    Margen general: {user.templateSettings.margin}
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={user.templateSettings.margin}
+                    onChange={(e) => updateRangeSetting("margin", e.target.value)}
+                    className="w-full"
+                  />
+                  <label className="block text-xs text-muted-foreground">
+                    Padding general: {user.templateSettings.padding}
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={user.templateSettings.padding}
+                    onChange={(e) => updateRangeSetting("padding", e.target.value)}
+                    className="w-full"
+                  />
+                  <label className="block text-xs text-muted-foreground">
+                    Padding encabezado: {user.templateSettings.headerPadding}
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={user.templateSettings.headerPadding}
+                    onChange={(e) => updateRangeSetting("headerPadding", e.target.value)}
+                    className="w-full"
+                  />
+                  <label className="block text-xs text-muted-foreground">
+                    Padding cuerpo: {user.templateSettings.bodyPadding}
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    step={1}
+                    value={user.templateSettings.bodyPadding}
+                    onChange={(e) => updateRangeSetting("bodyPadding", e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Orden cronológico por sección</Label>
+                <div className="mt-2 space-y-2">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Experiencia</span>
+                    <Select
+                      className="mt-1"
+                      value={getSectionOrder("reverseExperience")}
+                      options={layoutOptions}
+                      onChange={(e) => updateSectionOrder("reverseExperience", e.target.value as LayoutOrder)}
+                      placeholder="Seleccionar orden"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Educación</span>
+                    <Select
+                      className="mt-1"
+                      value={getSectionOrder("reverseEducation")}
+                      options={layoutOptions}
+                      onChange={(e) => updateSectionOrder("reverseEducation", e.target.value as LayoutOrder)}
+                      placeholder="Seleccionar orden"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Certificaciones</span>
+                    <Select
+                      className="mt-1"
+                      value={getSectionOrder("reverseCourses")}
+                      options={layoutOptions}
+                      onChange={(e) => updateSectionOrder("reverseCourses", e.target.value as LayoutOrder)}
+                      placeholder="Seleccionar orden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Opciones de visualización</Label>
+                <label className="flex items-center gap-2 rounded border px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(user.templateSettings.fullName)}
+                    onChange={(e) => updateTemplateSettings("fullName", e.target.checked)}
+                  />
+                  <span>Mostrar nombre completo</span>
+                </label>
+                <label className="flex items-center gap-2 rounded border px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(user.templateSettings.spaceBetween)}
+                    onChange={(e) => updateTemplateSettings("spaceBetween", e.target.checked)}
+                  />
+                  <span>Aumentar separación entre secciones</span>
+                </label>
+              </div>
+
+              <div>
+                <Label>Visibilidad de secciones</Label>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {VISIBILITY_SETTINGS.map((option) => (
+                    <label
+                      key={option.key}
+                      className="flex items-center gap-2 rounded border px-3 py-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(user.templateSettings[option.key])}
+                        onChange={(e) => updateTemplateSettings(option.key, e.target.checked)}
+                      />
+                      <span>{option.label}</span>
+                    </label>
                   ))}
                 </div>
               </div>

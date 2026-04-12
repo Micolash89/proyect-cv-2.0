@@ -30,7 +30,9 @@ export const Layout3Header: React.FC<HeaderProps> = ({ user, options }) => {
 
       <View style={styles.headerTextBlock}>
         <Text style={styles.name}>{fullNameText}</Text>
-        {profession ? <Text style={styles.profession}>{profession}</Text> : null}
+        {options.showOrientation && profession ? (
+          <Text style={styles.profession}>{profession}</Text>
+        ) : null}
       </View>
     </View>
   );

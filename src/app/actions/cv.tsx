@@ -65,7 +65,15 @@ export async function getCV(id: string) {
   }
 
   await markUserAsViewed(id);
-  return { user: { ...user, viewed: true } };
+  const normalizedUser = normalizeCVPayload({ ...user });
+  return {
+    user: {
+      ...user,
+      ...normalizedUser,
+      certifications: normalizedUser.certifications as typeof user.certifications,
+      viewed: true,
+    },
+  };
 }
 
 export async function createCV(data: CVFormData) {
@@ -103,7 +111,10 @@ export async function updateCV(id: string, data: Partial<CVFormData & { status?:
 
   const validated = validateCVPayload(mergedPayload);
   if (!validated.success) {
-    const firstError = Object.values(validated.errors)[0] ?? "Datos inválidos";
+    const firstError = validated.errors["certifications.0.title"]
+      ?? validated.errors["certifications.0.name"]
+      ?? Object.values(validated.errors)[0]
+      ?? "Datos inválidos";
     throw new Error(firstError);
   }
 
