@@ -46,12 +46,6 @@ import type {
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
-import {
-  getProvincias,
-  getDepartamentos,
-  type Provincia,
-  type Departamento,
-} from "@/lib/api/georef";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
@@ -128,13 +122,6 @@ export default function AdminCVPage() {
   });
   const [editingCertificationId, setEditingCertificationId] = useState<string | null>(null);
   const [editingCertificationSnapshot, setEditingCertificationSnapshot] = useState<Certification | null>(null);
-
-  // Location state for Datos Personales
-  const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
-  const [selectedProvincia, setSelectedProvincia] = useState("");
-  const [selectedDepartamento, setSelectedDepartamento] = useState("");
-  const [selectedLocalidad, setSelectedLocalidad] = useState("");
 
   const normalizeTemplateSettings = useCallback(
     (
@@ -398,94 +385,6 @@ export default function AdminCVPage() {
     }
   };
 
-  // Load provincias on mount
-  useEffect(() => {
-    const loadProvincias = async () => {
-      const data = await getProvincias();
-      setProvincias(data);
-    };
-    loadProvincias();
-  }, []);
-
-  // Load departamentos when provincia changes
-  useEffect(() => {
-    const loadDepartamentos = async () => {
-      if (!selectedProvincia) {
-        setDepartamentos([]);
-        setSelectedDepartamento("");
-        setSelectedLocalidad("");
-        return;
-      }
-      const data = await getDepartamentos(selectedProvincia);
-      setDepartamentos(data);
-    };
-    loadDepartamentos();
-  }, [selectedProvincia]);
-
-  // Update user location when selection changes
-  const handleProvinciaChange = (value: string) => {
-    setSelectedProvincia(value);
-    setSelectedDepartamento("");
-    setSelectedLocalidad("");
-    setDepartamentos([]);
-  };
-
-  const handleDepartamentoChange = (value: string) => {
-    setSelectedDepartamento(value);
-    setSelectedLocalidad("");
-  };
-
-  const handleLocalidadChange = (value: string) => {
-    setSelectedLocalidad(value);
-  };
-
-  // Update user.location when location selection changes
-  useEffect(() => {
-    const provinciaNombre = selectedProvincia
-      ? provincias.find((p) => p.id === selectedProvincia)?.nombre
-      : "";
-    const parts = [
-      selectedLocalidad || selectedDepartamento,
-      provinciaNombre,
-    ].filter(Boolean);
-    const newLocation = parts.join(", ");
-    setUser((current) => {
-      if (!current || current.location === newLocation) return current;
-      return { ...current, location: newLocation };
-    });
-  }, [
-    selectedProvincia,
-    selectedDepartamento,
-    selectedLocalidad,
-    provincias,
-  ]);
-
-  // Initialize location from user data (only once on mount)
-  const [locationInitialized, setLocationInitialized] = useState(false);
-
-  useEffect(() => {
-    if (
-      user &&
-      user.location &&
-      !locationInitialized &&
-      provincias.length > 0
-    ) {
-      // Try to parse location if it contains comma
-      const parts = user.location.split(", ");
-      if (parts.length >= 2) {
-        const loc = parts[0];
-        const prov = parts.slice(1).join(", ");
-        // Try to find matching provincia
-        const provMatch = provincias.find((p) => p.nombre === prov);
-        if (provMatch) {
-          setSelectedProvincia(provMatch.id);
-          // We'll need to also set the departamento/localidad after loading
-        }
-      }
-      setLocationInitialized(true);
-    }
-  }, [user, provincias, locationInitialized]);
-
   // const handleCVUpload = async (file: File) => {
   //   if (!file) return;
   //   if (file.size > 10 * 1024 * 1024) {
@@ -742,9 +641,6 @@ export default function AdminCVPage() {
       localidad: location.localidad,
       location: locationString 
     });
-    setSelectedProvincia(location.provincia);
-    setSelectedDepartamento(location.municipio);
-    setSelectedLocalidad(location.localidad);
   };
 
   const updateTemplateSettingsPartial = (

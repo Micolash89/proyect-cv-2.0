@@ -144,7 +144,6 @@ function RegistroPageContent() {
   const handleMainLocationChange = useCallback(
     (locationData: { provincia: string; municipio: string; localidad: string }) => {
       const nextLocation = [
-        locationData.localidad,
         locationData.municipio,
         locationData.provincia,
       ]
@@ -723,17 +722,35 @@ function RegistroPageContent() {
                         </Button>
                       ) : (
                         <div className="space-y-2">
+                          {(() => {
+                            const parts = (formData.location || "")
+                              .split(", ")
+                              .map((item) => item.trim())
+                              .filter(Boolean);
+
+                            const parsedValue =
+                              parts.length >= 3
+                                ? {
+                                    localidad: parts[0] || "",
+                                    municipio: parts[1] || "",
+                                    provincia: parts[2] || "",
+                                  }
+                                : {
+                                    localidad: "",
+                                    municipio: parts[0] || "",
+                                    provincia: parts[1] || "",
+                                  };
+
+                            return (
                           <LocationSelector
-                            value={{
-                              provincia: formData.location?.split(", ").at(-1) || "",
-                              municipio: formData.location?.split(", ").at(-2) || "",
-                              localidad: formData.location?.split(", ").at(-3) || "",
-                            }}
+                            value={parsedValue}
                             onChange={handleMainLocationChange}
                             showLabels={false}
                           />
+                            );
+                          })()}
                           <p className="text-xs text-muted-foreground">
-                            Selecciona provincia, municipio y localidad (opcional).
+                            Selecciona provincia y municipio/localidad.
                           </p>
                         </div>
                       )}

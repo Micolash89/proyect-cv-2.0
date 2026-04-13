@@ -723,18 +723,29 @@ export default function AdminNewCVPage() {
                                 value={
                                   formData.location
                                     ? (() => {
-                                        const parts = formData.location.split(", ");
+                                        const parts = formData.location
+                                          .split(", ")
+                                          .map((item) => item.trim())
+                                          .filter(Boolean);
+
+                                        if (parts.length >= 3) {
+                                          return {
+                                            localidad: parts[0] || "",
+                                            municipio: parts[1] || "",
+                                            provincia: parts[2] || "",
+                                          };
+                                        }
+
                                         return {
-                                          localidad: parts[0] ?? "",
-                                          municipio: parts[1] ?? "",
-                                          provincia: parts[2] ?? "",
+                                          localidad: "",
+                                          municipio: parts[0] || "",
+                                          provincia: parts[1] || "",
                                         };
                                       })()
                                     : undefined
                                 }
                                 onChange={(locationData) => {
                                   const nextLocation = [
-                                    locationData.localidad,
                                     locationData.municipio,
                                     locationData.provincia,
                                   ]
@@ -744,7 +755,7 @@ export default function AdminNewCVPage() {
                                 }}
                               />
                               <p className="text-xs text-muted-foreground">
-                                Seleccioná provincia, municipio y localidad.
+                                Seleccioná provincia y municipio/localidad.
                               </p>
                             </div>
                           )}

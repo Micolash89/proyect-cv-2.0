@@ -5,11 +5,18 @@ import { Select } from "@/components/ui/select";
 import {
   getProvincias,
   getDepartamentos,
-  getMunicipiosLocalidad,
+  getLocalidadesByProvincia,
   type Provincia,
   type Departamento,
   type Localidad,
 } from "@/lib/api/georef";
+
+const CABA_PROVINCIA_ID = "02";
+
+interface LocationOption {
+  id: string;
+  nombre: string;
+}
 
 interface LocationSelectorProps {
   value?: {
@@ -33,21 +40,19 @@ export function LocationSelector({
   showLabels = true,
 }: LocationSelectorProps) {
   const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
-  const [localidades, setLocalidadess] = useState<Localidad[]>([]);
+  const [secondLevelOptions, setSecondLevelOptions] = useState<LocationOption[]>([]);
 
   const [selectedProvinciaId, setSelectedProvinciaId] = useState("");
   const [selectedProvinciaNombre, setSelectedProvinciaNombre] = useState("");
-  const [selectedDepartamentoId, setSelectedDepartamentoId] = useState("");
-  const [selectedDepartamentoNombre, setSelectedDepartamentoNombre] =
+  const [selectedMunicipioNombre, setSelectedMunicipioNombre] =
     useState("");
-  const [selectedLocalidadNombre, setSelectedLocalidadNombre] = useState("");
 
   const initRef = useRef({
     provincia: false,
     municipio: false,
-    localidad: false,
   });
+
+  const isCabaSelected = selectedProvinciaId === CABA_PROVINCIA_ID;
 
   useEffect(() => {
     const loadProvincias = async () => {
@@ -69,65 +74,44 @@ export function LocationSelector({
   }, [value.provincia]);
 
   useEffect(() => {
-    const loadDepartamentos = async () => {
+    const loadSecondLevelOptions = async () => {
       if (!selectedProvinciaId) {
-        setDepartamentos([]);
-        setLocalidadess([]);
+        setSecondLevelOptions([]);
         return;
       }
-      const data = await getDepartamentos(selectedProvinciaId);
-      setDepartamentos(data);
+
+      const data: Array<Departamento | Localidad> = isCabaSelected
+        ? await getLocalidadesByProvincia(selectedProvinciaId)
+        : await getDepartamentos(selectedProvinciaId);
+
+      setSecondLevelOptions(data);
+
+      const initialMunicipio = isCabaSelected
+        ? value.localidad || value.municipio
+        : value.municipio;
 
       if (
-        value.municipio &&
+        initialMunicipio &&
         !initRef.current.municipio &&
         selectedProvinciaId
       ) {
-        const deptoEncontrado = data.find((d) => d.nombre === value.municipio);
-        if (deptoEncontrado) {
-          setSelectedDepartamentoId(deptoEncontrado.id);
-          setSelectedDepartamentoNombre(value.municipio);
+        const optionEncontrada = data.find((d) => d.nombre === initialMunicipio);
+        if (optionEncontrada) {
+          setSelectedMunicipioNombre(initialMunicipio);
           initRef.current.municipio = true;
         }
       }
     };
-    loadDepartamentos();
-  }, [selectedProvinciaId, value.municipio]);
-
-  useEffect(() => {
-    const loadLocalidadess = async () => {
-      if (!selectedProvinciaId) {
-        setLocalidadess([]);
-        return;
-      }
-      const data = await getMunicipiosLocalidad(
-        selectedProvinciaId,
-        selectedDepartamentoId || undefined,
-      );
-      setLocalidadess(data);
-
-      if (
-        value.localidad &&
-        !initRef.current.localidad &&
-        selectedProvinciaId
-      ) {
-        setSelectedLocalidadNombre(value.localidad);
-        initRef.current.localidad = true;
-      }
-    };
-    loadLocalidadess();
-  }, [selectedProvinciaId, selectedDepartamentoId, value.localidad]);
+    loadSecondLevelOptions();
+  }, [selectedProvinciaId, isCabaSelected, value.localidad, value.municipio]);
 
   const handleProvinciaChange = (nombreProvincia: string) => {
     setSelectedProvinciaNombre(nombreProvincia);
     const provincia = provincias.find((p) => p.nombre === nombreProvincia);
     setSelectedProvinciaId(provincia?.id || "");
-    setSelectedDepartamentoId("");
-    setSelectedDepartamentoNombre("");
-    setSelectedLocalidadNombre("");
-    setDepartamentos([]);
-    setLocalidadess([]);
-    initRef.current = { provincia: true, municipio: false, localidad: false };
+    setSelectedMunicipioNombre("");
+    setSecondLevelOptions([]);
+    initRef.current = { provincia: true, municipio: false };
 
     if (onChange) {
       onChange({
@@ -138,39 +122,35 @@ export function LocationSelector({
     }
   };
 
-  const handleDepartamentoChange = (nombreDepartamento: string) => {
-    setSelectedDepartamentoNombre(nombreDepartamento);
-    const departamento = departamentos.find(
-      (d) => d.nombre === nombreDepartamento,
+  const handleMunicipioChange = (nombreMunicipio: string) => {
+    setSelectedMunicipioNombre(nombreMunicipio);
+    const secondLevelOption = secondLevelOptions.find(
+      (d) => d.nombre === nombreMunicipio,
     );
-    setSelectedDepartamentoId(departamento?.id || "");
-    setSelectedLocalidadNombre("");
-    initRef.current = { provincia: true, municipio: true, localidad: false };
+    if (!secondLevelOption) {
+      return;
+    }
+    initRef.current = { provincia: true, municipio: true };
 
     if (onChange) {
       onChange({
         provincia: selectedProvinciaNombre,
-        municipio: nombreDepartamento,
+        municipio: nombreMunicipio,
         localidad: "",
       });
     }
   };
 
-  const handleLocalidadChange = (nombreLocalidad: string) => {
-    setSelectedLocalidadNombre(nombreLocalidad);
-    initRef.current = { provincia: true, municipio: true, localidad: true };
-
-    if (onChange) {
-      onChange({
-        provincia: selectedProvinciaNombre,
-        municipio: selectedDepartamentoNombre,
-        localidad: nombreLocalidad,
-      });
-    }
-  };
+  const secondLevelLabel = showLabels
+    ? isCabaSelected
+      ? "Localidad"
+      : "Municipio"
+    : isCabaSelected
+      ? "Seleccioná una localidad"
+      : "Seleccioná un municipio";
 
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-2">
       <Select
         value={selectedProvinciaNombre}
         placeholder={showLabels ? "Provincia" : "Seleccioná una provincia"}
@@ -179,19 +159,14 @@ export function LocationSelector({
         disabled={disabled}
       />
       <Select
-        value={selectedDepartamentoNombre}
-        placeholder={showLabels ? "Municipio" : "Seleccioná un municipio"}
-        onChange={(e) => handleDepartamentoChange(e.target.value)}
-        options={departamentos.map((d) => ({ value: d.nombre, label: d.nombre }))}
+        value={selectedMunicipioNombre}
+        placeholder={secondLevelLabel}
+        onChange={(e) => handleMunicipioChange(e.target.value)}
+        options={secondLevelOptions.map((d) => ({ value: d.nombre, label: d.nombre }))}
         disabled={disabled || !selectedProvinciaId}
       />
-      <Select
-        value={selectedLocalidadNombre}
-        placeholder={showLabels ? "Localidad" : "Seleccioná una localidad"}
-        onChange={(e) => handleLocalidadChange(e.target.value)}
-        options={localidades.map((l) => ({ value: l.nombre, label: l.nombre }))}
-        disabled={disabled || !selectedProvinciaId}
-      />
+
+      {/* Localidad selector removed: now Province -> Municipality/Locality (CABA) */}
     </div>
   );
 }

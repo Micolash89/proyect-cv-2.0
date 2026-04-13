@@ -19,11 +19,21 @@ export const formatPdfLocation = ({
   const safeFallback = normalize(fallback);
 
   if (safeLocalidad && safeMunicipio) {
-    return `${safeLocalidad}, ${safeMunicipio}`;
+    return safeProvincia
+      ? `${safeProvincia}, ${safeMunicipio}, ${safeLocalidad}`
+      : `${safeMunicipio}, ${safeLocalidad}`;
+  }
+
+  if (safeProvincia && safeMunicipio) {
+    return `${safeProvincia}, ${safeMunicipio}`;
   }
 
   if (safeProvincia) {
     return safeProvincia;
+  }
+
+  if (safeMunicipio) {
+    return safeMunicipio;
   }
 
   return safeFallback;

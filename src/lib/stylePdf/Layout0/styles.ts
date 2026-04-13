@@ -2,7 +2,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout0Styles = (opts: OptionsPDF) => {
-  const sectionSpacing = opts.spaceBetween ? 16 : 12;
+  const sectionSpacing = opts.spaceBetween ? 12 : 8;
   const accentColor = opts.primaryColor || "#000000";
 
   return StyleSheet.create({
@@ -19,14 +19,14 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       alignItems: "flex-start",
       borderBottomWidth: 1,
       borderBottomColor: "#222222",
-      paddingBottom: 8,
+      paddingBottom: 5,
     },
     headerLeft: {
       flex: 1,
     },
     headerInfo: {
       flex: 1,
-      paddingLeft: 72,
+      // paddingLeft: 72,
     },
     name: {
       fontSize: opts.headerFontSize + 2,
@@ -43,15 +43,14 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       marginTop: 2,
       fontSize: opts.bodyFontSize - 1,
       color: "#333333",
-      paddingBottom: 2,
     },
     contactItem: {
       color: "#2f2f2f",
     },
     photo: {
       position: "absolute",
-      top: 0,
-      left: 0,
+      top: -20,
+      left: -20,
       width: 60,
       height: 60,
       objectFit: "cover",
@@ -63,6 +62,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     sectionTitle: {
       fontSize: opts.bodyFontSize + 2,
+      textAlign: "center",
       fontWeight: "bold",
       textTransform: "uppercase",
       borderBottomWidth: 1,
@@ -114,10 +114,15 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       lineHeight: 1.35,
     },
     skills: {
-      margin: "auto",
-      marginTop: 4,
-      flexDirection: "column",
-      gap: 4,
+      // margin: "auto",
+      // marginTop: 4,
+      display: "flex",
+      flexWrap: "wrap",
+      flexDirection: "row",
+      justifyContent: "center",
+      // gap: 6,
+      // justifyContent: "center",
+      // gap: 4,
     },
     skill: {
       fontSize: opts.bodyFontSize,
@@ -125,11 +130,14 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     summary: {
       color: "#2f2f2f",
-      lineHeight: 1.05,
+      lineHeight: 0.8,
       textAlign: "justify",
       paddingLeft: 2,
       paddingRight: 2,
       fontStyle: "italic",
+      //text balance
+      
+      // paddingHorizontal: 4,
     },
     additionalInfoItem: {
       fontSize: opts.bodyFontSize,
@@ -158,18 +166,18 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       flexDirection: "row",
       alignItems: "flex-start",
       marginBottom: 2,
-      marginLeft: 10,
+      marginLeft: 5,
     },
     bulletDot: {
       width: 8,
       fontSize: opts.bodyFontSize + 2,
-      lineHeight: 1,
+      // lineHeight: 1,
       color: "#111111",
     },
     bulletText: {
-      flex: 1,
+      // flex: 1,
       fontSize: opts.bodyFontSize,
-      lineHeight: 1.3,
+      // lineHeight: 1.3,
       color: "#2a2a2a",
     },
   });

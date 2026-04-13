@@ -75,7 +75,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     sidebarSectionTitle: {
       fontSize: opts.bodyFontSize + 2,
       fontWeight: "bold",
-      color: "#FFFFFF",//si es rosa ponerlo en gris claro.
+       color: "#FFFFFF",
       marginTop: 14,
       marginBottom: 8,
       borderBottomWidth: 1,
@@ -104,7 +104,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
       borderBottomWidth: 1,
       borderBottomColor: "#D7DADF",
       paddingBottom: 4,
-      color: "#163A67",
+      color: opts.primaryColor === "#f6aad1"?"#000000": "#163A67",
     },
     entryContainer: {
       marginBottom: 10,

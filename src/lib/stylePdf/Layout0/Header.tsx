@@ -44,7 +44,7 @@ export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
       </View>
       {options.showPhoto && user.photo && (
         // React PDF's Image is not an HTML img element, so alt-text does not apply here.
-        // eslint-disable-next-line jsx-a11y/alt-text
+         // eslint-disable-next-line jsx-a11y/alt-text
         <Image src={user.photo} style={styles.photo} />
       )}
     </View>

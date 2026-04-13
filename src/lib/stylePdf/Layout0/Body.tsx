@@ -30,7 +30,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -106,15 +110,21 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     ? [...educationEntries].reverse()
     : educationEntries;
 
-  const certificationEntries = (user.certifications || []).map((cert, index) => (
-    <View key={index} style={styles.certificationItem}>
-      <Text style={styles.certificationTitle}>{formatCertificationTitle(cert)}</Text>
-      <Text style={styles.certificationMeta}>
-        {formatCertificationInstitution(cert)}
-        {formatCertificationDate(cert) ? ` · ${formatCertificationDate(cert)}` : ""}
-      </Text>
-    </View>
-  ));
+  const certificationEntries = (user.certifications || []).map(
+    (cert, index) => (
+      <View key={index} style={styles.certificationItem}>
+        <Text style={styles.certificationTitle}>
+          {formatCertificationTitle(cert)}
+        </Text>
+        <Text style={styles.certificationMeta}>
+          {formatCertificationInstitution(cert)}
+          {formatCertificationDate(cert)
+            ? ` · ${formatCertificationDate(cert)}`
+            : ""}
+        </Text>
+      </View>
+    ),
+  );
 
   const orderedCertifications = options.reverseCourses
     ? [...certificationEntries].reverse()
@@ -123,9 +133,11 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   return (
     <View>
       {options.showSummary && user.summary && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PERFIL PROFESIONAL</Text>
-          <Text style={styles.summary}>{user.summary}</Text>
+        <View style={[styles.section, { paddingHorizontal: 8 }]}>
+          {/* <Text style={styles.sectionTitle}>PERFIL PROFESIONAL</Text> */}
+          <View>
+            <Text style={styles.summary}>{user.summary}</Text>
+          </View>
         </View>
       )}
 
@@ -143,21 +155,14 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
         </View>
       )}
 
-      {options.showSkills && user.skills.length > 0 && (
+      {options.showCertifications && orderedCertifications.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SKILLS ADICIONALES</Text>
-          <View style={styles.skills}>
-            {user.skills.map((skill, index) => (
-              <View key={index} style={styles.bulletItem}>
-                <Text style={styles.bulletDot}>•</Text>
-                <Text style={styles.bulletText}>{skill}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
+          {orderedCertifications}
         </View>
       )}
 
-      {options.showLanguages && user.languages.length > 0 && (
+      {/* {options.showLanguages && user.languages.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>IDIOMAS</Text>
           {user.languages.map((lang, index) => (
@@ -167,23 +172,39 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
             </View>
           ))}
         </View>
-      )}
-
-      {options.showCertifications && orderedCertifications.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
-          {orderedCertifications}
-        </View>
-      )}
+      )} */}
 
       {additionalInfoLines.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>INFORMACIÓN ADICIONAL</Text>
-          {additionalInfoLines.map((item, index) => (
-            <Text key={index} style={styles.additionalInfoItem}>
-              • {item}
-            </Text>
-          ))}
+          <View style={[styles.skills, { gap: 4 }]}>
+            {additionalInfoLines.map((item, index) => (
+              <Text key={index} style={styles.additionalInfoItem}>
+                • {item}
+              </Text>
+            ))}
+            {options.showLanguages &&
+              user.languages.length > 0 &&
+              user.languages.map((lang, index) => (
+                <Text key={index} style={styles.additionalInfoItem}>
+                  • {lang.language}: {lang.level}
+                </Text>
+              ))}
+          </View>
+        </View>
+      )}
+
+      {options.showSkills && user.skills.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>HABILIDADES</Text>
+          <View style={styles.skills}>
+            {user.skills.map((skill, index) => (
+              <View key={index} style={styles.bulletItem}>
+                <Text style={styles.bulletDot}>•</Text>
+                <Text style={styles.bulletText}>{skill}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
     </View>
