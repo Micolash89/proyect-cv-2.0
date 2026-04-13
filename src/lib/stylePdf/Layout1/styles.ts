@@ -75,11 +75,11 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     sidebarSectionTitle: {
       fontSize: opts.bodyFontSize + 2,
       fontWeight: "bold",
-      color: "#FFFFFF",
+      color: "#FFFFFF",//si es rosa ponerlo en gris claro.
       marginTop: 14,
       marginBottom: 8,
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.75)",
+      borderBottomColor: "#FFFFFF",
       paddingBottom: 4,
     },
     skillItem: {
