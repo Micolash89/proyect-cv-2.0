@@ -70,7 +70,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize + 4,
       color: "#FFFFFF",
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.7)",
+      borderBottomColor: "#ffffff",
       paddingBottom: 4,
       marginBottom: 8,
     },
@@ -110,7 +110,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
     },
     entryMeta: {
       alignItems: "flex-end",
-      maxWidth: "42%",
+      // maxWidth: "42%",
     },
     institution: {
       fontWeight: "bold",
@@ -122,6 +122,14 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       color: "#748092",
       fontSize: opts.bodyFontSize - 1,
     },
+    entryHeaderDegre:{
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      // marginBottom: 4,
+    },
+
     degree: {
       fontStyle: "italic",
       fontSize: opts.bodyFontSize,
@@ -158,7 +166,11 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
     summary: {
       color: "#0F1115",
       lineHeight: 1.35,
-      marginBottom: 10,
+      marginBottom: 5,
+      fontSize: opts.bodyFontSize + 2,
+      textAlign: "justify",
+      wordBreak: "break-word",
+      paddingHorizontal: 10,
     },
     section: {
       marginBottom: 10,

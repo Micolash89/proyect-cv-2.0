@@ -4,6 +4,7 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout2Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import { buildAdditionalInfoLines } from "../utils/certifications";
 
 interface HeaderProps {
   user: UserCV;
@@ -21,6 +22,8 @@ const buildLocationLabel = (user: UserCV) => {
 
 export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
   const styles = createLayout2Styles(options);
+
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const fullNameText = options.fullName
     ? user.fullName
@@ -84,7 +87,16 @@ export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
           ))}
         </View>
       )}
-
+      {additionalInfoItems.length > 0 && (
+        <View style={[styles.sidebarSection, { marginTop: 10 }]}>
+          <Text style={styles.sidebarSectionTitle}>Información adicional</Text>
+          {additionalInfoItems.map((item, index) => (
+            <Text key={index} style={styles.sidebarListItem}>
+              {item}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 };

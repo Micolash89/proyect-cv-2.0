@@ -26,7 +26,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -57,11 +61,17 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{exp.company}</Text>
           <View style={styles.entryMeta}>
-            {experienceLocation ? <Text style={styles.location}>{experienceLocation}</Text> : null}
-            <Text style={styles.dates}>{formatDateRange(exp.startDate, exp.endDate, exp.current)}</Text>
+            {experienceLocation ? (
+              <Text style={styles.location}>{experienceLocation}</Text>
+            ) : null}
           </View>
         </View>
-        <Text style={styles.degree}>{exp.position}</Text>
+        <View style={styles.entryHeaderDegre}>
+          <Text style={styles.degree}>{exp.position}</Text>
+          <Text style={styles.dates}>
+            {formatDateRange(exp.startDate, exp.endDate, exp.current)}
+          </Text>
+        </View>
         {toBulletLines(exp.description).map((line, lineIndex) => (
           <View key={lineIndex} style={styles.bulletItem}>
             <Text style={styles.bulletDot}>•</Text>
@@ -84,24 +94,36 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{edu.institution}</Text>
           <View style={styles.entryMeta}>
-            {educationLocation ? <Text style={styles.location}>{educationLocation}</Text> : null}
-            <Text style={styles.dates}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
+            {educationLocation ? (
+              <Text style={styles.location}>{educationLocation}</Text>
+            ) : null}
           </View>
         </View>
-        <Text style={styles.degree}>{edu.degree}</Text>
+        <View style={styles.entryHeaderDegre}>
+          <Text style={styles.degree}>{edu.degree}</Text>
+          <Text style={styles.dates}>
+            {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+          </Text>
+        </View>
       </View>
     );
   });
 
-  const certificationEntries = (user.certifications || []).map((cert, index) => (
-    <View key={index} style={styles.entryContainer}>
-      <View style={styles.entryHeader}>
-        <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
-        <Text style={styles.dates}>{formatCertificationDate(cert)}</Text>
+  const certificationEntries = (user.certifications || []).map(
+    (cert, index) => (
+      <View key={index} style={styles.entryContainer}>
+        <View style={styles.entryHeader}>
+          <Text style={styles.institution}>
+            {formatCertificationTitle(cert)}
+          </Text>
+          <Text style={styles.dates}>{formatCertificationDate(cert)}</Text>
+        </View>
+        <Text style={styles.degree}>
+          {formatCertificationInstitution(cert)}
+        </Text>
       </View>
-      <Text style={styles.degree}>{formatCertificationInstitution(cert)}</Text>
-    </View>
-  ));
+    ),
+  );
 
   const additionalInfoItems = buildAdditionalInfoLines(user);
 
@@ -122,7 +144,9 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
       {options.showSummary && user.summary && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Perfil</Text>
-          <Text style={styles.summary}>{user.summary}</Text>
+          <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+            {user.summary}
+          </Text>
         </View>
       )}
 
@@ -144,18 +168,6 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
           {orderedCertifications}
-        </View>
-      )}
-
-      {additionalInfoItems.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información adicional</Text>
-          {additionalInfoItems.map((item, index) => (
-            <View key={index} style={styles.bulletItem}>
-              <Text style={styles.bulletDot}>•</Text>
-              <Text style={styles.bulletText}>{item}</Text>
-            </View>
-          ))}
         </View>
       )}
     </View>
