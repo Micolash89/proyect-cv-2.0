@@ -38,6 +38,11 @@ export function registerFonts() {
       { src: path.join(fontsPath, "Montserrat-Regular.ttf") },
       { src: path.join(fontsPath, "Montserrat-Regular.ttf"), fontWeight: "normal" },
       { src: path.join(fontsPath, "Montserrat-Bold.ttf"), fontWeight: "bold" },
+      {
+        src: path.join(fontsPath, "Montserrat-Regular.ttf"),
+        fontWeight: "normal",
+        fontStyle: "italic",
+      },
     ],
   });
 

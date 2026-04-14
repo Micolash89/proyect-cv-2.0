@@ -5,7 +5,6 @@ import { OptionsPDF } from "../definitions";
 import { createLayout2Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
 import {
-  buildAdditionalInfoLines,
   formatCertificationDate,
   formatCertificationInstitution,
   formatCertificationTitle,
@@ -124,8 +123,6 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
       </View>
     ),
   );
-
-  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const orderedExperience = options.reverseExperience
     ? [...experienceEntries].reverse()

@@ -44,7 +44,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       fontSize: opts.headerFontSize,
       textAlign: "center",
       marginBottom: 2,
-      color: "#FFFFFF",
+      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
     },
     sidebarContactGroup: {
       marginTop: 8,
@@ -54,36 +54,36 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       textAlign: "center",
       fontSize: opts.bodyFontSize + 2,
       marginBottom: 10,
-      color: "#FFFFFF",
+      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
       textTransform: "lowercase",
     },
     contactItem: {
       fontSize: opts.bodyFontSize - 1,
-      color: "#FFFFFF",
+      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "#FFFFFF",
       marginBottom: 3,
     },
     sidebarSection: {
       marginTop: 10,
     },
-    sidebarSectionTitle: {
+      sidebarSectionTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 4,
-      color: "#FFFFFF",
+      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
       borderBottomWidth: 1,
-      borderBottomColor: "#ffffff",
+      borderBottomColor:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
       paddingBottom: 4,
       marginBottom: 8,
     },
     sidebarListItem: {
       fontSize: opts.bodyFontSize,
-      color: "#FFFFFF",
+      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
       marginBottom: 3,
       lineHeight: 1.3,
     },
     skillPill: {
       alignSelf: "flex-start",
       backgroundColor: "#77849A",
-      color: "#FFFFFF",
+      color:  "#ffffff",
       borderRadius: 9,
       fontSize: opts.bodyFontSize - 2,
       paddingHorizontal: 7,
@@ -110,7 +110,6 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
     },
     entryMeta: {
       alignItems: "flex-end",
-      // maxWidth: "42%",
     },
     institution: {
       fontWeight: "bold",
@@ -127,9 +126,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "space-between",
-      // marginBottom: 4,
     },
-
     degree: {
       fontStyle: "italic",
       fontSize: opts.bodyFontSize,
