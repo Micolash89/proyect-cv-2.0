@@ -113,9 +113,13 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   const certificationEntries = (user.certifications || []).map(
     (cert, index) => (
       <View key={index} style={styles.certificationItem}>
-        <Text style={styles.certificationTitle}>
-          {formatCertificationTitle(cert)}
-        </Text>
+        <View style={styles.certificationItemHeader}>
+          <Text style={styles.certificationTitle}>
+            {formatCertificationTitle(cert)}
+          </Text>
+
+          <Text style={styles.dates}>{formatCertificationDate(cert)}</Text>
+        </View>
         <Text style={styles.certificationMeta}>
           {formatCertificationInstitution(cert)}
           {formatCertificationDate(cert)

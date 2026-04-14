@@ -142,7 +142,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     additionalInfoItem: {
       fontSize: opts.bodyFontSize,
       color: "#2a2a2a",
-      lineHeight: 1.35,
+      lineHeight: 1,
       marginBottom: 2,
     },
     languageItem: {
@@ -153,14 +153,23 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     certificationItem: {
       marginBottom: 8,
     },
+
+    certificationItemHeader:{
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      // marginBottom: 2,
+    },
+
     certificationTitle: {
       fontSize: opts.bodyFontSize + 1,
       fontWeight: "bold",
       color: "#1d1d1d",
     },
     certificationMeta: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#56657A",
+        fontWeight: "normal",
+      fontSize: opts.bodyFontSize,
+      color: "#222222",
     },
     bulletItem: {
       flexDirection: "row",

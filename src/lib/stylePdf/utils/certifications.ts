@@ -43,7 +43,7 @@ export function formatAvailabilityLabel(value?: UserCV["disponibilidad"]): strin
 export function formatCertificationDate(certification: Certification): string {
   if (certification.startMonth && certification.startYear) {
     const monthLabel = MONTH_LABELS[certification.startMonth] ?? certification.startMonth;
-    return `${monthLabel} ${certification.startYear}`;
+    return `${monthLabel} de ${certification.startYear}`;
   }
 
   if (certification.date) {

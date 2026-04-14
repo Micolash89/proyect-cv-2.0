@@ -24,6 +24,11 @@ export function registerFonts() {
       { src: path.join(fontsPath, "Roboto-Regular.ttf") },
       { src: path.join(fontsPath, "Roboto-Regular.ttf"), fontWeight: "normal" },
       { src: path.join(fontsPath, "Roboto-Bold.ttf"), fontWeight: "bold" },
+      {
+        src: path.join(fontsPath, "Roboto-Italic.ttf"),
+        fontWeight: "normal",
+        fontStyle: "italic",
+      },
     ],
   });
 
