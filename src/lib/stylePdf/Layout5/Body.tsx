@@ -86,7 +86,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
 
         {additionalInfoItems.length > 0 && (
           <View style={styles.leftSection}>
-            <Text style={styles.leftSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+            <Text style={styles.leftSectionTitle} hyphenationCallback={(word) => [word]}>INFORMACIÓN ADICIONAL</Text>
             {additionalInfoItems.map((item, index) => (
               <Text key={index} style={styles.leftText}>
                 {item}
@@ -111,38 +111,16 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
             <Text style={styles.leftSectionTitle}>IDIOMAS</Text>
             {user.languages.map((language, index) => (
               <View key={index} style={styles.languageItem}>
-                <Text style={styles.leftText}>{language.language}</Text>
+                <Text style={[styles.leftText, {marginBottom: 0}]}>{language.language}</Text>
                 <Text style={styles.leftMetaText}>{language.level.toUpperCase()}</Text>
               </View>
             ))}
           </View>
         )}
 
-        {orderedEducation.length > 0 && (
-          <View style={styles.leftSection}>
-            <Text style={styles.leftSectionTitle}>EDUCACIÓN</Text>
-            {orderedEducation.map((edu, index) => {
-              const location = formatPdfLocation({
-                localidad: edu.localidad,
-                municipio: edu.municipio,
-                provincia: edu.provincia,
-              });
-
-              return (
-                <View key={index} style={styles.courseItem}>
-                  <Text style={styles.leftText}>{edu.degree}</Text>
-                  <Text style={styles.leftMetaText}>{edu.institution}</Text>
-                  <Text style={styles.leftMetaText}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
-                  {location ? <Text style={styles.leftMetaText}>{location}</Text> : null}
-                </View>
-              );
-            })}
-          </View>
-        )}
-
         {options.showCertifications && orderedCourses.length > 0 && (
           <View style={styles.leftSection}>
-            <Text style={styles.leftSectionTitle}>CURSOS Y CERTIFICACIONES</Text>
+            <Text style={styles.leftSectionTitle} hyphenationCallback={(word) => [word]}>CURSOS Y CERTIFICACIONES</Text>
             {orderedCourses.map((course, index) => (
               <View key={index} style={styles.courseItem}>
                 <Text style={styles.leftText}>{formatCertificationTitle(course)}</Text>
@@ -158,7 +136,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
         {options.showSummary && user.summary && (
           <View style={styles.section}>
             <Text style={styles.rightSectionTitle}>PERFIL</Text>
-            <Text style={styles.summary}>{user.summary}</Text>
+            <Text style={styles.summary} hyphenationCallback={(word) => [word]}>{user.summary}</Text>
           </View>
         )}
 
@@ -184,6 +162,28 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
                       <Text style={styles.bulletText}>{line}</Text>
                     </View>
                   ))}
+                  {location ? <Text style={styles.entryLocation}>{location}</Text> : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+        {orderedEducation.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.rightSectionTitle}>EDUCACIÓN</Text>
+            {orderedEducation.map((edu, index) => {
+              const location = formatPdfLocation({
+               localidad: edu.localidad,
+                municipio: edu.municipio,
+                provincia: edu.provincia,
+              });
+
+              return (
+                <View key={index} style={styles.entryContainer}>
+                  <Text style={styles.entryMeta}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
+                  <Text style={styles.entryTitle}>{edu.degree}</Text>
+                  <Text style={styles.entryCompany}>{edu.institution}</Text>
+                  
                   {location ? <Text style={styles.entryLocation}>{location}</Text> : null}
                 </View>
               );

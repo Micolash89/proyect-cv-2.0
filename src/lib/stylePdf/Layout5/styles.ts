@@ -2,9 +2,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
-  const horizontalPadding = Math.max(14, Math.round(opts.bodyPadding * 0.4));
-  const verticalPadding = Math.max(10, Math.round(opts.bodyPadding * 0.3));
-  const headerHeight = 232;
+  const headerHeight = 220;
   const leftColumnWidth = "35%";
   const rightColumnWidth = "65%";
   const accentColor = opts.primaryColor || "#4E5054";
@@ -12,9 +10,9 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
   return StyleSheet.create({
     page: {
       fontFamily: opts.fontFamily,
-      paddingHorizontal: horizontalPadding,
-      paddingTop: verticalPadding,
-      paddingBottom: verticalPadding,
+      paddingHorizontal: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
       backgroundColor: "#F0F0F0",
     },
     topHeader: {
@@ -47,7 +45,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     firstName: {
       fontSize: opts.headerFontSize + 9,
-      fontWeight: "light",
+      fontWeight: "bold",
       letterSpacing: 3,
       marginBottom: 9,
       lineHeight: 1,
@@ -103,7 +101,8 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     leftText: {
       fontSize: opts.bodyFontSize + 1,
       marginBottom: 1,
-      color: "#FFFFFF",
+      // color: "#FFFFFF",
+       color: "#D7D8DC",
       lineHeight: 1.28,
     },
     leftMetaText: {
