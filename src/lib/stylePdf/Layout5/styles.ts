@@ -2,7 +2,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
-  const headerHeight = 220;
+  const headerHeight = 227.5;
   const leftColumnWidth = "35%";
   const rightColumnWidth = "65%";
   const accentColor = opts.primaryColor || "#4E5054";
@@ -101,7 +101,6 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     leftText: {
       fontSize: opts.bodyFontSize + 1,
       marginBottom: 1,
-      // color: "#FFFFFF",
        color: "#D7D8DC",
       lineHeight: 1.28,
     },

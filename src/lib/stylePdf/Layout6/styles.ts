@@ -14,8 +14,8 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontFamily: opts.fontFamily,
       paddingTop: pagePaddingY,
       paddingHorizontal: pagePaddingX,
-      paddingBottom: pagePaddingY,
-      lineHeight: 1.42,
+      paddingBottom: 0,
+      lineHeight: 0,
       backgroundColor: "#FFFFFF",
     },
     header: {
@@ -26,20 +26,20 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     headerLeft: {
       width: "22%",
       paddingRight: 12,
+      marginRight: 20,
     },
     headerCenter: {
       width: "78%",
-      paddingRight: headerPaddingX,
+      paddingRight: 0,
       justifyContent: "flex-start",
-      paddingTop: headerPaddingY,
-      paddingBottom: Math.max(8, Math.round(headerPaddingY * 0.75)),
+      paddingTop: 0,
     },
     profileImage: {
       width: 122,
       height: 122,
       objectFit: "cover",
       borderWidth: 1,
-      borderColor: accentColor,
+      borderColor: "#a0a0a0",
       alignSelf: "flex-start",
     },
     profileImageFallback: {
@@ -54,14 +54,15 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontSize: opts.headerFontSize + 5,
       letterSpacing: 0.4,
       color: accentColor,
+      lineHeight: 0,
     },
     contactInfo: {
       marginTop: 10,
+      lineHeight: 0.9,
       maxWidth: "95%",
     },
     contactRow: {
       flexDirection: "row",
-      marginBottom: 2,
       alignItems: "baseline",
       gap: 6,
     },
@@ -91,31 +92,32 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       letterSpacing: 0.2,
     },
     mainContent: {
-      marginTop: 4,
+      // marginTop: 4,
     },
     section: {
-      marginBottom: bodySpacing,
-      borderTopWidth: 1,
-      borderTopColor: accentColor,
+      marginBottom: 16,
+      borderTopWidth: 1.5,
+      borderTopColor: "#a0a0a0",
       paddingTop: 10,
     },
     sectionTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 5,
-      marginBottom: 8,
       color: accentColor,
       textTransform: "capitalize",
+      marginBottom: 5,
     },
     summary: {
       fontSize: opts.bodyFontSize,
       color: "#2E211A",
-      lineHeight: 1.35,
+      lineHeight: 1.50,
+      textAlign: "justify",
     },
     courseList: {
       marginTop: 2,
     },
     courseItem: {
-      marginBottom: 6,
+      // marginBottom: 6,
     },
     courseTitle: {
       fontSize: opts.bodyFontSize + 1,
@@ -128,12 +130,17 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     },
     skillList: {
       marginTop: 4,
+      flexDirection: "row",
+      flexWrap: "wrap",
     },
     skillItem: {
       fontSize: opts.bodyFontSize,
       color: "#2E211A",
       lineHeight: 1.32,
       marginBottom: 2,
+    },
+    skillBullet: {
+      color: "#a0a0a0",
     },
     timelineContainer: {
       marginTop: 2,
@@ -150,11 +157,12 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     timelineSideTitle: {
       fontSize: opts.bodyFontSize - 1,
       color: "#2B221D",
+      lineHeight: 0,
     },
     timelineSideMeta: {
       fontSize: opts.bodyFontSize - 2,
       color: "#6B625B",
-      lineHeight: 1.25,
+      lineHeight: 0.9,
     },
     timelineRail: {
       width: "6%",
@@ -166,33 +174,40 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 10,
       borderRadius: 5,
       borderWidth: 2,
-      borderColor: accentColor,
+      borderColor: "#a0a0a0",
       backgroundColor: "#FFFFFF",
       marginTop: 6,
     },
     timelineLine: {
       position: "absolute",
       width: 1,
-      backgroundColor: accentColor,
+      backgroundColor: "#a0a0a0",
       top: 15,
-      bottom: -12,
+      bottom: -20,
     },
     timelineContent: {
       flex: 1,
       paddingLeft: 10,
-      paddingBottom: 4,
+    },
+    timelineHeader: {
+      flexDirection: "row",
+      flexWrap: "wrap",
     },
     timelineTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 2,
       color: accentColor,
+      lineHeight: 0,
     },
     timelineSubtitle: {
       color: "#5C514A",
       fontSize: opts.bodyFontSize,
+      fontWeight: "bold",
+      paddingTop: 2,
+      lineHeight: 0,
     },
     timelineDescription: {
-      marginTop: 3,
+      marginTop: 6,
       color: "#2E211A",
       fontSize: opts.bodyFontSize,
       lineHeight: 1.38,
@@ -219,21 +234,24 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       height: 10,
       borderRadius: 5,
       borderWidth: 2,
-      borderColor: accentColor,
+      borderColor: "#a0a0a0",
       backgroundColor: "#FFFFFF",
-      marginTop: 5,
+      marginTop: 6,
     },
     educationLine: {
       position: "absolute",
       width: 1,
-      backgroundColor: accentColor,
+      backgroundColor: "#a0a0a0",
       top: 15,
-      bottom: -10,
+      bottom: -20,
     },
     educationTimelineContent: {
       flex: 1,
       paddingLeft: 10,
     },
+      educationConteiner: {
+        lineHeight: 0,
+      },
     educationDate: {
       fontSize: opts.bodyFontSize - 1,
       color: "#6B625B",
@@ -247,18 +265,18 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     educationSubtitle: {
       fontSize: opts.bodyFontSize,
       color: "#4B413A",
+      fontWeight: "normal",
     },
     educationLocation: {
       fontSize: opts.bodyFontSize - 1,
       color: "#6B625B",
-      marginTop: 1,
+      lineHeight: 0,
     },
     bottomSplit: {
       flexDirection: "row",
-      marginTop: 8,
       paddingTop: 10,
-      borderTopWidth: 1,
-      borderTopColor: "#D8D0CB",
+      borderTopWidth: 1.5,
+      borderTopColor: "#a0a0a0",
     },
     bottomColumn: {
       flex: 1,
@@ -267,8 +285,8 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     bottomColumnRight: {
       flex: 1,
       paddingLeft: 18,
-      borderLeftWidth: 1,
-      borderLeftColor: accentColor,
+      borderLeftWidth: 1.5,
+      borderLeftColor: "#a0a0a0",
     },
     languageItem: {
       flexDirection: "row",

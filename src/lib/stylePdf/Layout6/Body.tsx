@@ -26,7 +26,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -45,32 +49,27 @@ const toBulletLines = (text?: string) => {
 export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout6Styles(options);
 
-  const orderedExperience = options.reverseExperience ? [...user.experience].reverse() : user.experience;
-  const orderedEducation = options.reverseEducation ? [...user.education].reverse() : user.education;
+  const orderedExperience = options.reverseExperience
+    ? [...user.experience].reverse()
+    : user.experience;
+  const orderedEducation = options.reverseEducation
+    ? [...user.education].reverse()
+    : user.education;
   const additionalInfoLines = buildAdditionalInfoLines(user);
-  const orderedCourses = options.reverseCourses ? [...(user.certifications || [])].reverse() : user.certifications || [];
+  const orderedCourses = options.reverseCourses
+    ? [...(user.certifications || [])].reverse()
+    : user.certifications || [];
 
   return (
     <View style={styles.mainContent}>
       {options.showSummary && user.summary && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Perfil profesional</Text>
-          <Text style={styles.summary}>{user.summary}</Text>
+          <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+            {user.summary}
+          </Text>
         </View>
       )}
-
-        {options.showSkills && user.skills.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Habilidades</Text>
-            <View style={styles.skillList}>
-              {user.skills.map((skill, index) => (
-                <Text key={index} style={styles.skillItem}>
-                  • {skill}
-                </Text>
-              ))}
-            </View>
-          </View>
-        )}
 
       {orderedExperience.length > 0 && (
         <View style={styles.section}>
@@ -87,18 +86,44 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
               return (
                 <View key={index} style={styles.timelineEntry}>
                   <View style={styles.timelineLeft}>
-                    <Text style={styles.timelineSideTitle}>{exp.position}</Text>
-                    {location ? <Text style={styles.timelineSideMeta}>{location}</Text> : null}
+                    <Text
+                      style={styles.timelineSideTitle}
+                      hyphenationCallback={(word) => [word]}
+                    >
+                      {exp.position}
+                    </Text>
                   </View>
                   <View style={styles.timelineRail}>
                     <View style={styles.timelineDot} />
-                    {index !== orderedExperience.length - 1 ? <View style={styles.timelineLine} /> : null}
+                    {index !== orderedExperience.length - 1 ? (
+                      <View style={styles.timelineLine} />
+                    ) : null}
                   </View>
                   <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>{exp.company}</Text>
-                    <Text style={styles.timelineSubtitle}>{formatDateRange(exp.startDate, exp.endDate, exp.current)}</Text>
+                    <View style={styles.timelineHeader}>
+                      <Text style={styles.timelineTitle}>{exp.company} </Text>
+                      <Text style={styles.timelineSubtitle}>
+                        {" | " +
+                          formatDateRange(
+                            exp.startDate,
+                            exp.endDate,
+                            exp.current,
+                          )}
+                      </Text>
+                    </View>
+                    {location ? (
+                      <Text
+                        style={[styles.educationLocation, { lineHeight: 0 }]}
+                      >
+                        {location}
+                      </Text>
+                    ) : null}
                     {toBulletLines(exp.description).map((line, lineIndex) => (
-                      <Text key={lineIndex} style={styles.timelineDescription}>
+                      <Text
+                        key={lineIndex}
+                        style={[styles.timelineDescription, { lineHeight: 0 }]}
+                        hyphenationCallback={(word) => [word]}
+                      >
                         {line}
                       </Text>
                     ))}
@@ -111,7 +136,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       )}
 
       {orderedEducation.length > 0 && (
-        <View style={styles.section}>
+        <View style={[styles.section, { marginTop: 0,marginBottom: 0 }]}>
           <Text style={styles.sectionTitle}>Educación</Text>
           <View style={styles.educationTimeline}>
             {orderedEducation.map((edu, index) => {
@@ -124,16 +149,28 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
               return (
                 <View key={index} style={styles.educationTimelineEntry}>
                   <View style={styles.educationTimelineLeft}>
-                    <Text style={styles.educationDate}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
+                    <Text style={styles.educationDate}>
+                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+                    </Text>
                   </View>
                   <View style={styles.educationTimelineRail}>
                     <View style={styles.educationDot} />
-                    {index !== orderedEducation.length - 1 ? <View style={styles.educationLine} /> : null}
+                    {index !== orderedEducation.length - 1 ? (
+                      <View style={styles.educationLine} />
+                    ) : null}
                   </View>
                   <View style={styles.educationTimelineContent}>
-                    <Text style={styles.educationTitle}>{edu.degree}</Text>
-                    <Text style={styles.educationSubtitle}>{edu.institution}</Text>
-                    {location ? <Text style={styles.educationLocation}>{location}</Text> : null}
+                    <Text style={styles.educationConteiner}>
+                      <Text style={styles.educationTitle}>
+                        {edu.degree + " "}
+                      </Text>
+                      <Text style={styles.educationSubtitle}>
+                        ,{" " + edu.institution + "\n"}
+                      </Text>
+                      {location ? (
+                        <Text style={[styles.educationLocation, { lineHeight: 0, marginBottom: 0 }]}>{location}</Text>
+                      ) : null}
+                    </Text>
                   </View>
                 </View>
               );
@@ -143,27 +180,50 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       )}
 
       {options.showCertifications && orderedCourses.length > 0 && (
-        <View style={styles.section}>
+        <View style={[styles.section, { marginTop: 0 }]}>
           <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
           <View style={styles.courseList}>
             {orderedCourses.map((course, index) => (
               <View key={index} style={styles.courseItem}>
-                <Text style={styles.courseTitle}>{formatCertificationTitle(course)}</Text>
-                <Text style={styles.courseMeta}>{formatCertificationInstitution(course)}</Text>
-                <Text style={styles.courseMeta}>{formatCertificationDate(course)}</Text>
+                <Text style={styles.courseTitle}>
+                  {formatCertificationTitle(course)}
+                </Text>
+                <Text style={styles.courseMeta}>
+                  {formatCertificationInstitution(course)}
+                </Text>
+                <Text style={styles.courseMeta}>
+                  {formatCertificationDate(course)}
+                </Text>
               </View>
             ))}
           </View>
         </View>
       )}
 
-      {(additionalInfoLines.length > 0 || (options.showLanguages && user.languages.length > 0)) && (
+      {options.showSkills && user.skills.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Habilidades</Text>
+          <View style={styles.skillList}>
+            {user.skills.map((skill, index) => (
+              <Text key={index} style={styles.skillItem}>
+                <Text style={styles.skillBullet}> • </Text>
+                {skill}
+              </Text>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {(additionalInfoLines.length > 0 ||
+        (options.showLanguages && user.languages.length > 0)) && (
         <View style={styles.bottomSplit}>
           <View style={styles.bottomColumn}>
             {additionalInfoLines.length > 0 && (
               <>
                 <Text style={styles.sectionTitle}>Información adicional</Text>
-                <Text style={styles.additionalText}>{additionalInfoLines.join(". ")}</Text>
+                <Text style={styles.additionalText}>
+                  {additionalInfoLines.join(". ")}
+                </Text>
               </>
             )}
           </View>
