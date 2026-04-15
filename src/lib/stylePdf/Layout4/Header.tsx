@@ -65,10 +65,15 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
 
       {additionalInfoItems.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.leftSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+          <Text
+            style={styles.leftSectionTitle}
+            hyphenationCallback={(word) => [word]}
+          >
+            INFORMACIÓN ADICIONAL
+          </Text>
           {additionalInfoItems.map((item, index) => (
             <Text key={index} style={styles.leftText}>
-              {item}
+              • {item}
             </Text>
           ))}
         </View>
@@ -76,12 +81,27 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
 
       {options.showCertifications && orderedCourses.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.leftSectionTitle}>CURSOS Y CERTIFICACIONES</Text>
+          <Text
+            style={styles.leftSectionTitle}
+            hyphenationCallback={(word) => [word]}
+          >
+            CURSOS Y CERTIFICACIONES
+          </Text>
           {orderedCourses.map((course, index) => (
             <View key={index} style={styles.leftItemGroup}>
-              <Text style={styles.leftItemTitle}>{formatCertificationTitle(course)}</Text>
-              <Text style={styles.leftText}>{formatCertificationInstitution(course)}</Text>
-              <Text style={styles.leftMeta}>{formatCertificationDate(course)}</Text>
+              <Text
+                style={styles.leftItemTitle}
+                hyphenationCallback={(word) => [word]}
+              >
+                {" "}
+                • {formatCertificationTitle(course)}
+              </Text>
+              <Text style={[styles.leftText, { marginBottom: 0 }]}>
+                {formatCertificationInstitution(course)}
+              </Text>
+              <Text style={styles.leftMeta}>
+                {course.startMonth}/{course.startYear}
+              </Text>
             </View>
           ))}
         </View>

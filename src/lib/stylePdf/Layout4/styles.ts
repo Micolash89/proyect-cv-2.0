@@ -34,6 +34,8 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
     photoWrap: {
       marginBottom: 16,
       alignItems: "center",
+      justifyContent: "center",
+      marginHorizontal: "auto",
     },
     profileImage: {
       borderRadius: 52,
@@ -60,7 +62,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       lineHeight: 1.3,
     },
     leftMeta: {
-      fontSize: opts.bodyFontSize,
+      fontSize: opts.bodyFontSize - 1,
       color: "#657184",
       marginBottom: 2,
     },
@@ -80,10 +82,6 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       lineHeight: 1.3,
     },
     nameHeader: {
-      marginBottom: 8,
-      paddingBottom: 6,
-      borderBottomWidth: 1,
-      borderBottomColor: "#D9D9D9",
       position: "relative",
       minHeight: 72,
       justifyContent: "flex-start",
@@ -94,6 +92,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       textTransform: "uppercase",
       color: accentColor,
       fontWeight: "medium",
+      zIndex: 10,
     },
     watermarkSurname: {
       position: "absolute",
@@ -102,6 +101,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       fontFamily: "Quensialy",
       fontSize: opts.headerFontSize + 42,
       color: "#C7C7C7",
+      zIndex: 20,
     },
     section: {
       marginTop: 12,
@@ -124,18 +124,18 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize + 4,
       color: "#1D2738",
       fontWeight: "medium",
-      marginBottom: 1,
+      marginBottom: 3,
     },
     entrySubtitle: {
       fontWeight: "medium",
       fontSize: opts.bodyFontSize + 2,
       color: "#273549",
-      marginBottom: 1,
+      marginBottom: 3,
     },
     entryMeta: {
       fontSize: opts.bodyFontSize + 1,
       color: "#687488",
-      marginBottom: 2,
+      marginBottom: 6,
     },
     bulletItem: {
       flexDirection: "row",
@@ -160,6 +160,7 @@ export const createLayout4Styles = (opts: OptionsPDF) => {
       lineHeight: 1.35,
       fontSize: opts.bodyFontSize + 1,
       marginBottom: 8,
+      textAlign: "justify",
     },
   });
 };

@@ -21,7 +21,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -45,7 +49,8 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
     : user.fullName.split(" ").slice(0, 2).join(" ");
 
   const nameParts = fullNameText.trim().split(" ").filter(Boolean);
-  const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : fullNameText;
+  const surname =
+    nameParts.length > 1 ? nameParts[nameParts.length - 1] : fullNameText;
 
   const orderedExperience = options.reverseExperience
     ? [...user.experience].reverse()
@@ -65,7 +70,9 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
       {options.showSummary && user.summary && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>PERFIL</Text>
-          <Text style={styles.summary}>{user.summary}</Text>
+          <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+            {user.summary}
+          </Text>
         </View>
       )}
 
@@ -91,7 +98,12 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
                 {toBulletLines(exp.description).map((line, lineIndex) => (
                   <View key={lineIndex} style={styles.bulletItem}>
                     <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{line}</Text>
+                    <Text
+                      style={styles.bulletText}
+                      hyphenationCallback={(word) => [word]}
+                    >
+                      {line}
+                    </Text>
                   </View>
                 ))}
               </View>
