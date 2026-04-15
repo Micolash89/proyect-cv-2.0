@@ -27,16 +27,17 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
       width: 112,
       height: 112,
       borderRadius: 56,
-      borderWidth: 3,
+      // borderWidth: 3,
       borderColor: "#D3A15E",
       overflow: "hidden",
       marginRight: 16,
       backgroundColor: "#A47840",
     },
     profileImage: {
-      width: "100%",
-      height: "100%",
+      width: 112,
+      height: 112,
       objectFit: "cover",
+      objectPosition: "center",
     },
     headerTextBlock: {
       flex: 1,
@@ -57,8 +58,8 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     bodyContainer: {
       flexDirection: "row",
       paddingHorizontal: bodyPaddingX,
-      paddingTop: bodyPaddingY,
-      paddingBottom: bodyPaddingY,
+      paddingTop: bodyPaddingY-2,
+      // paddingBottom: bodyPaddingY,
     },
     leftColumn: {
       width: "35%",

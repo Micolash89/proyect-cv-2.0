@@ -27,7 +27,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -77,7 +81,9 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
       <View key={index} style={styles.entryContainer}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{exp.company}</Text>
-          <Text style={styles.dates}>{formatDateRange(exp.startDate, exp.endDate, exp.current)}</Text>
+          <Text style={styles.dates}>
+            {formatDateRange(exp.startDate, exp.endDate, exp.current)}
+          </Text>
         </View>
         <Text style={styles.degree}>{exp.position}</Text>
         {location ? <Text style={styles.location}>{location}</Text> : null}
@@ -102,7 +108,9 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
       <View key={index} style={styles.entryContainer}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{edu.institution}</Text>
-          <Text style={styles.dates}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
+          <Text style={styles.dates}>
+            {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+          </Text>
         </View>
         <Text style={styles.degree}>{edu.degree}</Text>
         {location ? <Text style={styles.location}>{location}</Text> : null}
@@ -110,19 +118,29 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
     );
   });
 
-  const certificationEntries = (user.certifications || []).map((cert, index) => (
-    <View key={index} style={styles.entryContainer}>
-      <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
-      <Text style={styles.certificationMeta}>
-        {formatCertificationInstitution(cert)}
-        {formatCertificationDate(cert) ? ` | ${formatCertificationDate(cert)}` : ""}
-      </Text>
-    </View>
-  ));
+  const certificationEntries = (user.certifications || []).map(
+    (cert, index) => (
+      <View key={index} style={styles.entryContainer}>
+        <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
+        <Text style={styles.certificationMeta}>
+          {formatCertificationInstitution(cert)}
+          {formatCertificationDate(cert)
+            ? ` | ${formatCertificationDate(cert)}`
+            : ""}
+        </Text>
+      </View>
+    ),
+  );
 
-  const orderedExperience = options.reverseExperience ? [...experienceEntries].reverse() : experienceEntries;
-  const orderedEducation = options.reverseEducation ? [...educationEntries].reverse() : educationEntries;
-  const orderedCourses = options.reverseCourses ? [...certificationEntries].reverse() : certificationEntries;
+  const orderedExperience = options.reverseExperience
+    ? [...experienceEntries].reverse()
+    : experienceEntries;
+  const orderedEducation = options.reverseEducation
+    ? [...educationEntries].reverse()
+    : educationEntries;
+  const orderedCourses = options.reverseCourses
+    ? [...certificationEntries].reverse()
+    : certificationEntries;
 
   return (
     <View style={styles.bodyContainer}>
@@ -142,7 +160,11 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
           <View style={styles.section}>
             <Text style={styles.leftSectionTitle}>HABILIDADES</Text>
             {user.skills.map((skill, index) => (
-              <Text key={index} style={styles.leftBulletItem}>
+              <Text
+                key={index}
+                style={styles.leftBulletItem}
+                hyphenationCallback={(word) => [word]}
+              >
                 · {skill}
               </Text>
             ))}
@@ -163,7 +185,12 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
 
         {additionalInfoItems.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.leftSectionTitle}>INFORMACIÓN ADICIONAL</Text>
+            <Text
+              style={styles.leftSectionTitle}
+              hyphenationCallback={(word) => [word]}
+            >
+              INFORMACIÓN ADICIONAL
+            </Text>
             {additionalInfoItems.map((item, index) => (
               <Text key={index} style={styles.leftInfoItem}>
                 {item}
@@ -177,7 +204,9 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
         {options.showSummary && user.summary && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>PERFIL</Text>
-            <Text style={styles.summary}>{user.summary}</Text>
+            <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+              {user.summary}
+            </Text>
           </View>
         )}
 
