@@ -49,6 +49,7 @@ El JSON debe tener esta estructura exacta:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio o string vacío",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio",
       "endDate": "fecha fin o string vacío"
     }
@@ -268,6 +269,7 @@ El JSON debe tener esta estructura exacta:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio o string vacío",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio o string vacío",
       "endDate": "fecha fin o string vacío"
     }

@@ -11,6 +11,10 @@ import {
   formatCertificationInstitution,
   formatCertificationTitle,
 } from "../utils/certifications";
+import {
+  formatEducationDegreeWithStatus,
+  isEducationInProgress,
+} from "../utils/educationStatus";
 
 interface BodyProps {
   user: UserCV;
@@ -70,9 +74,15 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
   const educationEntries = user.education.map((edu, index) => (
     <View key={index} style={styles.entryContainer}>
       <Text style={styles.companyName}>{edu.institution}</Text>
-      <Text style={styles.jobTitle}>{edu.degree}</Text>
+      <Text style={styles.jobTitle}>
+        {formatEducationDegreeWithStatus(edu.degree, edu.status)}
+      </Text>
       <Text style={styles.dateLocation}>
-        {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+        {formatDateRange(
+          edu.startDate,
+          edu.endDate,
+          isEducationInProgress(edu.status),
+        )}
         {formatPdfLocation({
           localidad: edu.localidad,
           municipio: edu.municipio,

@@ -67,6 +67,7 @@ import {
   yearSelectOptions,
   registroSteps,
   REGISTRO_DEFAULT_FORM_DATA,
+  EDUCATION_STATUS_OPTIONS,
 } from "@/lib/constants";
 import { buildTemplateSettingsDefaults } from "@/lib/constants/cv";
 import { validateImageFile } from "@/lib/validations/files";
@@ -284,9 +285,9 @@ function RegistroPageContent() {
           id: generateId(),
           institution: "",
           degree: "",
+          status: "complete",
           startDate: "",
           endDate: "",
-          current: false,
           provincia: "",
           municipio: "",
           localidad: "",
@@ -309,7 +310,7 @@ function RegistroPageContent() {
           ? {
               ...edu,
               [field]: value,
-              ...(field === "current" && value === true ? { endDate: "" } : {}),
+              ...(field === "status" && value === "in_progress" ? { endDate: "" } : {}),
             }
           : edu,
       );
@@ -1075,7 +1076,7 @@ function RegistroPageContent() {
                           onChange={(e) =>
                             updateEducation(edu.id, "endDate", e.target.value)
                           }
-                          disabled={edu.current}
+                          disabled={edu.status === "in_progress"}
                           className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                         />
                       </div>
@@ -1085,17 +1086,20 @@ function RegistroPageContent() {
                       {getFieldError(`education.${index}.endDate`) && (
                         <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
                       )}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={edu.current}
+                      <div>
+                        <Label>Estado del estudio *</Label>
+                        <Select
+                          value={edu.status}
                           onChange={(e) =>
-                            updateEducation(edu.id, "current", e.target.checked)
+                            updateEducation(edu.id, "status", e.target.value)
                           }
-                          className="rounded"
+                          options={EDUCATION_STATUS_OPTIONS}
+                          className={cn(getFieldError(`education.${index}.status`) && "border-red-500 focus-visible:ring-red-500")}
                         />
-                        <span className="text-sm">Estudio actual</span>
-                      </label>
+                        {getFieldError(`education.${index}.status`) && (
+                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.status`)}</p>
+                        )}
+                      </div>
                     </div>
                   ))}
                   <Button

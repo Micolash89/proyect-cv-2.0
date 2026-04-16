@@ -12,6 +12,7 @@ export type FontSize = "small" | "medium" | "large";
 export type LayoutOrder = "ascending" | "descending";
 export type IAType = "gemini" | "claude" | "groq";
 export type AvailabilityType = "fullTime" | "partTime";
+export type EducationStatus = "complete" | "in_progress" | "incomplete";
 
 export interface Settings {
   whatsappNumber: string;
@@ -45,7 +46,7 @@ export interface Education {
   degree: string;
   startDate: string;
   endDate?: string;
-  current: boolean;
+  status: EducationStatus;
   provincia?: string;
   municipio?: string;
   localidad?: string;

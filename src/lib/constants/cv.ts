@@ -1,6 +1,18 @@
-import type { CVFormDraft, TemplateSettings } from "@/types";
+import type { CVFormDraft, EducationStatus, TemplateSettings } from "@/types";
 import { getTemplateDefaultColor } from "@/lib/constants/templates";
 import { DEFAULT_OPTIONS_PDF } from "@/lib/stylePdf/definitions";
+
+export const EDUCATION_STATUS_OPTIONS = [
+  { value: "complete", label: "Completo" },
+  { value: "in_progress", label: "En curso" },
+  { value: "incomplete", label: "Incompleto" },
+] as const;
+
+export const EDUCATION_STATUS_LABELS: Record<EducationStatus, string> = {
+  complete: "Completo",
+  in_progress: "En curso",
+  incomplete: "Incompleto",
+};
 
 export function buildTemplateSettingsDefaults(primaryColor: string): TemplateSettings {
   return {

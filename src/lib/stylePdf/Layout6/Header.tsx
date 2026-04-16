@@ -27,7 +27,7 @@ const buildContactLines = (user: UserCV): ContactLine[] => {
   const birthdate = formatBirthdateForPdf(user.fechaNacimiento);
 
   return [
-    { label: "Fecha de nacimiento:", value: birthdate },
+    { label: "Nacimiento:", value: birthdate },
     { label: "Correo:", value: user.email || "" },
     { label: "Teléfono:", value: user.phone || "" },
     { label: "Dirección:", value: location },

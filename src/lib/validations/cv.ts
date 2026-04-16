@@ -1,5 +1,12 @@
 import { z } from "zod";
-import type { AvailabilityType, Certification, CVStatus, TemplateSettings, TemplateType } from "@/types";
+import type {
+  AvailabilityType,
+  Certification,
+  CVStatus,
+  EducationStatus,
+  TemplateSettings,
+  TemplateType,
+} from "@/types";
 
 const nameRegex = /^[a-zA-Z\u00C0-\u024F\s'-]+$/;
 const phoneRegex = /^[0-9+()\s-]+$/;
@@ -16,6 +23,11 @@ const TEMPLATE_VALUES: [TemplateType, ...TemplateType[]] = [
   "elegant",
 ];
 const AVAILABILITY_VALUES: [AvailabilityType, ...AvailabilityType[]] = ["fullTime", "partTime"];
+const EDUCATION_STATUS_VALUES: [EducationStatus, ...EducationStatus[]] = [
+  "complete",
+  "in_progress",
+  "incomplete",
+];
 const MONTH_VALUES = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] as const;
 
 const MONTH_LABELS: Record<string, string> = {
@@ -96,6 +108,46 @@ function optionalTextField(
 
 function normalizeCertificationField(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeEducationStatus(value: unknown, currentValue: unknown): EducationStatus {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+
+  if (normalized === "complete" || normalized === "completo") {
+    return "complete";
+  }
+
+  if (
+    normalized === "in_progress"
+    || normalized === "in progress"
+    || normalized === "en_curso"
+    || normalized === "en curso"
+    || normalized === "en_proceso"
+    || normalized === "en proceso"
+  ) {
+    return "in_progress";
+  }
+
+  if (normalized === "incomplete" || normalized === "incompleto") {
+    return "incomplete";
+  }
+
+  if (currentValue === true) {
+    return "in_progress";
+  }
+
+  return "complete";
+}
+
+function normalizeEducationInput(entry: unknown): Record<string, unknown> {
+  const education = (entry ?? {}) as Record<string, unknown>;
+  const status = normalizeEducationStatus(education.status, education.current);
+
+  return {
+    ...education,
+    status,
+    endDate: status === "in_progress" ? "" : normalizeCertificationField(education.endDate),
+  };
 }
 
 function normalizeCertificationInput(certification: Record<string, unknown>): Record<string, unknown> {
@@ -184,15 +236,17 @@ const educationSchema = z
     id: z.string().min(1, "Educación: ID inválido"),
     institution: optionalTextField("Institución", 2, 80),
     degree: optionalTextField("Título/Carrera", 2, 80),
+    status: z.enum(EDUCATION_STATUS_VALUES, {
+      message: "Estado de estudio: es obligatorio",
+    }),
     startDate: z.string().trim(),
     endDate: z.string().trim().optional(),
-    current: z.boolean().default(false),
     provincia: optionalTextField("Provincia", 2, 40).optional(),
     municipio: optionalTextField("Municipio", 2, 40).optional(),
     localidad: optionalTextField("Localidad", 2, 40).optional(),
   })
   .superRefine((value, ctx) => {
-    const effectiveEndDate = value.current ? "" : (value.endDate ?? "");
+    const effectiveEndDate = value.status === "in_progress" ? "" : (value.endDate ?? "");
 
     if (!hasValue(value.institution)) {
       ctx.addIssue({
@@ -449,6 +503,9 @@ export function buildFullName(name?: string, lastName?: string): string {
 export function normalizeCVPayload<T extends Record<string, unknown>>(payload: T): T & { name: string; lastName: string; fullName: string } {
   const nameValue = typeof payload.name === "string" ? payload.name.trim() : "";
   const lastNameValue = typeof payload.lastName === "string" ? payload.lastName.trim() : "";
+  const education = Array.isArray(payload.education)
+    ? payload.education.map((item) => normalizeEducationInput(item))
+    : payload.education;
   const certifications = Array.isArray(payload.certifications)
     ? payload.certifications.map((item) =>
         normalizeCertificationInput((item ?? {}) as Record<string, unknown>),
@@ -458,6 +515,7 @@ export function normalizeCVPayload<T extends Record<string, unknown>>(payload: T
   if (nameValue && lastNameValue) {
     return {
       ...payload,
+      education,
       certifications,
       name: nameValue,
       lastName: lastNameValue,
@@ -471,6 +529,7 @@ export function normalizeCVPayload<T extends Record<string, unknown>>(payload: T
 
   return {
     ...payload,
+    education,
     certifications,
     name,
     lastName,

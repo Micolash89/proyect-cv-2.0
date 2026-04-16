@@ -4,6 +4,10 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout4Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import {
+  formatEducationDegreeWithStatus,
+  isEducationInProgress,
+} from "../utils/educationStatus";
 
 interface BodyProps {
   user: UserCV;
@@ -125,9 +129,15 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
             return (
               <View key={index} style={styles.entryContainer}>
                 <Text style={styles.entryTitle}>{edu.institution}</Text>
-                <Text style={styles.entrySubtitle}>{edu.degree}</Text>
+                <Text style={styles.entrySubtitle}>
+                  {formatEducationDegreeWithStatus(edu.degree, edu.status)}
+                </Text>
                 <Text style={styles.entryMeta}>
-                  {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+                  {formatDateRange(
+                    edu.startDate,
+                    edu.endDate,
+                    isEducationInProgress(edu.status),
+                  )}
                   {location ? ` | ${location}` : ""}
                 </Text>
               </View>

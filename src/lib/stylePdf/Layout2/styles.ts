@@ -4,6 +4,8 @@ import { OptionsPDF } from "../definitions";
 export const createLayout2Styles = (opts: OptionsPDF) => {
   const sidebarBackground = opts.headerBackground || opts.primaryColor;
 
+  const colorOptionColor = sidebarBackground==="#F3F2E3" ? "black" : "white"
+
   return StyleSheet.create({
     page: {
       fontFamily: opts.fontFamily,
@@ -44,7 +46,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       fontSize: opts.headerFontSize,
       textAlign: "center",
       marginBottom: 2,
-      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
+      color:  colorOptionColor,
     },
     sidebarContactGroup: {
       marginTop: 8,
@@ -54,12 +56,12 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       textAlign: "center",
       fontSize: opts.bodyFontSize + 2,
       marginBottom: 10,
-      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
+      color:  colorOptionColor,
       textTransform: "lowercase",
     },
     contactItem: {
       fontSize: opts.bodyFontSize - 1,
-      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "#FFFFFF",
+      color:  colorOptionColor,
       marginBottom: 3,
     },
     sidebarSection: {
@@ -68,21 +70,21 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       sidebarSectionTitle: {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 4,
-      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
+      color:  colorOptionColor,
       borderBottomWidth: 1,
-      borderBottomColor:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
+      borderBottomColor:  colorOptionColor,
       paddingBottom: 4,
       marginBottom: 8,
     },
     sidebarListItem: {
       fontSize: opts.bodyFontSize,
-      color:  sidebarBackground==="#F3F2E3" ? "#77849A" : "white",
+      color:  colorOptionColor,
       marginBottom: 3,
       lineHeight: 1.3,
     },
     skillPill: {
       alignSelf: "flex-start",
-      backgroundColor: "#77849A",
+      backgroundColor: colorOptionColor,
       color:  "#ffffff",
       borderRadius: 9,
       fontSize: opts.bodyFontSize - 2,
@@ -159,6 +161,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize,
       lineHeight: 1.3,
       color: "#1F1F1F",
+      maxWidth: "94%",
     },
     summary: {
       color: "#0F1115",

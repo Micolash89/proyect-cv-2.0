@@ -177,9 +177,9 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
             institution: edu.institution || "",
             degree: edu.degree || "",
             field: edu.field || "",
+            status: edu.status || (edu.current ? "in_progress" : "complete"),
             startDate: edu.startDate || "",
             endDate: edu.endDate || "",
-            current: edu.current || false,
             provincia: "",
             municipio: "",
             localidad: "",
@@ -267,7 +267,7 @@ export function AITextExtractor({ onDataExtracted, className }: AITextExtractorP
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="text-sm font-medium truncate max-w-[200px]">{file?.name}</span>
+                <span className="text-sm font-medium truncate max-w-50">{file?.name}</span>
               </div>
               <button
                 type="button"

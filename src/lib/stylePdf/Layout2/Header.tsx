@@ -88,7 +88,7 @@ export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
         </View>
       )}
       {additionalInfoItems.length > 0 && (
-        <View style={[styles.sidebarSection, { marginTop: 10 }]}>
+        <View style={[styles.sidebarSection, { marginTop: 15 }]}>
           <Text style={styles.sidebarSectionTitle}>Información adicional</Text>
           {additionalInfoItems.map((item, index) => (
             <Text key={index} style={styles.sidebarListItem}>

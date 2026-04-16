@@ -11,6 +11,10 @@ import {
   formatCertificationInstitution,
   formatCertificationTitle,
 } from "../utils/certifications";
+import {
+  formatEducationDegreeWithStatus,
+  isEducationInProgress,
+} from "../utils/educationStatus";
 
 interface BodyProps {
   user: UserCV;
@@ -181,8 +185,16 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
 
               return (
                 <View key={index} style={styles.entryContainer}>
-                  <Text style={styles.entryMeta}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
-                  <Text style={styles.entryTitle}>{edu.degree}</Text>
+                  <Text style={styles.entryMeta}>
+                    {formatDateRange(
+                      edu.startDate,
+                      edu.endDate,
+                      isEducationInProgress(edu.status),
+                    )}
+                  </Text>
+                  <Text style={styles.entryTitle}>
+                    {formatEducationDegreeWithStatus(edu.degree, edu.status)}
+                  </Text>
                   <Text style={styles.entryCompany}>{edu.institution}</Text>
                   
                   {location ? <Text style={styles.entryLocation}>{location}</Text> : null}

@@ -8,9 +8,14 @@ import {
   buildAdditionalInfoLines,
   formatBirthdateForPdf,
   formatCertificationDate,
+  formatCertificationDate2,
   formatCertificationInstitution,
   formatCertificationTitle,
 } from "../utils/certifications";
+import {
+  formatEducationDegreeWithStatus,
+  isEducationInProgress,
+} from "../utils/educationStatus";
 
 interface BodyProps {
   user: UserCV;
@@ -110,10 +115,16 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{edu.institution}</Text>
           <Text style={styles.dates}>
-            {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+            {formatDateRange(
+              edu.startDate,
+              edu.endDate,
+              isEducationInProgress(edu.status),
+            )}
           </Text>
         </View>
-        <Text style={styles.degree}>{edu.degree}</Text>
+        <Text style={styles.degree}>
+          {formatEducationDegreeWithStatus(edu.degree, edu.status)}
+        </Text>
         {location ? <Text style={styles.location}>{location}</Text> : null}
       </View>
     );
@@ -125,8 +136,8 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
         <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
         <Text style={styles.certificationMeta}>
           {formatCertificationInstitution(cert)}
-          {formatCertificationDate(cert)
-            ? ` | ${formatCertificationDate(cert)}`
+          {formatCertificationDate2(cert)
+            ? ` | ${formatCertificationDate2(cert)}`
             : ""}
         </Text>
       </View>

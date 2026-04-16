@@ -130,6 +130,7 @@ los siguientes datos en formato JSON:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio",
       "endDate": "fecha fin"
     }
@@ -187,6 +188,7 @@ y extrae los siguientes datos en formato JSON:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio",
       "endDate": "fecha fin"
     }
@@ -347,6 +349,7 @@ y extrae los siguientes datos en formato JSON:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio",
       "endDate": "fecha fin"
     }
@@ -508,6 +511,7 @@ y extrae los siguientes datos en formato JSON:
       "institution": "institución",
       "degree": "título",
       "field": "campo de estudio",
+      "status": "complete | in_progress | incomplete",
       "startDate": "fecha inicio",
       "endDate": "fecha fin"
     }

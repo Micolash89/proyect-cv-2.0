@@ -10,6 +10,10 @@ import {
   formatCertificationInstitution,
   formatCertificationTitle,
 } from "../utils/certifications";
+import {
+  formatEducationDegreeWithStatus,
+  isEducationInProgress,
+} from "../utils/educationStatus";
 
 interface BodyProps {
   user: UserCV;
@@ -136,7 +140,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       )}
 
       {orderedEducation.length > 0 && (
-        <View style={[styles.section, { marginTop: 0, marginBottom: 0 }]}>
+        <View style={[styles.section, { marginTop: 0, marginBottom: 5 }]}>
           <Text style={styles.sectionTitle}>Educación</Text>
           <View style={styles.educationTimeline}>
             {orderedEducation.map((edu, index) => {
@@ -150,7 +154,11 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
                 <View key={index} style={styles.educationTimelineEntry}>
                   <View style={styles.educationTimelineLeft}>
                     <Text style={styles.educationDate}>
-                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
+                      {formatDateRange(
+                        edu.startDate,
+                        edu.endDate,
+                        isEducationInProgress(edu.status),
+                      )}
                     </Text>
                   </View>
                   <View style={styles.educationTimelineRail}>
@@ -162,7 +170,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
                   <View style={styles.educationTimelineContent}>
                     <Text style={styles.educationConteiner}>
                       <Text style={styles.educationTitle}>
-                        {edu.degree + " "}
+                        {formatEducationDegreeWithStatus(edu.degree, edu.status) + " "}
                       </Text>
                       <Text style={styles.educationSubtitle}>
                         ,{" " + edu.institution + "\n"}
@@ -188,7 +196,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
 
       {options.showCertifications && orderedCourses.length > 0 && (
         <View style={[styles.section, { marginTop: 0 }]}>
-          <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
+          <Text style={styles.sectionTitle}>Cursos y Certificaciones</Text>
 
           <View style={styles.timelineContainer}>
             {orderedCourses.map((course, index) => {

@@ -31,7 +31,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     headerCenter: {
       width: "78%",
       paddingRight: 0,
-      justifyContent: "flex-start",
+      justifyContent: "space-between",
       paddingTop: 0,
     },
     profileImage: {
@@ -75,7 +75,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     contactValue: {
       fontSize: opts.bodyFontSize,
       color: "#20120B",
-      flex: 1,
+      // flex: 1,
     },
     headerNote: {
       fontSize: opts.bodyFontSize + 2,
@@ -104,7 +104,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontWeight: "bold",
       fontSize: opts.bodyFontSize + 5,
       color: accentColor,
-      textTransform: "capitalize",
       marginBottom: 5,
     },
     summary: {

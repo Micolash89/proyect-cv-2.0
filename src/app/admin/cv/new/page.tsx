@@ -39,6 +39,7 @@ import {
   yearSelectOptions,
   registroSteps,
   ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
+  EDUCATION_STATUS_OPTIONS,
 } from "@/lib/constants";
 import {
   getTemplatePalette,
@@ -274,9 +275,9 @@ export default function AdminNewCVPage() {
           id: generateId(),
           institution: "",
           degree: "",
+          status: "complete",
           startDate: "",
           endDate: "",
-          current: false,
           provincia: "",
           municipio: "",
           localidad: "",
@@ -299,7 +300,7 @@ export default function AdminNewCVPage() {
           ? {
               ...e,
               [field]: value,
-              ...(field === "current" && value === true ? { endDate: "" } : {}),
+              ...(field === "status" && value === "in_progress" ? { endDate: "" } : {}),
             }
           : e,
       ),
@@ -1110,7 +1111,7 @@ export default function AdminNewCVPage() {
                                   e.target.value,
                                 )
                               }
-                              disabled={edu.current}
+                                disabled={edu.status === "in_progress"}
                               className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                             />
                           </div>
@@ -1120,20 +1121,20 @@ export default function AdminNewCVPage() {
                           {getFieldError(`education.${index}.endDate`) && (
                             <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
                           )}
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={edu.current}
+                          <div>
+                            <Label>Estado del estudio *</Label>
+                            <Select
+                              value={edu.status}
                               onChange={(e) =>
-                                updateEducation(
-                                  edu.id,
-                                  "current",
-                                  e.target.checked,
-                                )
+                                updateEducation(edu.id, "status", e.target.value)
                               }
+                              options={EDUCATION_STATUS_OPTIONS}
+                              className={cn(getFieldError(`education.${index}.status`) && "border-red-500 focus-visible:ring-red-500")}
                             />
-                            <span className="text-sm">Estudio actual</span>
-                          </label>
+                            {getFieldError(`education.${index}.status`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.status`)}</p>
+                            )}
+                          </div>
                         </div>
                       ))}
                       {formData.education.length === 0 && (

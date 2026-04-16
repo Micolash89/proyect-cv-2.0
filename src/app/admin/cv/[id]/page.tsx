@@ -65,6 +65,7 @@ import {
   layoutOptions,
   monthSelectOptions,
   yearSelectOptions,
+  EDUCATION_STATUS_OPTIONS,
 } from "@/lib/constants";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
@@ -789,9 +790,9 @@ export default function AdminCVPage() {
           id: generateId(),
           institution: "",
           degree: "",
+          status: "complete",
           startDate: "",
           endDate: "",
-          current: false,
           provincia: "",
           municipio: "",
           localidad: "",
@@ -818,7 +819,7 @@ export default function AdminCVPage() {
           ? {
               ...e,
               [field]: value,
-              ...(field === "current" && value === true ? { endDate: "" } : {}),
+              ...(field === "status" && value === "in_progress" ? { endDate: "" } : {}),
             }
           : e,
       ),
@@ -1589,6 +1590,7 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "endDate", e.target.value)
                       }
+                      disabled={edu.status === "in_progress"}
                       className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
                     />
                   </div>
@@ -1598,6 +1600,20 @@ export default function AdminCVPage() {
                   {getFieldError(`education.${index}.endDate`) && (
                     <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
                   )}
+                  <div>
+                    <Label>Estado del estudio *</Label>
+                    <Select
+                      value={edu.status}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "status", e.target.value)
+                      }
+                      options={EDUCATION_STATUS_OPTIONS}
+                      className={cn(getFieldError(`education.${index}.status`) && "border-red-500 focus-visible:ring-red-500")}
+                    />
+                    {getFieldError(`education.${index}.status`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.status`)}</p>
+                    )}
+                  </div>
                 </motion.div>
               ))}
               <Button variant="outline" onClick={addEducation}>
