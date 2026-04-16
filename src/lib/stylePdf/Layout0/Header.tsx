@@ -4,6 +4,7 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout0Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import { formatBirthdateForPdf } from "../utils/certifications";
 
 export interface HeaderProps {
   user: UserCV;
@@ -24,6 +25,7 @@ export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
     fallback: user.location,
   });
   const contactItems = [
+    formatBirthdateForPdf(user.fechaNacimiento),
     locationLabel,
     user.linkedin,
     user.phone,

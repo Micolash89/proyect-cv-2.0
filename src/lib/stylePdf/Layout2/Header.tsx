@@ -4,7 +4,7 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout2Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
-import { buildAdditionalInfoLines } from "../utils/certifications";
+import { buildAdditionalInfoLines, formatBirthdateForPdf } from "../utils/certifications";
 
 interface HeaderProps {
   user: UserCV;
@@ -34,7 +34,7 @@ export const Layout2Header: React.FC<HeaderProps> = ({ user, options }) => {
   const profession = user.targetJob || user.experience[0]?.position || "";
 
   const contactItems = [
-    user.fechaNacimiento,
+    formatBirthdateForPdf(user.fechaNacimiento),
     user.dni ? `DNI: ${user.dni}` : "",
     user.phone ? `Tel: ${user.phone}` : "",
     user.email || "",

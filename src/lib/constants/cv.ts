@@ -24,6 +24,7 @@ export const REGISTRO_DEFAULT_FORM_DATA: CVFormDraft = {
   fullName: "",
   phone: "",
   dni: "",
+  fechaNacimiento: "",
   email: "",
   location: "",
   links: "",

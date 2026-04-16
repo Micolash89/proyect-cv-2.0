@@ -1116,6 +1116,19 @@ export default function AdminCVPage() {
                     <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
                   )}
                 </div>
+                <div>
+                  <Label>Fecha de nacimiento (opcional)</Label>
+                  <Input
+                    type="date"
+                    value={user.fechaNacimiento || ""}
+                    onChange={(e) => updateField("fechaNacimiento", e.target.value)}
+                    max={new Date().toISOString().split("T")[0]}
+                    className={cn(getFieldError("fechaNacimiento") && "border-red-500 focus-visible:ring-red-500")}
+                  />
+                  {getFieldError("fechaNacimiento") && (
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("fechaNacimiento")}</p>
+                  )}
+                </div>
               </div>
               <div>
                 <Label>Ubicación</Label>

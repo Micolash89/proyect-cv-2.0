@@ -693,6 +693,22 @@ function RegistroPageContent() {
                           )}
                         </div>
                         <div>
+                          <Label htmlFor="fechaNacimiento">Fecha de nacimiento (opcional)</Label>
+                          <Input
+                            id="fechaNacimiento"
+                            type="date"
+                            value={formData.fechaNacimiento || ""}
+                            onChange={(e) =>
+                              updateFormData({ fechaNacimiento: e.target.value }, "fechaNacimiento")
+                            }
+                            max={new Date().toISOString().split("T")[0]}
+                            className={cn(getFieldError("fechaNacimiento") && "border-red-500 focus-visible:ring-red-500")}
+                          />
+                          {getFieldError("fechaNacimiento") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("fechaNacimiento")}</p>
+                          )}
+                        </div>
+                        <div>
                           <Label htmlFor="email">Email (opcional)</Label>
                           <Input
                             id="email"

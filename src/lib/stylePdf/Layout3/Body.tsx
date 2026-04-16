@@ -6,6 +6,7 @@ import { createLayout3Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
 import {
   buildAdditionalInfoLines,
+  formatBirthdateForPdf,
   formatCertificationDate,
   formatCertificationInstitution,
   formatCertificationTitle,
@@ -56,7 +57,7 @@ const buildInfoItems = (user: UserCV) => {
   });
 
   return [
-    user.fechaNacimiento || "",
+    formatBirthdateForPdf(user.fechaNacimiento),
     user.dni ? `DNI: ${user.dni}` : "",
     user.phone ? `Tel: ${user.phone}` : "",
     user.email || "",

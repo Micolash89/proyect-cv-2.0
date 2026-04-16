@@ -75,6 +75,7 @@ export default function AdminNewCVPage() {
     fullName: "",
     phone: "",
     dni: "",
+    fechaNacimiento: "",
     email: "",
     location: "",
     links: "",
@@ -434,6 +435,7 @@ export default function AdminNewCVPage() {
       fullName: buildFullName(splitName.name || prev.name, splitName.lastName || prev.lastName),
       phone: data.phone || prev.phone,
       email: data.email || prev.email,
+      fechaNacimiento: data.fechaNacimiento || prev.fechaNacimiento,
       location: data.location || prev.location,
       summary: data.summary || prev.summary,
       experience:
@@ -704,6 +706,21 @@ export default function AdminNewCVPage() {
                           />
                           {getFieldError("dni") && (
                             <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label>Fecha de nacimiento (opcional)</Label>
+                          <Input
+                            type="date"
+                            value={formData.fechaNacimiento || ""}
+                            onChange={(e) =>
+                              updateFormData({ fechaNacimiento: e.target.value }, "fechaNacimiento")
+                            }
+                            max={new Date().toISOString().split("T")[0]}
+                            className={cn(getFieldError("fechaNacimiento") && "border-red-500 focus-visible:ring-red-500")}
+                          />
+                          {getFieldError("fechaNacimiento") && (
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("fechaNacimiento")}</p>
                           )}
                         </div>
                         <div>

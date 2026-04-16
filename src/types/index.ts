@@ -151,6 +151,7 @@ export interface CVFormData {
   fullName: string;
   phone: string;
   email?: string;
+  fechaNacimiento?: string;
   location?: string;
   summary?: string;
   photo?: string;
@@ -175,6 +176,7 @@ export interface CVFormDraft {
   fullName: string;
   phone: string;
   dni?: string;
+  fechaNacimiento?: string;
   email?: string;
   location?: string;
   links?: string;
@@ -199,6 +201,7 @@ export interface ExtractedCVData {
   fullName: string;
   email: string;
   phone: string;
+  fechaNacimiento?: string;
   location: string;
   summary: string;
   experience: Experience[];

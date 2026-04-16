@@ -7,6 +7,7 @@ interface UserCVDoc {
   phone: string;
   fullName: string;
   email: string;
+  fechaNacimiento?: string;
   photo?: string;
   location?: string;
   linkedin?: string;
@@ -35,6 +36,7 @@ interface UserCVResponse {
   phone: string;
   fullName: string;
   email: string;
+  fechaNacimiento?: string;
   photo?: string;
   location?: string;
   linkedin?: string;
@@ -77,6 +79,7 @@ export async function createUser(data: CVFormData): Promise<UserCVResponse> {
     phone: data.phone,
     fullName: data.fullName,
     email: data.email || "",
+    fechaNacimiento: data.fechaNacimiento,
     photo: data.photo,
     location: data.location,
     linkedin: "",

@@ -61,6 +61,23 @@ export function formatCertificationInstitution(certification: Certification): st
   return certification.institution || certification.issuer || "";
 }
 
+export function formatBirthdateForPdf(value?: string): string {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(parsed);
+}
+
 export function buildAdditionalInfoLines(user: UserCV): string[] {
   return [
     user.licencia ? `Licencia de conducir: ${user.licencia}` : "",

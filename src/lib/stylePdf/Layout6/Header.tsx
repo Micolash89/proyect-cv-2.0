@@ -4,6 +4,7 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout6Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
+import { formatBirthdateForPdf } from "../utils/certifications";
 
 interface HeaderProps {
   user: UserCV;
@@ -23,8 +24,10 @@ const buildContactLines = (user: UserCV): ContactLine[] => {
     fallback: user.location,
   });
   const social = user.github || user.linkedin || user.links || "";
+  const birthdate = formatBirthdateForPdf(user.fechaNacimiento);
 
   return [
+    { label: "Fecha de nacimiento:", value: birthdate },
     { label: "Correo:", value: user.email || "" },
     { label: "Teléfono:", value: user.phone || "" },
     { label: "Dirección:", value: location },

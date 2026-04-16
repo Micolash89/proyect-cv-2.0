@@ -199,7 +199,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
                       style={styles.timelineSideTitle}
                       hyphenationCallback={(word) => [word]}
                     >
-                      {formatCertificationDate(course)}
+                      {course.startMonth }/{course.startYear}{" "}
                     </Text>
                   </View>
                   <View style={styles.timelineRail}>

@@ -156,7 +156,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     },
     timelineSideTitle: {
       fontSize: opts.bodyFontSize - 1,
-      color: "#2B221D",
+      color: "#6B625B",
       lineHeight: 0,
       paddingTop: 2,
     },
@@ -257,6 +257,8 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize - 1,
       color: "#6B625B",
       marginBottom: 1,
+      lineHeight: 0,
+      paddingTop: 2,
     },
     educationTitle: {
       fontSize: opts.bodyFontSize + 1,

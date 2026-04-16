@@ -6,6 +6,7 @@ import { createLayout4Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
 import {
   buildAdditionalInfoLines,
+  formatBirthdateForPdf,
   formatCertificationDate,
   formatCertificationInstitution,
   formatCertificationTitle,
@@ -29,7 +30,7 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
   const styles = createLayout4Styles(options);
 
   const contactItems = [
-    user.fechaNacimiento,
+    formatBirthdateForPdf(user.fechaNacimiento),
     user.dni ? `DNI: ${user.dni}` : "",
     user.phone ? `Tel: ${user.phone}` : "",
     user.email || "",

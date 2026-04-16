@@ -364,6 +364,12 @@ export const cvFormValidationSchema = z
       .trim()
       .regex(/^$|^[0-9]{7,8}$/, "DNI: debe contener 7 u 8 números")
       .optional(),
+    fechaNacimiento: z
+      .string()
+      .trim()
+      .regex(/^$|^\d{4}-\d{2}-\d{2}$/, "Fecha de nacimiento: formato inválido")
+      .refine((value) => !hasValue(value) || !isFutureDate(value), "Fecha de nacimiento: no puede ser posterior a hoy")
+      .optional(),
     location: optionalTextField("Ubicación", 2, 80).optional(),
     links: optionalTextField("Links", 5, 400).optional(),
     photo: z.string().trim().optional(),
