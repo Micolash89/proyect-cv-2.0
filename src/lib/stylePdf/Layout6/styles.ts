@@ -148,7 +148,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     timelineEntry: {
       flexDirection: "row",
       marginBottom: 8,
-      minHeight: 64,
+      // minHeight: 64,
     },
     timelineLeft: {
       width: "16%",
@@ -158,6 +158,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize - 1,
       color: "#2B221D",
       lineHeight: 0,
+      paddingTop: 2,
     },
     timelineSideMeta: {
       fontSize: opts.bodyFontSize - 2,
@@ -202,7 +203,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     timelineSubtitle: {
       color: "#5C514A",
       fontSize: opts.bodyFontSize,
-      fontWeight: "bold",
+      fontWeight: "normal",
       paddingTop: 2,
       lineHeight: 0,
     },
@@ -218,7 +219,7 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     educationTimelineEntry: {
       flexDirection: "row",
       marginBottom: 8,
-      minHeight: 44,
+      // minHeight: 44,
     },
     educationTimelineLeft: {
       width: "15%",

@@ -136,7 +136,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       )}
 
       {orderedEducation.length > 0 && (
-        <View style={[styles.section, { marginTop: 0,marginBottom: 0 }]}>
+        <View style={[styles.section, { marginTop: 0, marginBottom: 0 }]}>
           <Text style={styles.sectionTitle}>Educación</Text>
           <View style={styles.educationTimeline}>
             {orderedEducation.map((edu, index) => {
@@ -168,7 +168,14 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
                         ,{" " + edu.institution + "\n"}
                       </Text>
                       {location ? (
-                        <Text style={[styles.educationLocation, { lineHeight: 0, marginBottom: 0 }]}>{location}</Text>
+                        <Text
+                          style={[
+                            styles.educationLocation,
+                            { lineHeight: 0, marginBottom: 0 },
+                          ]}
+                        >
+                          {location}
+                        </Text>
                       ) : null}
                     </Text>
                   </View>
@@ -182,20 +189,38 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       {options.showCertifications && orderedCourses.length > 0 && (
         <View style={[styles.section, { marginTop: 0 }]}>
           <Text style={styles.sectionTitle}>Cursos y certificaciones</Text>
-          <View style={styles.courseList}>
-            {orderedCourses.map((course, index) => (
-              <View key={index} style={styles.courseItem}>
-                <Text style={styles.courseTitle}>
-                  {formatCertificationTitle(course)}
-                </Text>
-                <Text style={styles.courseMeta}>
-                  {formatCertificationInstitution(course)}
-                </Text>
-                <Text style={styles.courseMeta}>
-                  {formatCertificationDate(course)}
-                </Text>
-              </View>
-            ))}
+
+          <View style={styles.timelineContainer}>
+            {orderedCourses.map((course, index) => {
+              return (
+                <View key={index} style={styles.timelineEntry}>
+                  <View style={styles.timelineLeft}>
+                    <Text
+                      style={styles.timelineSideTitle}
+                      hyphenationCallback={(word) => [word]}
+                    >
+                      {formatCertificationDate(course)}
+                    </Text>
+                  </View>
+                  <View style={styles.timelineRail}>
+                    <View style={styles.timelineDot} />
+                    {index !== orderedCourses.length - 1 ? (
+                      <View style={styles.timelineLine} />
+                    ) : null}
+                  </View>
+                  <View style={styles.timelineContent}>
+                    <View style={styles.timelineHeader}>
+                      <Text style={styles.timelineTitle}>
+                        {formatCertificationTitle(course)}{" "}
+                      </Text>
+                      <Text style={styles.timelineSubtitle}>
+                        {" | " + formatCertificationInstitution(course)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         </View>
       )}
