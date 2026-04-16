@@ -7,6 +7,7 @@ import { formatPdfLocation } from "../utils/location";
 import {
   buildAdditionalInfoLines,
   formatCertificationDate,
+  formatCertificationDate2,
   formatCertificationInstitution,
   formatCertificationTitle,
 } from "../utils/certifications";
@@ -26,7 +27,11 @@ const parseDate = (dateStr: string | undefined) => {
   }
 };
 
-const formatDateRange = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+const formatDateRange = (
+  startDate?: string,
+  endDate?: string,
+  isCurrent?: boolean,
+) => {
   const start = parseDate(startDate);
   const end = isCurrent ? "Actualidad" : parseDate(endDate);
   if (start && end) return `${start} - ${end}`;
@@ -55,7 +60,9 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
           : ""}
       </Text>
       {exp.description && (
-        <Text style={styles.description}>• {exp.description}</Text>
+        <Text style={styles.description} hyphenationCallback={(word) => [word]}>
+          • {exp.description}
+        </Text>
       )}
     </View>
   ));
@@ -81,22 +88,28 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
     </View>
   ));
 
-  const certificationEntries = (user.certifications || []).map((cert, index) => (
-    <View key={index} style={styles.certificationItem}>
-      <Text style={styles.certificationName}>{formatCertificationTitle(cert)}</Text>
-      <Text style={styles.certificationIssuer}>{formatCertificationInstitution(cert)}</Text>
-      <Text style={styles.certificationDate}>{formatCertificationDate(cert)}</Text>
-    </View>
-  ));
+  const certificationEntries = (user.certifications || []).map(
+    (cert, index) => (
+      <View key={index} style={styles.certificationItem}>
+        <Text style={styles.certificationName}>
+          {formatCertificationTitle(cert)}
+        </Text>
+        <Text style={styles.certificationIssuer}>
+          {formatCertificationInstitution(cert)}
+        </Text>
+        <Text style={styles.certificationDate}>
+          {formatCertificationDate2(cert)}
+        </Text>
+      </View>
+    ),
+  );
 
-  const additionalInfoItems = buildAdditionalInfoLines(user);
-
-  const orderedExperience = options.reverseExperience 
-    ? [...experienceEntries].reverse() 
+  const orderedExperience = options.reverseExperience
+    ? [...experienceEntries].reverse()
     : experienceEntries;
 
-  const orderedEducation = options.reverseEducation 
-    ? [...educationEntries].reverse() 
+  const orderedEducation = options.reverseEducation
+    ? [...educationEntries].reverse()
     : educationEntries;
 
   const orderedCertifications = options.reverseCourses
@@ -108,7 +121,9 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
       {options.showSummary && user.summary && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>PERFIL PROFESIONAL</Text>
-          <Text style={styles.summary}>{user.summary}</Text>
+          <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+            {user.summary}
+          </Text>
         </View>
       )}
 
@@ -130,17 +145,6 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>CURSOS Y CERTIFICACIONES</Text>
           {orderedCertifications}
-        </View>
-      )}
-
-      {additionalInfoItems.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMACIÓN ADICIONAL</Text>
-          {additionalInfoItems.map((item, index) => (
-            <Text key={index} style={styles.description}>
-              • {item}
-            </Text>
-          ))}
         </View>
       )}
     </View>

@@ -25,8 +25,8 @@ export const Layout0Header: React.FC<HeaderProps> = ({ user, options }) => {
     fallback: user.location,
   });
   const contactItems = [
-    formatBirthdateForPdf(user.fechaNacimiento),
     locationLabel,
+    formatBirthdateForPdf(user.fechaNacimiento),
     user.linkedin,
     user.phone,
     user.email,

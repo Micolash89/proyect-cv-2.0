@@ -53,6 +53,19 @@ export function formatCertificationDate(certification: Certification): string {
   return certification.startYear || "";
 }
 
+export function formatCertificationDate2(certification: Certification): string {
+  if (certification.startMonth && certification.startYear) {
+    const monthLabel = MONTH_LABELS[certification.startMonth] ?? certification.startMonth;
+    return `${monthLabel} - ${certification.startYear}`;
+  }
+
+  if (certification.date) {
+    return parseLegacyYear(certification.date);
+  }
+
+  return certification.startYear || "";
+}
+
 export function formatCertificationTitle(certification: Certification): string {
   return certification.title || certification.name || "";
 }

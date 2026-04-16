@@ -4,7 +4,11 @@ import { UserCV } from "@/types";
 import { OptionsPDF } from "../definitions";
 import { createLayout1Styles } from "./styles";
 import { formatPdfLocation } from "../utils/location";
-import { formatBirthdateForPdf } from "../utils/certifications";
+import {
+  buildAdditionalInfoLines,
+  formatBirthdateForPdf,
+} from "../utils/certifications";
+import { info } from "console";
 
 interface HeaderProps {
   user: UserCV;
@@ -22,6 +26,8 @@ const buildLocationLabel = (user: UserCV) => {
 
 export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
   const styles = createLayout1Styles(options);
+
+  const additionalInfoItems = buildAdditionalInfoLines(user);
 
   const fullNameText = options.fullName
     ? user.fullName
@@ -48,7 +54,7 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
           <Image src={user.photo} style={styles.profileImage} />
         </View>
       )}
-      
+
       <Text style={styles.sidebarName}>{firstName}</Text>
       <Text style={styles.sidebarName}>{lastName}</Text>
       {options.showOrientation && profession ? (
@@ -67,7 +73,9 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
         <>
           <Text style={styles.sidebarSectionTitle}>HABILIDADES</Text>
           {user.skills.map((skill, index) => (
-            <Text key={index} style={styles.skillItem}>• {skill}</Text>
+            <Text key={index} style={styles.skillItem}>
+              • {skill}
+            </Text>
           ))}
         </>
       )}
@@ -78,6 +86,22 @@ export const Layout1Header: React.FC<HeaderProps> = ({ user, options }) => {
           {user.languages.map((lang, index) => (
             <Text key={index} style={styles.skillItem}>
               • {lang.language} - {lang.level}
+            </Text>
+          ))}
+        </>
+      )}
+
+      {additionalInfoItems.length > 0 && (
+        <>
+          <Text
+            style={styles.sidebarSectionTitle}
+            hyphenationCallback={(word) => [word]}
+          >
+            INFORMACIÓN ADICIONAL
+          </Text>
+          {additionalInfoItems.map((item, index) => (
+            <Text key={index} style={styles.skillItem}>
+              • {item}
             </Text>
           ))}
         </>

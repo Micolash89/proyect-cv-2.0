@@ -112,17 +112,19 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     companyName: {
       fontSize: opts.bodyFontSize + 1,
       fontWeight: "bold",
-      color: "#24364A",
+      // color: "#24364A",
+      color: opts.primaryColor === "#f6aad1"?"#000000": "#24364A",
     },
     jobTitle: {
       fontSize: opts.bodyFontSize,
       fontWeight: "bold",
-      color: "#31475C",
+      // color: "#31475C",
+      color: opts.primaryColor === "#f6aad1"?"#8a7e7e": "#31475C",
       marginBottom: 1,
     },
     dateLocation: {
       fontSize: opts.bodyFontSize - 1,
-      color: "#70829A",
+      color: opts.primaryColor === "#f6aad1"?"#888888": "#70829A",
       marginBottom: 2,
     },
     description: {
@@ -144,7 +146,6 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize + 1,
       color: "#3F4B5A",
       lineHeight: 1.4,
-      marginBottom: 10,
     },
     additionalInfo: {
       color: "#FFFFFF",
@@ -156,17 +157,20 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
       marginBottom: 8,
     },
     certificationName: {
-      fontSize: opts.bodyFontSize,
-      color: "#24364A",
+      fontSize: opts.bodyFontSize + 1,
+      color: opts.primaryColor === "#f6aad1"?"#000000": "#24364A",
       fontWeight: "bold",
     },
     certificationIssuer: {
-      fontSize: opts.bodyFontSize - 1,
-      color: "#56657A",
+      fontSize: opts.bodyFontSize,
+      fontWeight: "bold",
+      color: opts.primaryColor === "#f6aad1"?"#8a7e7e": "#56657A",
+      marginBottom: 1,
     },
     certificationDate: {
       fontSize: opts.bodyFontSize - 1,
-      color: "#70829A",
+      color: opts.primaryColor === "#f6aad1"?"#888888": "#70829A",
+      marginBottom: 2,
     },
   });
 };

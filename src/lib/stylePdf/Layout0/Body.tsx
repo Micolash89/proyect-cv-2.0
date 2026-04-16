@@ -75,7 +75,7 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       {toBulletLines(exp.description).map((line, lineIndex) => (
         <View key={lineIndex} style={styles.bulletItem}>
           <Text style={styles.bulletDot}>•</Text>
-          <Text style={styles.bulletText}>{line}</Text>
+          <Text style={[styles.bulletText, { maxWidth: "95%" }]}>{line}</Text>
         </View>
       ))}
     </View>
@@ -122,9 +122,6 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
         </View>
         <Text style={styles.certificationMeta}>
           {formatCertificationInstitution(cert)}
-          {formatCertificationDate(cert)
-            ? ` · ${formatCertificationDate(cert)}`
-            : ""}
         </Text>
       </View>
     ),
@@ -138,7 +135,6 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
     <View>
       {options.showSummary && user.summary && (
         <View style={[styles.section, { paddingHorizontal: 8 }]}>
-          {/* <Text style={styles.sectionTitle}>PERFIL PROFESIONAL</Text> */}
           <View>
             <Text style={styles.summary}>{user.summary}</Text>
           </View>
@@ -165,18 +161,6 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
           {orderedCertifications}
         </View>
       )}
-
-      {/* {options.showLanguages && user.languages.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>IDIOMAS</Text>
-          {user.languages.map((lang, index) => (
-            <View key={index} style={styles.languageItem}>
-              <Text>{lang.language}</Text>
-              <Text style={styles.dates}>{lang.level}</Text>
-            </View>
-          ))}
-        </View>
-      )} */}
 
       {additionalInfoLines.length > 0 && (
         <View style={styles.section}>

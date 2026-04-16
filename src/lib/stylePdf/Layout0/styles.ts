@@ -39,7 +39,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "center",
-      gap: 4,
+      gap: 2,
       marginTop: 2,
       fontSize: opts.bodyFontSize - 1,
       color: "#333333",
@@ -85,7 +85,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
     },
     institution: {
       fontWeight: "bold",
-      fontSize: opts.bodyFontSize + 1,
+      fontSize: opts.bodyFontSize -1,
       textTransform: "uppercase",
       color: "#1d1d1d",
     },
@@ -93,7 +93,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize - 1,
       color: "#2f2f2f",
       fontWeight: "bold",
-      fontStyle: "italic",
+      // fontStyle: "italic",
     },
     degree: {
       fontWeight: "normal",
@@ -188,6 +188,7 @@ export const createLayout0Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize,
       // lineHeight: 1.3,
       color: "#2a2a2a",
+      // width: "95%",
     },
   });
 };
