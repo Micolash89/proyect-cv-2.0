@@ -25,23 +25,53 @@ export async function generateProfile(
     .map((e) => `${e.position} en ${e.company}: ${e.description}`)
     .join("\n");
 
+  const hasExperience = experience.length > 0 && experience.some(e => e.description?.trim());
+
   const prompt = `
-Eres un experto en currículums y perfiles profesionales. Basándote en la siguiente experiencia laboral y skills, 
-genera un perfil profesional atractivo y conciso para un CV.
+Eres un experto en CVs ATS-optimizados siguiendo estándares Harvard University.
+Genera un perfil profesional que pase filtros de sistemas ATS y destaque fortalezas.
 
-${targetJob ? `Aspiración profesional: ${targetJob}` : ""}
+${targetJob ? `Puesto aspirado: ${targetJob}` : ""}
 
-Experiencia laboral:
-${experienceText}
+${hasExperience ? `Experiencia laboral:\n${experienceText}` : "Sin experiencia laboral registrada"}
 
-Skills: ${skills.join(", ")}
+Skills clave: ${skills.length > 0 ? skills.join(", ") : "Sin skills registrados"}
 
-El perfil debe:
-- Ser de 3-4 oraciones
-- Destacar fortalezas y logros
-- Ser profesional pero atractivo
-- Estar en español
-- No incluir datos personales adicionales
+ESTÁNDARES HARVARD - DIRECTRICES OBLIGATORIAS:
+✓ ESPECÍFICO, no general - frases concretas, no vagas
+✓ ACTIVO, no pasivo - comienza con verbos de acción fuertes
+✓ EXPRESAR, no impresionar - profesional y claro
+✓ ARTICULADO - preciso y profesional
+✓ BASADO EN HECHOS - información verificable, sin métricas inventadas
+✓ PARA ESCANEADORES RÁPIDOS - estructura clara, palabras clave ATS
+
+VERBOS DE LIDERAZGO Y COMUNICACIÓN PARA PERFILES:
+Achieved, Coordinated, Directed, Implemented, Led, Managed, Orchestrated, Spearheaded, Supervised, Articulated, Communicated, Presented, Drafted, Established
+
+PALABRAS CLAVE ATS (incluir naturalmente):
+- Palabras relevantes al puesto ${targetJob ? `(${targetJob})` : ""}
+- Términos técnicos si aplican
+- Competencias blandas: Leadership, Communication, Problem-solving, Collaboration, Adaptability, Strategic thinking
+
+ESTRUCTURA RECOMENDADA:
+Máximo 4 renglones (~150-180 palabras total). Comienza con logro o responsabilidad principal. Termina con disposición/valor agregado.
+
+Si TIENE experiencia clara:
+- Resaltar 2-3 logros o responsabilidades principales
+- Usar verbos Harvard como Achieved, Directed, Managed, Coordinated
+- Resultado/impacto verificable
+
+Si NO tiene experiencia o muy reciente:
+- Perfil orientado a "Profesional en búsqueda de primera oportunidad"
+- Énfasis en soft skills, disposición de aprendizaje, potencial
+- Mentar capacidad de adaptarse y crecer en el rol
+
+El resultado debe:
+- Devolver SOLO el perfil (sin introducciones)
+- Usar lenguaje profesional y articulado
+- NO inventar métricas ni porcentajes
+- NO usar pronombres personales
+- Ser específico y orientado al rol/puesto
 `;
 
   const result = await model.generateContent(prompt);
@@ -74,20 +104,39 @@ export async function generateSkills(
     .map((e) => `${e.degree} en ${e.institution}`)
     .join("\n");
 
+  const hasExperience = experience.length > 0 && experience.some(e => e.position?.trim());
+
   const prompt = `
-Eres un experto en recursos humanos. Basándote en la siguiente experiencia laboral y educación,
-genera una lista de 5-6 skills genéricos y relevantes para un CV.
+Eres un experto en recursos humanos especializado en CVs Harvard-estándar.
+Genera una lista de EXACTAMENTE 6 skills más relevantes, priorizando soft skills según experiencia.
 
-${targetJob ? `El puesto aspirado es: ${targetJob}` : ""}
+${targetJob ? `Puesto aspirado: ${targetJob}` : ""}
 
-Experiencia laboral:
-${experienceText}
+${experienceText ? `Experiencia laboral:\n${experienceText}` : "Sin experiencia laboral"}
 
-Educación:
-${educationText}
+${educationText ? `Educación:\n${educationText}` : "Sin educación registrada"}
 
-Responde SOLO con un array JSON de strings, sin texto adicional.
-Ejemplo: ["Gestión de proyectos", "Trabajo en equipo", "Comunicación", "Análisis de datos", "Liderazgo", "Planificación"]
+CATEGORÍAS HARVARD DE SKILLS:
+
+SOFT SKILLS (Priorizar si sin experiencia):
+- Comunicación, Trabajo en equipo, Liderazgo, Adaptabilidad
+- Resolución de problemas, Pensamiento crítico
+- Gestión del tiempo, Responsabilidad, Proactividad, Empatía
+- Colaboración, Negociación, Persuasión, Facilitación
+
+HABILIDADES TÉCNICAS (Si hay experiencia clara):
+- Análisis de datos, Programación, Diseño
+- Marketing digital, Gestión de proyectos
+- Cualquier técnica específica del puesto
+
+INSTRUCCIONES CRÍTICAS:
+- Generar EXACTAMENTE 6 skills (ni más, ni menos)
+- Si HAY experiencia clara (>1 año): 3-4 técnicos + 2-3 soft skills balanceados
+- Si NO hay experiencia o muy reciente: 5-6 SOFT SKILLS prioritarios
+- NO inventar skills ficticios
+- Usar lenguaje específico, no genérico
+- Responde SOLO con JSON array, sin explicaciones.
+- Formato exacto: ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6"]
 `;
 
   const result = await model.generateContent(prompt);
@@ -96,13 +145,14 @@ Ejemplo: ["Gestión de proyectos", "Trabajo en equipo", "Comunicación", "Análi
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed.slice(0, 6) : ["Comunicación", "Trabajo en equipo", "Liderazgo", "Adaptabilidad", "Proactividad", "Pensamiento crítico"];
     }
   } catch {
-    return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+    return ["Comunicación", "Trabajo en equipo", "Liderazgo", "Adaptabilidad", "Proactividad", "Pensamiento crítico"];
   }
   
-  return ["Comunicación", "Trabajo en equipo", "Responsabilidad", "Proactividad", "Gestión del tiempo"];
+  return ["Comunicación", "Trabajo en equipo", "Liderazgo", "Adaptabilidad", "Proactividad", "Pensamiento crítico"];
 }
 
 export async function improveText(text: string): Promise<string> {
@@ -120,19 +170,38 @@ export async function improveText(text: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: AIProvider.GEMINI });
 
   const prompt = `
-Mejora la siguiente descripción de funciones laborales para un CV. 
-Hazla más profesional, impactante y orientada a logros. 
-Mantén el mismo significado pero usa mejor vocabulario y estructura.
+Mejora la siguiente descripción de funciones laborales para un CV profesional.
+Aplica los estándares de currículum recomendados por Harvard University.
 
 Descripción actual:
 ${text}
 
+DIRECTRICES HARVARD (OBLIGATORIAS):
+- ESPECÍFICO, no general - evita frases vagas como "responsable de"
+- ACTIVO, no pasivo - comienza con verbos de acción fuertes
+- EXPRESAR, no impresionar - claro y profesional, sin flowery language
+- ARTICULADO, no redundante - preciso y directo
+- BASADO EN HECHOS - información verificable, sin métricas inventadas
+- PARA ESCANEADORES RÁPIDOS - párrafo conciso, sin saltos de línea
+
+VERBOS DE ACCIÓN RECOMENDADOS POR HARVARD:
+Liderazgo: Coordinated, Implemented, Achieved, Spearheaded, Directed, Led, Organized, Managed, Orchestrated, Supervised
+Comunicación: Articulated, Communicated, Presented, Explained, Drafted, Wrote, Negotiated, Persuaded, Liaised
+Organización: Structured, Planned, Executed, Systematized, Consolidated, Arranged
+Técnico: Developed, Designed, Engineered, Optimized, Programmed, Built, Assembled, Devised
+Investigación: Analyzed, Investigated, Examined, Evaluated, Determined, Identified, Collected, Researched
+Cuantitativo: Calculated, Managed, Optimized, Improved, Increased, Reduced, Streamlined, Maximized, Minimized
+
+ESTRUCTURA RECOMENDADA:
+[Verbo fuerte] [Objeto/Responsabilidad] [Contexto/Coordinaciones], [Resultado/Impacto verificable]
+
 El resultado debe:
-- Estar en español
-- Ser más conciso pero con más impacto
-- Usar verbos de acción
-- Destacar logros y responsabilidades
-- Mantener 2-3 oraciones máximo
+- Ser UN SOLO PÁRRAFO SIN SALTOS DE LÍNEA (~200-250 caracteres máximo)
+- Usar verbos Harvard del catálogo anterior
+- NO inventar métricas ni porcentajes (ej: "incrementó 25%")
+- NO usar pronombres personales (yo, mi, mío)
+- Mantener lenguaje profesional, articulado y específico
+- Devuelve SOLO el texto mejorado, sin comillas ni introducciones.
 `;
 
   const result = await model.generateContent(prompt);
