@@ -78,7 +78,12 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
         {toBulletLines(exp.description).map((line, lineIndex) => (
           <View key={lineIndex} style={styles.bulletItem}>
             <Text style={styles.bulletDot}>•</Text>
-            <Text style={styles.bulletText} hyphenationCallback={(word) => [word]}>{line}</Text>
+            <Text
+              style={styles.bulletText}
+              hyphenationCallback={(word) => [word]}
+            >
+              {line}
+            </Text>
           </View>
         ))}
       </View>

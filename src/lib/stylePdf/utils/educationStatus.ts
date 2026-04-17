@@ -45,3 +45,8 @@ export function formatEducationDegreeWithStatus(degree: string, status: unknown)
 
   return `${cleanDegree} (${label})`;
 }
+export function formatEducationDegreeWithoutStatus(degree: string): string {
+  const cleanDegree = typeof degree === "string" ? degree.trim() : "";
+
+  return `${cleanDegree}`;
+}

@@ -2,7 +2,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 import { OptionsPDF } from "../definitions";
 
 export const createLayout5Styles = (opts: OptionsPDF) => {
-  const headerHeight = 227.5;
+  const headerHeight = 220;
   const leftColumnWidth = "35%";
   const rightColumnWidth = "65%";
   const accentColor = opts.primaryColor || "#4E5054";
@@ -68,6 +68,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     contentRow: {
       flexDirection: "row",
       width: "100%",
+      flex: 1,
     },
     leftColumn: {
       width: leftColumnWidth,
@@ -79,7 +80,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     },
     rightColumn: {
       width: rightColumnWidth,
-      backgroundColor: "#F5F5F5",
+      backgroundColor: "#ffffff",
       paddingTop: 12,
       paddingHorizontal: 18,
       paddingBottom: 8,
@@ -99,10 +100,16 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
       textTransform: "uppercase",
     },
     leftText: {
-      fontSize: opts.bodyFontSize + 1,
+      fontSize: opts.bodyFontSize,
       marginBottom: 1,
-       color: "#D7D8DC",
+      color: "#D7D8DC",
       lineHeight: 1.28,
+    },
+    leftMetaContainer: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between"
     },
     leftMetaText: {
       fontSize: opts.bodyFontSize,
@@ -134,27 +141,31 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
     entryContainer: {
       marginBottom: 10,
     },
+    conteinerExperienceHeader: {
+      marginBottom: 2,
+    },
+    entryHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
     entryTitle: {
       fontSize: opts.bodyFontSize + 4,
       fontWeight: "bold",
-      marginBottom: 1,
       color: "#0A1019",
     },
     entryCompany: {
-      fontSize: opts.bodyFontSize + 2,
-      marginBottom: 1,
+      fontSize: opts.bodyFontSize + 1,
       color: "#121C2B",
       fontWeight: "medium",
     },
     entryMeta: {
-      fontSize: opts.bodyFontSize + 1,
-      color: "#394556",
-      marginBottom: 1,
+      fontSize: opts.bodyFontSize - 1,
+      color: "#5C6778",
     },
     entryLocation: {
-      fontSize: opts.bodyFontSize + 1,
+      fontSize: opts.bodyFontSize - 1,
       color: "#5C6778",
-      marginTop: 2,
       marginBottom: 1,
     },
     bulletItem: {

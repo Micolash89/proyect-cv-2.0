@@ -4,9 +4,6 @@ import { OptionsPDF } from "../definitions";
 export const createLayout6Styles = (opts: OptionsPDF) => {
   const pagePaddingX = Math.max(16, Math.round(opts.padding * 0.5));
   const pagePaddingY = Math.max(14, Math.round(opts.padding * 0.4));
-  const headerPaddingX = Math.max(10, Math.round(opts.headerPadding * 0.28));
-  const headerPaddingY = Math.max(12, Math.round(opts.headerPadding * 0.3));
-  const bodySpacing = opts.spaceBetween ? 16 : 12;
   const accentColor = opts.primaryColor || "#2D160C";
 
   return StyleSheet.create({
@@ -75,7 +72,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     contactValue: {
       fontSize: opts.bodyFontSize,
       color: "#20120B",
-      // flex: 1,
     },
     headerNote: {
       fontSize: opts.bodyFontSize + 2,
@@ -92,7 +88,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       letterSpacing: 0.2,
     },
     mainContent: {
-      // marginTop: 4,
     },
     section: {
       marginBottom: 16,
@@ -116,7 +111,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
       marginTop: 2,
     },
     courseItem: {
-      // marginBottom: 6,
     },
     courseTitle: {
       fontSize: opts.bodyFontSize + 1,
@@ -147,7 +141,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     timelineEntry: {
       flexDirection: "row",
       marginBottom: 8,
-      // minHeight: 64,
     },
     timelineLeft: {
       width: "16%",
@@ -218,7 +211,6 @@ export const createLayout6Styles = (opts: OptionsPDF) => {
     educationTimelineEntry: {
       flexDirection: "row",
       marginBottom: 8,
-      // minHeight: 44,
     },
     educationTimelineLeft: {
       width: "15%",
