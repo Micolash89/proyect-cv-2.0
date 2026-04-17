@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     url: APP_URL,
     siteName: "CV Generator Pro",
     title: "CV Generator Pro - Crea tu Curriculum Profesional",
-    description: "Crea tu currículum vitae profesional en PDF con 8 plantillas diseñadas para destacar tu perfil laboral. Integración con IA y Google.",
+    description: "Crea y valida tu currículum profesional con múltiples plantillas modernas. Integración con IA y servicio personalizado de entrega.",
     images: [
       {
         url: "/og-image.jpg",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CV Generator Pro - Crea tu Curriculum Profesional",
-    description: "Crea tu currículum vitae profesional en PDF con 8 plantillas diseñadas para destacar tu perfil laboral.",
+    description: "Crea y valida tu currículum profesional con múltiples plantillas modernas y recibe tu CV en PDF personalizado.",
     images: ["/og-image.jpg"],
   },
   facebook: {
