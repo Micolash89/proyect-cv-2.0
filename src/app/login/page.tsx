@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { login, type LoginState } from "@/app/actions/auth";
 
 const initialState: LoginState = {
@@ -46,6 +46,16 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
+        <Button
+          type="button"
+          variant="ghost"
+          className="mb-4"
+          onClick={() => router.push("/")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver
+        </Button>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">CV Generator</h1>
           <p className="text-muted-foreground">Panel de Administración</p>

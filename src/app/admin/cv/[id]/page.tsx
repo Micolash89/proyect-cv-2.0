@@ -31,6 +31,14 @@ import {
   Wand2,
   ShieldCheck,
   BookOpen,
+  User,
+  Briefcase,
+  GraduationCap,
+  Brain,
+  Languages,
+  FileText,
+  Settings2,
+  Camera,
 } from "lucide-react";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
@@ -68,7 +76,11 @@ import {
   EDUCATION_STATUS_OPTIONS,
 } from "@/lib/constants";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
-import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
+import {
+  buildFullName,
+  splitFullName,
+  validateCVPayload,
+} from "@/lib/validations";
 import { validateImageFile } from "@/lib/validations/files";
 import { buildTemplateSettingsDefaults } from "@/lib/constants/cv";
 
@@ -111,7 +123,9 @@ export default function AdminCVPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [nameFields, setNameFields] = useState({ name: "", lastName: "" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+    {},
+  );
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [showCertificationForm, setShowCertificationForm] = useState(false);
   const [showLicenseInput, setShowLicenseInput] = useState(false);
@@ -121,8 +135,6 @@ export default function AdminCVPage() {
     startMonth: "",
     startYear: "",
   });
-  const [editingCertificationId, setEditingCertificationId] = useState<string | null>(null);
-  const [editingCertificationSnapshot, setEditingCertificationSnapshot] = useState<Certification | null>(null);
 
   const normalizeTemplateSettings = useCallback(
     (
@@ -156,14 +168,17 @@ export default function AdminCVPage() {
     });
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging) {
-      setPreviewPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y,
-      });
-    }
-  }, [dragOffset.x, dragOffset.y, isDragging]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (isDragging) {
+        setPreviewPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y,
+        });
+      }
+    },
+    [dragOffset.x, dragOffset.y, isDragging],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -207,50 +222,63 @@ export default function AdminCVPage() {
     fetchUser();
   }, [fetchUser]);
 
-  const validateRealtime = useCallback((candidate: UserCV, names = nameFields) => {
-    const validation = validateCVPayload({
-      ...candidate,
-      name: names.name,
-      lastName: names.lastName,
-    });
-    setFieldErrors(validation.success ? {} : validation.errors);
+  const validateRealtime = useCallback(
+    (candidate: UserCV, names = nameFields) => {
+      const validation = validateCVPayload({
+        ...candidate,
+        name: names.name,
+        lastName: names.lastName,
+      });
+      setFieldErrors(validation.success ? {} : validation.errors);
 
-    return validation.success;
-  }, [nameFields]);
+      return validation.success;
+    },
+    [nameFields],
+  );
 
-  const getFieldError = useCallback((path: string) => {
-    if (!submitAttempted && !touchedFields[path]) {
-      return "";
-    }
+  const getFieldError = useCallback(
+    (path: string) => {
+      if (!submitAttempted && !touchedFields[path]) {
+        return "";
+      }
 
-    return fieldErrors[path] ?? "";
-  }, [fieldErrors, submitAttempted, touchedFields]);
+      return fieldErrors[path] ?? "";
+    },
+    [fieldErrors, submitAttempted, touchedFields],
+  );
 
   const scrollToField = useCallback((fieldPath: string) => {
     if (typeof document === "undefined") {
       return;
     }
 
-    const exactTarget = document.querySelector(`[data-field-id="${fieldPath}"]`) as HTMLElement | null;
-    const sectionTarget = document.querySelector(`[data-section-id="${fieldPath.split(".")[0]}"]`) as HTMLElement | null;
+    const exactTarget = document.querySelector(
+      `[data-field-id="${fieldPath}"]`,
+    ) as HTMLElement | null;
+    const sectionTarget = document.querySelector(
+      `[data-section-id="${fieldPath.split(".")[0]}"]`,
+    ) as HTMLElement | null;
     const target = exactTarget ?? sectionTarget;
 
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
 
-  const handleStatusChange = useCallback(async (status: CVStatus) => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      await updateCV(user._id, { status });
-      setUser({ ...user, status });
-      toast.success("Estado actualizado");
-    } catch (error) {
-      toast.error("Error al actualizar estado");
-    } finally {
-      setSaving(false);
-    }
-  }, [user]);
+  const handleStatusChange = useCallback(
+    async (status: CVStatus) => {
+      if (!user) return;
+      setSaving(true);
+      try {
+        await updateCV(user._id, { status });
+        setUser({ ...user, status });
+        toast.success("Estado actualizado");
+      } catch (error) {
+        toast.error("Error al actualizar estado");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [user],
+  );
 
   useEffect(() => {
     if (user && user?.status == "pending") {
@@ -386,66 +414,6 @@ export default function AdminCVPage() {
     }
   };
 
-  // const handleCVUpload = async (file: File) => {
-  //   if (!file) return;
-  //   if (file.size > 10 * 1024 * 1024) {
-  //     toast.error("El archivo debe ser menor a 10MB");
-  //     return;
-  //   }
-
-  //   if (!user) return;
-  //   setUploadingCV(true);
-  //   try {
-  //     const result = await extractCVAction(file);
-
-  //     if (result.success && result.extracted) {
-  //       const extracted = result.extracted;
-  //       setUser({
-  //         ...user,
-  //         fullName: extracted.fullName || user.fullName,
-  //         email: extracted.email || user.email,
-  //         phone: extracted.phone || user.phone,
-  //         location: extracted.location || user.location,
-  //         summary: extracted.summary || user.summary,
-  //         experience:
-  //           extracted.experience && extracted.experience.length > 0
-  //             ? extracted.experience
-  //             : user.experience,
-  //         education:
-  //           extracted.education && extracted.education.length > 0
-  //             ? extracted.education
-  //             : user.education,
-  //         skills:
-  //           extracted.skills && extracted.skills.length > 0
-  //             ? extracted.skills
-  //             : user.skills,
-  //         languages:
-  //           extracted.languages && extracted.languages.length > 0
-  //             ? extracted.languages
-  //             : user.languages,
-  //       });
-  //       toast.success("CV procesado correctamente");
-  //     } else {
-  //       toast.error(result.error || "Error al procesar el CV");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Error al procesar el CV");
-  //   } finally {
-  //     setUploadingCV(false);
-  //   }
-  // };
-
-  // const handleDrop = (e: React.DragEvent) => {
-  //   e.preventDefault();
-  //   const file = e.dataTransfer.files[0];
-  //   if (
-  //     file &&
-  //     (file.type === "application/pdf" || file.type.startsWith("image/"))
-  //   ) {
-  //     handleCVUpload(file);
-  //   }
-  // };
-
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -518,7 +486,10 @@ export default function AdminCVPage() {
   const addCertification = () => {
     if (!user) return;
 
-    if (!newCertification.title.trim() || !newCertification.institution.trim()) {
+    if (
+      !newCertification.title.trim() ||
+      !newCertification.institution.trim()
+    ) {
       toast.error("Completá el título y la institución");
       return;
     }
@@ -543,49 +514,37 @@ export default function AdminCVPage() {
     setUser(nextUser);
     validateRealtime(nextUser);
     setShowCertificationForm(false);
-    setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
+    setNewCertification({
+      title: "",
+      institution: "",
+      startMonth: "",
+      startYear: "",
+    });
   };
 
   const removeCertification = (id: string) => {
     if (!user) return;
     const nextUser = {
       ...user,
-      certifications: (user.certifications || []).filter((item) => item.id !== id),
-    } as UserCV;
-
-    setUser(nextUser);
-    validateRealtime(nextUser);
-  };
-
-  const startCertificationEdit = (certification: Certification) => {
-    setEditingCertificationId(certification.id);
-    setEditingCertificationSnapshot(JSON.parse(JSON.stringify(certification)) as Certification);
-  };
-
-  const cancelCertificationEdit = () => {
-    if (!user || !editingCertificationSnapshot || !editingCertificationId) {
-      setEditingCertificationId(null);
-      setEditingCertificationSnapshot(null);
-      return;
-    }
-
-    const nextUser = {
-      ...user,
-      certifications: (user.certifications || []).map((item) =>
-        item.id === editingCertificationId ? editingCertificationSnapshot : item,
+      certifications: (user.certifications || []).filter(
+        (item) => item.id !== id,
       ),
     } as UserCV;
 
     setUser(nextUser);
     validateRealtime(nextUser);
-    setEditingCertificationId(null);
-    setEditingCertificationSnapshot(null);
   };
 
-  const updateCertification = (id: string, field: keyof Certification, value: string) => {
+  const updateCertification = (
+    id: string,
+    field: keyof Certification,
+    value: string,
+  ) => {
     if (!user) return;
 
-    const index = (user.certifications || []).findIndex((item) => item.id === id);
+    const index = (user.certifications || []).findIndex(
+      (item) => item.id === id,
+    );
     const nextUser = {
       ...user,
       certifications: (user.certifications || []).map((item) =>
@@ -630,17 +589,24 @@ export default function AdminCVPage() {
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
   };
 
-  const updatePersonalLocation = (location: { provincia: string; municipio: string; localidad: string }) => {
+  const updatePersonalLocation = (location: {
+    provincia: string;
+    municipio: string;
+    localidad: string;
+  }) => {
     if (!user) return;
-    const locationString = [location.localidad || location.municipio, location.provincia]
+    const locationString = [
+      location.localidad || location.municipio,
+      location.provincia,
+    ]
       .filter(Boolean)
       .join(", ");
-    setUser({ 
-      ...user, 
+    setUser({
+      ...user,
       provincia: location.provincia,
       municipio: location.municipio,
       localidad: location.localidad,
-      location: locationString 
+      location: locationString,
     });
   };
 
@@ -670,7 +636,13 @@ export default function AdminCVPage() {
   };
 
   const updateRangeSetting = (
-    field: "headerFontSize" | "bodyFontSize" | "margin" | "padding" | "headerPadding" | "bodyPadding",
+    field:
+      | "headerFontSize"
+      | "bodyFontSize"
+      | "margin"
+      | "padding"
+      | "headerPadding"
+      | "bodyPadding",
     rawValue: string,
   ) => {
     const nextValue = Number.parseInt(rawValue, 10);
@@ -684,7 +656,8 @@ export default function AdminCVPage() {
 
   const getSectionOrder = (
     field: "reverseExperience" | "reverseEducation" | "reverseCourses",
-  ): LayoutOrder => (user?.templateSettings[field] ? "ascending" : "descending");
+  ): LayoutOrder =>
+    user?.templateSettings[field] ? "ascending" : "descending";
 
   const updateSectionOrder = (
     field: "reverseExperience" | "reverseEducation" | "reverseCourses",
@@ -819,7 +792,9 @@ export default function AdminCVPage() {
           ? {
               ...e,
               [field]: value,
-              ...(field === "status" && value === "in_progress" ? { endDate: "" } : {}),
+              ...(field === "status" && value === "in_progress"
+                ? { endDate: "" }
+                : {}),
             }
           : e,
       ),
@@ -915,7 +890,9 @@ export default function AdminCVPage() {
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center justify-between p-2 border-b bg-gray-50 cursor-grab">
-              <span className="text-sm font-medium text-black">Vista Previa</span>
+              <span className="text-sm font-medium text-black">
+                Vista Previa
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -949,7 +926,9 @@ export default function AdminCVPage() {
             <span className="hidden md:block">Volver</span>
           </Button>
           <div className="min-w-0 flex-1 lg:flex-none">
-            <h1 className="text-xl md:text-2xl font-bold wrap-break-word">{user.fullName}</h1>
+            <h1 className="text-xl md:text-2xl font-bold wrap-break-word">
+              {user.fullName}
+            </h1>
             <p className="text-muted-foreground text-xs md:text-base wrap-break-word">
               {user.email}
             </p>
@@ -962,7 +941,7 @@ export default function AdminCVPage() {
               onClick={handleSave}
               className={cn(
                 "w-full md:w-auto",
-                hasUnsavedChanges && "border-2 border-red-500"
+                hasUnsavedChanges && "border-2 border-red-500",
               )}
               loading={saving}
             >
@@ -1005,28 +984,6 @@ export default function AdminCVPage() {
         </div>
       ) : null}
 
-      {/* <div
-        className="border-2 border-dashed rounded-lg p-4 mb-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-        onClick={() => document.getElementById("cv-upload")?.click()}
-      >
-        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          {uploadingCV
-            ? "Procesando CV..."
-            : "Arrastra un CV anterior (PDF o imagen) para auto-completar"}
-        </p>
-        <input
-          id="cv-upload"
-          type="file"
-          accept=".pdf,image/*"
-          className="hidden"
-          onChange={(e) => handleCVUpload(e.target.files?.[0]!)}
-          disabled={uploadingCV}
-        />
-      </div> */}
-
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1051,10 +1008,16 @@ export default function AdminCVPage() {
         </Button>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid lg:grid-cols-3 gap-8 ">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="grid lg:grid-cols-3 gap-8 "
+      >
         <div className="lg:col-span-2 space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <User className="h-5 w-5 text-primary" />
               <CardTitle>Datos Personales</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1064,21 +1027,33 @@ export default function AdminCVPage() {
                   <Input
                     value={nameFields.name}
                     onChange={(e) => updateNameField("name", e.target.value)}
-                    className={cn(getFieldError("name") && "border-red-500 focus-visible:ring-red-500")}
+                    className={cn(
+                      getFieldError("name") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("name") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("name")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("name")}
+                    </p>
                   )}
                 </div>
                 <div>
                   <Label>Apellido *</Label>
                   <Input
                     value={nameFields.lastName}
-                    onChange={(e) => updateNameField("lastName", e.target.value)}
-                    className={cn(getFieldError("lastName") && "border-red-500 focus-visible:ring-red-500")}
+                    onChange={(e) =>
+                      updateNameField("lastName", e.target.value)
+                    }
+                    className={cn(
+                      getFieldError("lastName") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("lastName") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("lastName")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("lastName")}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1086,35 +1061,51 @@ export default function AdminCVPage() {
                   <Input
                     value={user.email}
                     onChange={(e) => updateField("email", e.target.value)}
-                    className={cn(getFieldError("email") && "border-red-500 focus-visible:ring-red-500")}
+                    className={cn(
+                      getFieldError("email") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("email") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("email")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("email")}
+                    </p>
                   )}
                 </div>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
+                 <div>
                   <Label>Teléfono</Label>
                   <Input
                     value={user.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
-                    className={cn(getFieldError("phone") && "border-red-500 focus-visible:ring-red-500")}
+                    className={cn(
+                      getFieldError("phone") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("phone") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("phone")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("phone")}
+                    </p>
                   )}
                 </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+               
                 <div>
                   <Label>DNI (opcional)</Label>
                   <Input
                     value={user.dni || ""}
                     onChange={(e) => updateField("dni", e.target.value)}
                     placeholder="Ej: 12345678"
-                    className={cn(getFieldError("dni") && "border-red-500 focus-visible:ring-red-500")}
+                    className={cn(
+                      getFieldError("dni") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("dni") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("dni")}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1122,12 +1113,19 @@ export default function AdminCVPage() {
                   <Input
                     type="date"
                     value={user.fechaNacimiento || ""}
-                    onChange={(e) => updateField("fechaNacimiento", e.target.value)}
+                    onChange={(e) =>
+                      updateField("fechaNacimiento", e.target.value)
+                    }
                     max={new Date().toISOString().split("T")[0]}
-                    className={cn(getFieldError("fechaNacimiento") && "border-red-500 focus-visible:ring-red-500")}
+                    className={cn(
+                      getFieldError("fechaNacimiento") &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                   {getFieldError("fechaNacimiento") && (
-                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("fechaNacimiento")}</p>
+                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError("fechaNacimiento")}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1151,21 +1149,26 @@ export default function AdminCVPage() {
                   value={user.links || ""}
                   onChange={(e) => updateField("links", e.target.value)}
                   placeholder="linkedin.com/in/..., instagram.com/..."
-                  className={cn(getFieldError("links") && "border-red-500 focus-visible:ring-red-500")}
+                  className={cn(
+                    getFieldError("links") &&
+                      "border-red-500 focus-visible:ring-red-500",
+                  )}
                 />
                 {getFieldError("links") && (
-                  <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("links")}</p>
+                  <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError("links")}
+                  </p>
                 )}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="items-center pb-2">
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
               <ShieldCheck className="h-5 w-5 text-primary" />
+              <CardTitle>Información adicional</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-center text-base font-semibold">Información adicional</p>
               <div className="grid gap-3 sm:grid-cols-4">
                 <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                   <input
@@ -1193,7 +1196,9 @@ export default function AdminCVPage() {
                   <input
                     type="checkbox"
                     checked={!!user.incorporacionInmediata}
-                    onChange={(e) => updateField("incorporacionInmediata", e.target.checked)}
+                    onChange={(e) =>
+                      updateField("incorporacionInmediata", e.target.checked)
+                    }
                   />
                   <span className="text-sm">Incorporación inmediata</span>
                 </label>
@@ -1220,7 +1225,9 @@ export default function AdminCVPage() {
                 <Label>Disponibilidad horaria</Label>
                 <Select
                   value={user.disponibilidad || ""}
-                  onChange={(e) => updateField("disponibilidad", e.target.value)}
+                  onChange={(e) =>
+                    updateField("disponibilidad", e.target.value)
+                  }
                   options={availabilityOptions}
                   placeholder="Seleccionar disponibilidad"
                 />
@@ -1229,22 +1236,28 @@ export default function AdminCVPage() {
           </Card>
 
           <Card data-section-id="certifications">
-            <CardHeader className="items-center pb-2">
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
               <BookOpen className="h-5 w-5 text-primary" />
+              <CardTitle>Cursos y certificaciones</CardTitle>
+              {!showCertificationForm ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => setShowCertificationForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar
+                </Button>
+              ) : null}
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <p className="w-full text-center text-base font-semibold">Cursos y certificaciones</p>
-                {!showCertificationForm ? (
-                  <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar
-                  </Button>
-                ) : null}
-              </div>
-
               {!showCertificationForm ? (
-                <div className="text-sm text-muted-foreground">Completá tus cursos y certificaciones para destacarlos en el CV.</div>
+                <div className="text-sm text-muted-foreground">
+                  Completá tus cursos y certificaciones para destacarlos en el
+                  CV.
+                </div>
               ) : (
                 <div className="grid gap-3 rounded-md border p-4">
                   <div className="grid gap-3 md:grid-cols-2">
@@ -1253,7 +1266,12 @@ export default function AdminCVPage() {
                       <Input
                         data-field-id="certifications.new.title"
                         value={newCertification.title}
-                        onChange={(e) => setNewCertification((prev) => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCertification((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }))
+                        }
                         placeholder="Ej: Excel avanzado"
                       />
                     </div>
@@ -1262,7 +1280,12 @@ export default function AdminCVPage() {
                       <Input
                         data-field-id="certifications.new.institution"
                         value={newCertification.institution}
-                        onChange={(e) => setNewCertification((prev) => ({ ...prev, institution: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCertification((prev) => ({
+                            ...prev,
+                            institution: e.target.value,
+                          }))
+                        }
                         placeholder="Ej: Universidad X"
                       />
                     </div>
@@ -1273,7 +1296,12 @@ export default function AdminCVPage() {
                       <Select
                         data-field-id="certifications.new.startMonth"
                         value={newCertification.startMonth}
-                        onChange={(e) => setNewCertification((prev) => ({ ...prev, startMonth: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCertification((prev) => ({
+                            ...prev,
+                            startMonth: e.target.value,
+                          }))
+                        }
                         options={monthSelectOptions}
                         placeholder="Seleccionar mes"
                       />
@@ -1283,7 +1311,12 @@ export default function AdminCVPage() {
                       <Select
                         data-field-id="certifications.new.startYear"
                         value={newCertification.startYear}
-                        onChange={(e) => setNewCertification((prev) => ({ ...prev, startYear: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCertification((prev) => ({
+                            ...prev,
+                            startYear: e.target.value,
+                          }))
+                        }
                         options={yearSelectOptions}
                         placeholder="Seleccionar año"
                       />
@@ -1294,10 +1327,19 @@ export default function AdminCVPage() {
                       <Plus className="h-4 w-4 mr-1" />
                       Agregar
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => {
-                      setShowCertificationForm(false);
-                      setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
-                    }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCertificationForm(false);
+                        setNewCertification({
+                          title: "",
+                          institution: "",
+                          startMonth: "",
+                          startYear: "",
+                        });
+                      }}
+                    >
                       Cancelar
                     </Button>
                   </div>
@@ -1306,91 +1348,143 @@ export default function AdminCVPage() {
 
               <div className="space-y-3">
                 {(user.certifications || []).length > 0 ? (
-                  (user.certifications || []).map((course) => (
-                    <div key={course.id} className="rounded-md border p-3 space-y-3">
-                      {editingCertificationId === course.id ? (
-                        <div className="space-y-3">
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div>
-                              <Label>Título del curso</Label>
-                              <Input
-                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.title`}
-                                value={course.title ?? ""}
-                                onChange={(e) => updateCertification(course.id, "title", e.target.value)}
-                              />
-                            </div>
-                            <div>
-                              <Label>Institución</Label>
-                              <Input
-                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.institution`}
-                                value={course.institution ?? ""}
-                                onChange={(e) => updateCertification(course.id, "institution", e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div>
-                              <Label>Mes de inicio</Label>
-                              <Select
-                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.startMonth`}
-                                value={course.startMonth ?? ""}
-                                onChange={(e) => updateCertification(course.id, "startMonth", e.target.value)}
-                                options={monthSelectOptions}
-                                placeholder="Seleccionar mes"
-                              />
-                            </div>
-                            <div>
-                              <Label>Año de inicio</Label>
-                              <Select
-                                data-field-id={`certifications.${(user.certifications || []).findIndex((item) => item.id === course.id)}.startYear`}
-                                value={course.startYear ?? ""}
-                                onChange={(e) => updateCertification(course.id, "startYear", e.target.value)}
-                                options={yearSelectOptions}
-                                placeholder="Seleccionar año"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button type="button" onClick={() => setEditingCertificationId(null)}>
-                              Guardar
-                            </Button>
-                            <Button type="button" variant="outline" onClick={cancelCertificationEdit}>
-                              Cancelar
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start justify-between gap-3">
+                  (user.certifications || []).map((course, index) => (
+                    <div
+                      key={course.id}
+                      className="rounded-md border p-3 space-y-3"
+                    >
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCertification(course.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="grid gap-3 md:grid-cols-2">
                           <div>
-                            <p className="font-medium">{course.title || course.name || "Sin título"}</p>
-                            {course.institution || course.issuer ? (
-                              <p className="text-sm text-muted-foreground">{course.institution || course.issuer}</p>
-                            ) : null}
-                            <p className="text-xs text-muted-foreground">
-                              {[course.startMonth, course.startYear].filter(Boolean).join("/") || "Sin fecha"}
-                            </p>
+                            <Label>Título del curso</Label>
+                            <Input
+                              data-field-id={`certifications.${index}.title`}
+                              value={course.title ?? ""}
+                              onChange={(e) =>
+                                updateCertification(
+                                  course.id,
+                                  "title",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`certifications.${index}.title`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(`certifications.${index}.title`) && (
+                              <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`certifications.${index}.title`)}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Button type="button" variant="ghost" size="icon" onClick={() => startCertificationEdit(course)}>
-                              <Sparkles className="h-4 w-4" />
-                            </Button>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
-                              <X className="h-4 w-4" />
-                            </Button>
+                          <div>
+                            <Label>Institución</Label>
+                            <Input
+                              data-field-id={`certifications.${index}.institution`}
+                              value={course.institution ?? ""}
+                              onChange={(e) =>
+                                updateCertification(
+                                  course.id,
+                                  "institution",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`certifications.${index}.institution`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(
+                              `certifications.${index}.institution`,
+                            ) && (
+                              <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(
+                                  `certifications.${index}.institution`,
+                                )}
+                              </p>
+                            )}
                           </div>
                         </div>
-                      )}
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div>
+                            <Label>Mes de inicio</Label>
+                            <Select
+                              data-field-id={`certifications.${index}.startMonth`}
+                              value={course.startMonth ?? ""}
+                              onChange={(e) =>
+                                updateCertification(
+                                  course.id,
+                                  "startMonth",
+                                  e.target.value,
+                                )
+                              }
+                              options={monthSelectOptions}
+                              placeholder="Seleccionar mes"
+                              className={cn(
+                                getFieldError(
+                                  `certifications.${index}.startMonth`,
+                                ) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(`certifications.${index}.startMonth`) && (
+                              <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`certifications.${index}.startMonth`)}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <Label>Año de inicio</Label>
+                            <Select
+                              data-field-id={`certifications.${index}.startYear`}
+                              value={course.startYear ?? ""}
+                              onChange={(e) =>
+                                updateCertification(
+                                  course.id,
+                                  "startYear",
+                                  e.target.value,
+                                )
+                              }
+                              options={yearSelectOptions}
+                              placeholder="Seleccionar año"
+                              className={cn(
+                                getFieldError(`certifications.${index}.startYear`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(`certifications.${index}.startYear`) && (
+                              <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`certifications.${index}.startYear`)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">Aún no agregaste cursos ni certificaciones.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aún no agregaste cursos ni certificaciones.
+                  </p>
                 )}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <Briefcase className="h-5 w-5 text-primary" />
               <CardTitle>Experiencia Laboral</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1410,12 +1504,15 @@ export default function AdminCVPage() {
                           updateExperience(exp.id, "company", e.target.value)
                         }
                         className={cn(
-                          "w-full",
-                          getFieldError(`experience.${index}.company`) && "border-red-500 focus-visible:ring-red-500",
+                          "w-full ",
+                          getFieldError(`experience.${index}.company`) &&
+                            "border-red-500 focus-visible:ring-red-500",
                         )}
                       />
                       {getFieldError(`experience.${index}.company`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.company`)}</p>
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                          {getFieldError(`experience.${index}.company`)}
+                        </p>
                       )}
                       <Input
                         placeholder="Puesto"
@@ -1423,10 +1520,15 @@ export default function AdminCVPage() {
                         onChange={(e) =>
                           updateExperience(exp.id, "position", e.target.value)
                         }
-                        className={cn(getFieldError(`experience.${index}.position`) && "border-red-500 focus-visible:ring-red-500")}
+                        className={cn(
+                          getFieldError(`experience.${index}.position`) &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
                       />
                       {getFieldError(`experience.${index}.position`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.position`)}</p>
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                          {getFieldError(`experience.${index}.position`)}
+                        </p>
                       )}
                     </div>
                     <Button
@@ -1453,7 +1555,10 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateExperience(exp.id, "startDate", e.target.value)
                       }
-                      className={cn(getFieldError(`experience.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
+                      className={cn(
+                        getFieldError(`experience.${index}.startDate`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                     <Input
                       type="date"
@@ -1462,14 +1567,21 @@ export default function AdminCVPage() {
                         updateExperience(exp.id, "endDate", e.target.value)
                       }
                       disabled={exp.current}
-                      className={cn(getFieldError(`experience.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
+                      className={cn(
+                        getFieldError(`experience.${index}.endDate`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                   </div>
                   {getFieldError(`experience.${index}.startDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.startDate`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`experience.${index}.startDate`)}
+                    </p>
                   )}
                   {getFieldError(`experience.${index}.endDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.endDate`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`experience.${index}.endDate`)}
+                    </p>
                   )}
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2">
@@ -1522,7 +1634,8 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <GraduationCap className="h-5 w-5 text-primary" />
               <CardTitle>Educación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1534,17 +1647,43 @@ export default function AdminCVPage() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <Input
-                      placeholder="Institución"
-                      value={edu.institution}
-                      onChange={(e) =>
-                        updateEducation(edu.id, "institution", e.target.value)
-                      }
-                      className={cn(
-                        "w-full flex-1 min-w-0",
-                        getFieldError(`education.${index}.institution`) && "border-red-500 focus-visible:ring-red-500",
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <Input
+                        placeholder="Institución"
+                        value={edu.institution}
+                        onChange={(e) =>
+                          updateEducation(edu.id, "institution", e.target.value)
+                        }
+                        className={cn(
+                          "w-full",
+                          getFieldError(`education.${index}.institution`) &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
+                      />
+                        {getFieldError(`education.${index}.institution`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                          {getFieldError(`education.${index}.institution`)}
+                        </p>
                       )}
-                    />
+
+                      <Input
+                        placeholder="Título / Carrera"
+                        value={edu.degree}
+                        onChange={(e) =>
+                          updateEducation(edu.id, "degree", e.target.value)
+                        }
+                        className={cn(
+                          getFieldError(`education.${index}.degree`) &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
+                      />
+
+                       {getFieldError(`education.${index}.degree`) && (
+                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                          {getFieldError(`education.${index}.degree`)}
+                        </p>
+                      )}
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1554,19 +1693,16 @@ export default function AdminCVPage() {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                  <Input
-                    placeholder="Título / Carrera"
-                    value={edu.degree}
-                    onChange={(e) =>
-                      updateEducation(edu.id, "degree", e.target.value)
-                    }
-                    className={cn(getFieldError(`education.${index}.degree`) && "border-red-500 focus-visible:ring-red-500")}
-                  />
+
                   {getFieldError(`education.${index}.institution`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.institution`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`education.${index}.institution`)}
+                    </p>
                   )}
                   {getFieldError(`education.${index}.degree`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.degree`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`education.${index}.degree`)}
+                    </p>
                   )}
                   <EducationLocationSelector
                     educacionId={edu.id}
@@ -1582,7 +1718,10 @@ export default function AdminCVPage() {
                       onChange={(e) =>
                         updateEducation(edu.id, "startDate", e.target.value)
                       }
-                      className={cn(getFieldError(`education.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
+                      className={cn(
+                        getFieldError(`education.${index}.startDate`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                     <Input
                       type="date"
@@ -1591,14 +1730,21 @@ export default function AdminCVPage() {
                         updateEducation(edu.id, "endDate", e.target.value)
                       }
                       disabled={edu.status === "in_progress"}
-                      className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
+                      className={cn(
+                        getFieldError(`education.${index}.endDate`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                   </div>
                   {getFieldError(`education.${index}.startDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.startDate`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`education.${index}.startDate`)}
+                    </p>
                   )}
                   {getFieldError(`education.${index}.endDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`education.${index}.endDate`)}
+                    </p>
                   )}
                   <div>
                     <Label>Estado del estudio *</Label>
@@ -1608,10 +1754,15 @@ export default function AdminCVPage() {
                         updateEducation(edu.id, "status", e.target.value)
                       }
                       options={EDUCATION_STATUS_OPTIONS}
-                      className={cn(getFieldError(`education.${index}.status`) && "border-red-500 focus-visible:ring-red-500")}
+                      className={cn(
+                        getFieldError(`education.${index}.status`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                     {getFieldError(`education.${index}.status`) && (
-                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.status`)}</p>
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                        {getFieldError(`education.${index}.status`)}
+                      </p>
                     )}
                   </div>
                 </motion.div>
@@ -1624,13 +1775,18 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <Brain className="h-5 w-5 text-primary" />
               <CardTitle>Habilidades</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
                 <div className="flex flex-col sm:flex-row gap-2 w-full">
-                  <Input placeholder="Agregar habilidad" id="newSkill" className="w-full" />
+                  <Input
+                    placeholder="Agregar habilidad"
+                    id="newSkill"
+                    className="w-full"
+                  />
                   <Button
                     type="button"
                     className="w-full sm:w-auto"
@@ -1675,7 +1831,8 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <Languages className="h-5 w-5 text-primary" />
               <CardTitle>Idiomas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1689,7 +1846,14 @@ export default function AdminCVPage() {
                   id="newLanguageLevel"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                 >
-                  <option value="" hidden defaultChecked className="text-muted-foreground">Nivel</option>
+                  <option
+                    value=""
+                    hidden
+                    defaultChecked
+                    className="text-muted-foreground"
+                  >
+                    Nivel
+                  </option>
                   <option value="Básico">Básico</option>
                   <option value="Intermedio">Intermedio</option>
                   <option value="Avanzado">Avanzado</option>
@@ -1715,7 +1879,10 @@ export default function AdminCVPage() {
               </div>
               <div className="space-y-2">
                 {user.languages.map((lang: any) => (
-                  <div key={lang.id} className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center">
+                  <div
+                    key={lang.id}
+                    className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center"
+                  >
                     <Input
                       value={lang.language || ""}
                       onChange={(e) =>
@@ -1730,7 +1897,9 @@ export default function AdminCVPage() {
                       }
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                     >
-                      <option value="" disabled hidden>Nivel</option>
+                      <option value="" disabled hidden>
+                        Nivel
+                      </option>
                       <option value="Básico">Básico</option>
                       <option value="Intermedio">Intermedio</option>
                       <option value="Avanzado">Avanzado</option>
@@ -1751,7 +1920,8 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <FileText className="h-5 w-5 text-primary" />
               <CardTitle>Perfil / Resumen</CardTitle>
             </CardHeader>
             <CardContent>
@@ -1762,7 +1932,8 @@ export default function AdminCVPage() {
                   onChange={(e) => updateField("targetJob", e.target.value)}
                   className={cn(
                     "flex-1",
-                    getFieldError("targetJob") && "border-red-500 focus-visible:ring-red-500",
+                    getFieldError("targetJob") &&
+                      "border-red-500 focus-visible:ring-red-500",
                   )}
                 />
                 <Button
@@ -1786,14 +1957,19 @@ export default function AdminCVPage() {
                 placeholder="Resumen del perfil profesional..."
                 className={cn(
                   "min-h-25",
-                  getFieldError("summary") && "border-red-500 focus-visible:ring-red-500",
+                  getFieldError("summary") &&
+                    "border-red-500 focus-visible:ring-red-500",
                 )}
               />
               {getFieldError("targetJob") && (
-                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("targetJob")}</p>
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                  {getFieldError("targetJob")}
+                </p>
               )}
               {getFieldError("summary") && (
-                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("summary")}</p>
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                  {getFieldError("summary")}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -1801,7 +1977,8 @@ export default function AdminCVPage() {
 
         <div className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <Settings2 className="h-5 w-5 text-primary" />
               <CardTitle>Configuración del CV</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1852,7 +2029,9 @@ export default function AdminCVPage() {
                     max={40}
                     step={1}
                     value={user.templateSettings.headerFontSize}
-                    onChange={(e) => updateRangeSetting("headerFontSize", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("headerFontSize", e.target.value)
+                    }
                     className="w-full"
                   />
                   <label className="block text-xs text-muted-foreground">
@@ -1864,7 +2043,9 @@ export default function AdminCVPage() {
                     max={16}
                     step={1}
                     value={user.templateSettings.bodyFontSize}
-                    onChange={(e) => updateRangeSetting("bodyFontSize", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("bodyFontSize", e.target.value)
+                    }
                     className="w-full"
                   />
                 </div>
@@ -1882,7 +2063,9 @@ export default function AdminCVPage() {
                     max={60}
                     step={1}
                     value={user.templateSettings.margin}
-                    onChange={(e) => updateRangeSetting("margin", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("margin", e.target.value)
+                    }
                     className="w-full"
                   />
                   <label className="block text-xs text-muted-foreground">
@@ -1894,7 +2077,9 @@ export default function AdminCVPage() {
                     max={60}
                     step={1}
                     value={user.templateSettings.padding}
-                    onChange={(e) => updateRangeSetting("padding", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("padding", e.target.value)
+                    }
                     className="w-full"
                   />
                   <label className="block text-xs text-muted-foreground">
@@ -1906,7 +2091,9 @@ export default function AdminCVPage() {
                     max={60}
                     step={1}
                     value={user.templateSettings.headerPadding}
-                    onChange={(e) => updateRangeSetting("headerPadding", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("headerPadding", e.target.value)
+                    }
                     className="w-full"
                   />
                   <label className="block text-xs text-muted-foreground">
@@ -1918,7 +2105,9 @@ export default function AdminCVPage() {
                     max={60}
                     step={1}
                     value={user.templateSettings.bodyPadding}
-                    onChange={(e) => updateRangeSetting("bodyPadding", e.target.value)}
+                    onChange={(e) =>
+                      updateRangeSetting("bodyPadding", e.target.value)
+                    }
                     className="w-full"
                   />
                 </div>
@@ -1928,32 +2117,53 @@ export default function AdminCVPage() {
                 <Label>Orden cronológico por sección</Label>
                 <div className="mt-2 space-y-2">
                   <div>
-                    <span className="text-xs text-muted-foreground">Experiencia</span>
+                    <span className="text-xs text-muted-foreground">
+                      Experiencia
+                    </span>
                     <Select
                       className="mt-1"
                       value={getSectionOrder("reverseExperience")}
                       options={layoutOptions}
-                      onChange={(e) => updateSectionOrder("reverseExperience", e.target.value as LayoutOrder)}
+                      onChange={(e) =>
+                        updateSectionOrder(
+                          "reverseExperience",
+                          e.target.value as LayoutOrder,
+                        )
+                      }
                       placeholder="Seleccionar orden"
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-muted-foreground">Educación</span>
+                    <span className="text-xs text-muted-foreground">
+                      Educación
+                    </span>
                     <Select
                       className="mt-1"
                       value={getSectionOrder("reverseEducation")}
                       options={layoutOptions}
-                      onChange={(e) => updateSectionOrder("reverseEducation", e.target.value as LayoutOrder)}
+                      onChange={(e) =>
+                        updateSectionOrder(
+                          "reverseEducation",
+                          e.target.value as LayoutOrder,
+                        )
+                      }
                       placeholder="Seleccionar orden"
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-muted-foreground">Certificaciones</span>
+                    <span className="text-xs text-muted-foreground">
+                      Certificaciones
+                    </span>
                     <Select
                       className="mt-1"
                       value={getSectionOrder("reverseCourses")}
                       options={layoutOptions}
-                      onChange={(e) => updateSectionOrder("reverseCourses", e.target.value as LayoutOrder)}
+                      onChange={(e) =>
+                        updateSectionOrder(
+                          "reverseCourses",
+                          e.target.value as LayoutOrder,
+                        )
+                      }
                       placeholder="Seleccionar orden"
                     />
                   </div>
@@ -1966,7 +2176,9 @@ export default function AdminCVPage() {
                   <input
                     type="checkbox"
                     checked={Boolean(user.templateSettings.fullName)}
-                    onChange={(e) => updateTemplateSettings("fullName", e.target.checked)}
+                    onChange={(e) =>
+                      updateTemplateSettings("fullName", e.target.checked)
+                    }
                   />
                   <span>Mostrar nombre completo</span>
                 </label>
@@ -1974,7 +2186,9 @@ export default function AdminCVPage() {
                   <input
                     type="checkbox"
                     checked={Boolean(user.templateSettings.spaceBetween)}
-                    onChange={(e) => updateTemplateSettings("spaceBetween", e.target.checked)}
+                    onChange={(e) =>
+                      updateTemplateSettings("spaceBetween", e.target.checked)
+                    }
                   />
                   <span>Aumentar separación entre secciones</span>
                 </label>
@@ -1991,7 +2205,9 @@ export default function AdminCVPage() {
                       <input
                         type="checkbox"
                         checked={Boolean(user.templateSettings[option.key])}
-                        onChange={(e) => updateTemplateSettings(option.key, e.target.checked)}
+                        onChange={(e) =>
+                          updateTemplateSettings(option.key, e.target.checked)
+                        }
                       />
                       <span>{option.label}</span>
                     </label>
@@ -2002,7 +2218,8 @@ export default function AdminCVPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <Camera className="h-5 w-5 text-primary" />
               <CardTitle>Foto de perfil</CardTitle>
             </CardHeader>
             <CardContent>

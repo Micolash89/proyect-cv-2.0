@@ -27,6 +27,11 @@ import {
   Zap,
   Globe,
   Sparkles,
+  User,
+  Briefcase,
+  GraduationCap,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
@@ -578,8 +583,10 @@ export default function AdminNewCVPage() {
                 <button
                   type="button"
                   onClick={() => step.id < currentStep && setCurrentStep(step.id)}
+                  title={step.title}
+                  aria-label={`Paso ${step.id}: ${step.title}`}
                   className={cn(
-                    "flex items-center gap-2 px-2 py-2 rounded-lg transition-all text-sm font-medium flex-col",
+                    "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
                     currentStep === step.id
                       ? "bg-foreground text-background"
                       : step.id < currentStep
@@ -588,12 +595,7 @@ export default function AdminNewCVPage() {
                   )}
                   disabled={step.id > currentStep}
                 >
-                  {step.id < currentStep ? (
-                    <CheckCircle className="md:size-4 size-7" />
-                  ) : (
-                    <step.icon className="md:size-4 size-7" />
-                  )}
-                  <span>{step.title}</span>
+                  <step.icon className="md:size-4 size-7" />
                 </button>
                 {index < registroSteps.length - 1 && (
                   <div className="w-8 h-0.5 bg-border mx-2" />
@@ -611,8 +613,13 @@ export default function AdminNewCVPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
-                  data-section-id="personal"
                 >
+                  <Card data-section-id="personal">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <User className="h-5 w-5 text-primary" />
+                      <CardTitle>Datos personales</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                   <div className="flex justify-end">
                     <Button
                       type="button"
@@ -808,6 +815,8 @@ export default function AdminNewCVPage() {
                           </p>
                         </div>
                       )}
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
 
@@ -819,7 +828,8 @@ export default function AdminNewCVPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <Card data-section-id="photo">
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <ImageIcon className="h-5 w-5 text-primary" />
                       <CardTitle>Foto de Perfil</CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -880,12 +890,14 @@ export default function AdminNewCVPage() {
                   className="space-y-4"
                 >
                   <Card data-section-id="experience">
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <Briefcase className="h-5 w-5 text-primary" />
                       <CardTitle>Experiencia Laboral</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={addExperience}
+                        className="ml-auto"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar
@@ -1026,12 +1038,14 @@ export default function AdminNewCVPage() {
                   className="space-y-4"
                 >
                   <Card data-section-id="education">
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <GraduationCap className="h-5 w-5 text-primary" />
                       <CardTitle>Educación</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={addEducation}
+                        className="ml-auto"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar
@@ -1156,11 +1170,11 @@ export default function AdminNewCVPage() {
                   className="space-y-6"
                 >
                   <Card data-section-id="certifications">
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <BookOpen className="h-5 w-5 text-primary" />
+                      <CardTitle>Cursos y certificaciones</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Cursos y certificaciones</p>
                       <div className="flex items-center justify-between gap-4">
                         {!showCertificationForm ? (
                           <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)} className="w-full">
@@ -1354,11 +1368,11 @@ export default function AdminNewCVPage() {
                   className="space-y-6"
                 >
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <Zap className="h-5 w-5 text-primary" />
+                      <CardTitle>Habilidades</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Habilidades</p>
                       <div className="flex gap-2">
                         <Input
                           placeholder="Agregar habilidad"
@@ -1405,11 +1419,11 @@ export default function AdminNewCVPage() {
                   </Card>
 
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <Globe className="h-5 w-5 text-primary" />
+                      <CardTitle>Idiomas</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Idiomas</p>
                       <Button variant="outline" size="sm" onClick={addLanguage} className="w-full">
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar idioma
@@ -1464,11 +1478,11 @@ export default function AdminNewCVPage() {
                   className="space-y-6"
                 >
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <ShieldCheck className="h-5 w-5 text-primary" />
+                      <CardTitle>Información adicional</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Información adicional</p>
                       <div className="grid gap-3 sm:grid-cols-4">
                         <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                           <input
@@ -1542,14 +1556,15 @@ export default function AdminNewCVPage() {
 
               {currentStep === 8 && (
                 <motion.div
-                  key="step6"
+                  key="step8"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
                   <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <CheckCircle className="h-5 w-5 text-primary" />
                       <CardTitle>Diseño del CV</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -1605,7 +1620,8 @@ export default function AdminNewCVPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <CheckCircle className="h-5 w-5 text-primary" />
                       <CardTitle>Confirmar Datos</CardTitle>
                     </CardHeader>
                     <CardContent>

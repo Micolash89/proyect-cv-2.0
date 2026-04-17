@@ -558,8 +558,10 @@ function RegistroPageContent() {
                   onClick={() =>
                     step.id < currentStep && setCurrentStep(step.id)
                   }
+                  title={step.title}
+                  aria-label={`Paso ${step.id}: ${step.title}`}
                   className={cn(
-                    "flex items-center gap-2 px-2 py-2 rounded-lg transition-all text-sm font-medium flex-col",
+                    "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
                     currentStep === step.id
                       ? "bg-foreground text-background"
                       : step.id < currentStep
@@ -568,12 +570,7 @@ function RegistroPageContent() {
                   )}
                   disabled={step.id > currentStep}
                 >
-                  {step.id < currentStep ? (
-                    <Check className="md:size-4 size-7" />
-                  ) : (
-                    <step.icon className="md:size-4 size-7" />
-                  )}
-                  <span>{step.title}</span>
+                  <step.icon className="md:size-4 size-7" />
                 </button>
                 {index < registroSteps.length - 1 && (
                   <div className="w-8 h-0.5 bg-border mx-2" />
@@ -593,8 +590,13 @@ function RegistroPageContent() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
-                      data-section-id="personal"
                     >
+                      <Card data-section-id="personal">
+                        <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                          <User className="h-5 w-5 text-primary" />
+                          <CardTitle>Datos personales</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                       {/* <Button
                         type="button"
                         variant="outline"
@@ -809,6 +811,8 @@ function RegistroPageContent() {
                           </Button>
                         </div>
                       )}
+                        </CardContent>
+                      </Card>
                     </motion.div>
                   )}
 
@@ -819,8 +823,13 @@ function RegistroPageContent() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
-                      data-section-id="photo"
                     >
+                      <Card data-section-id="photo">
+                        <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                          <ImageIcon className="h-5 w-5 text-primary" />
+                          <CardTitle>Foto de perfil</CardTitle>
+                        </CardHeader>
+                        <CardContent>
                       <div
                         className="flex flex-col items-center justify-center py-8 border-2 border-dashed rounded-lg"
                         onDragOver={(e) => e.preventDefault()}
@@ -875,6 +884,8 @@ function RegistroPageContent() {
                           PNG, JPG hasta 1MB
                         </p>
                       </div>
+                        </CardContent>
+                      </Card>
                     </motion.div>
                   )}
 
@@ -885,8 +896,13 @@ function RegistroPageContent() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
-                  data-section-id="experience"
                 >
+                  <Card data-section-id="experience">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      <CardTitle>Experiencia laboral</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                   {formData.experience.map((exp, index) => (
                     <div
                       key={exp.id}
@@ -999,6 +1015,8 @@ function RegistroPageContent() {
                     <Plus className="h-4 w-4 mr-2" />
                     Agregar experiencia
                   </Button>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
 
@@ -1009,8 +1027,13 @@ function RegistroPageContent() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
-                  data-section-id="education"
                 >
+                  <Card data-section-id="education">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <CardTitle>Educación</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                   {formData.education.map((edu, index) => (
                     <div
                       key={edu.id}
@@ -1111,6 +1134,8 @@ function RegistroPageContent() {
                     <Plus className="h-4 w-4 mr-2" />
                     Agregar educación
                   </Button>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
 
@@ -1123,11 +1148,11 @@ function RegistroPageContent() {
                   className="space-y-6"
                 >
                   <Card data-section-id="certifications">
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <BookOpen className="h-5 w-5 text-primary" />
+                      <CardTitle>Cursos y certificaciones</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Cursos y certificaciones</p>
                       <div className="flex items-center justify-between gap-4">
                         {!showCertificationForm ? (
                           <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)} className="w-full">
@@ -1292,11 +1317,11 @@ function RegistroPageContent() {
                   className="space-y-6"
                 >
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <Zap className="h-5 w-5 text-primary" />
+                      <CardTitle>Habilidades</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Habilidades</p>
                       <div className="flex flex-wrap gap-2">
                         {formData.skills.map((skill, index) => (
                           <Badge
@@ -1348,11 +1373,11 @@ function RegistroPageContent() {
                   </Card>
 
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <Globe className="h-5 w-5 text-primary" />
+                      <CardTitle>Idiomas</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Idiomas</p>
                       {!showLanguageForm ? (
                         <Button
                           type="button"
@@ -1459,11 +1484,11 @@ function RegistroPageContent() {
                   className="space-y-6"
                 >
                   <Card>
-                    <CardHeader className="items-center pb-2">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <ShieldCheck className="h-5 w-5 text-primary" />
+                      <CardTitle>Información adicional</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-center text-base font-semibold">Información adicional</p>
                       <div className="grid gap-3 sm:grid-cols-4">
                         <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                           <input
@@ -1530,9 +1555,14 @@ function RegistroPageContent() {
                     </CardContent>
                   </Card>
 
-                  <div>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <CardTitle>Resumen breve</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                     <div className="flex items-center justify-between mb-2">
-                      <Label>Resumen breve</Label>
+                      <Label>Descripción del perfil</Label>
                       <Button
                         type="button"
                         variant="ghost"
@@ -1557,57 +1587,66 @@ function RegistroPageContent() {
                     {getFieldError("summary") && (
                       <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("summary")}</p>
                     )}
-                  </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
 
               {currentStep === 8 && (
                 <motion.div
-                  key="step6"
+                  key="step8"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div>
-                    <Label>Elige el diseño de tu CV</Label>
-                    <div className="mt-4">
-                      <TemplateCarousel
-                        templates={templateOptions}
-                        selectedTemplate={formData.selectedTemplate}
-                        onSelectTemplate={handleTemplateSelection}
-                      />
-                    </div>
-                  </div>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      <CardTitle>Diseño del CV</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Elige el diseño de tu CV</Label>
+                        <div className="mt-4">
+                          <TemplateCarousel
+                            templates={templateOptions}
+                            selectedTemplate={formData.selectedTemplate}
+                            onSelectTemplate={handleTemplateSelection}
+                          />
+                        </div>
+                      </div>
 
-                  <div>
-                    <Label>Color del diseño</Label>
-                    <div className="flex flex-wrap gap-3 mt-2">
-                      {availableTemplateColors.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() =>
-                            updateFormData({
-                              templateSettings: {
-                                ...formData.templateSettings,
-                                primaryColor: color,
-                              },
-                            })
-                          }
-                          className={cn(
-                            "h-10 w-10 rounded-full border-2 transition-all cursor-pointer",
-                            formData.templateSettings.primaryColor ===
-                              color
-                              ? "border-foreground scale-110"
-                              : "border-transparent hover:scale-105",
-                          )}
-                          style={{ backgroundColor: color }}
-                          title={color}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                      <div>
+                        <Label>Color del diseño</Label>
+                        <div className="flex flex-wrap gap-3 mt-2">
+                          {availableTemplateColors.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() =>
+                                updateFormData({
+                                  templateSettings: {
+                                    ...formData.templateSettings,
+                                    primaryColor: color,
+                                  },
+                                })
+                              }
+                              className={cn(
+                                "h-10 w-10 rounded-full border-2 transition-all cursor-pointer",
+                                formData.templateSettings.primaryColor ===
+                                  color
+                                  ? "border-foreground scale-110"
+                                  : "border-transparent hover:scale-105",
+                              )}
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
 
@@ -1619,6 +1658,12 @@ function RegistroPageContent() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      <CardTitle>Confirmar datos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                   <div className="border-t pt-4">
                     <h3 className="font-medium mb-4">Resumen de tus datos</h3>
                     <div className="space-y-3 text-sm">
@@ -1687,6 +1732,8 @@ function RegistroPageContent() {
                       Verifica que todos los datos estén correctos antes de enviar el formulario.
                     </AlertDescription>
                   </Alert>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               )}
             </AnimatePresence>
