@@ -48,7 +48,7 @@ export default function LoginPage() {
       >
         <Button
           type="button"
-          variant="ghost"
+          variant="default"
           className="mb-4"
           onClick={() => router.push("/")}
         >

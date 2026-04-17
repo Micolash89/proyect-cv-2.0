@@ -95,7 +95,7 @@ export default function AdminNewCVPage() {
     experience: [] as Experience[],
     education: [] as Education[],
     skills: [] as string[],
-    languages: [] as Language[],
+    languages: [{ id: generateId(), language: "", level: "" }] as Language[],
     certifications: [] as Certification[],
     selectedTemplate: "harvard" as TemplateType,
     templateSettings: ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
@@ -105,21 +105,6 @@ export default function AdminNewCVPage() {
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [showLanguageForm, setShowLanguageForm] = useState(false);
-  const [newLanguage, setNewLanguage] = useState({
-    language: "Español",
-    level: "",
-    custom: "",
-  });
-  const [showCertificationForm, setShowCertificationForm] = useState(false);
-  const [newCertification, setNewCertification] = useState({
-    title: "",
-    institution: "",
-    startMonth: "",
-    startYear: "",
-  });
-  const [editingCertificationId, setEditingCertificationId] = useState<string | null>(null);
-  const [editingCertificationSnapshot, setEditingCertificationSnapshot] = useState<Certification | null>(null);
 
   const validateRealtime = useCallback((nextData: typeof formData) => {
     const validation = validateCVPayload(nextData);
@@ -332,70 +317,36 @@ export default function AdminNewCVPage() {
   };
 
   const addLanguage = () => {
-    const lang = newLanguage.custom || newLanguage.language;
-    if (lang.trim() && newLanguage.level.trim()) {
-      updateFormData({
-        languages: [
-          ...formData.languages,
-          { id: generateId(), language: lang, level: newLanguage.level },
-        ],
-      });
-      setNewLanguage({ language: "Español", level: "", custom: "" });
-      setShowLanguageForm(false);
-    }
+    updateFormData({
+      languages: [
+        ...formData.languages,
+        { id: generateId(), language: "", level: "" },
+      ],
+    });
   };
 
   const addCertification = () => {
-    if (!newCertification.title.trim() || !newCertification.institution.trim()) {
-      toast.error("Completá el título y la institución");
-      return;
-    }
-
     updateFormData({
       certifications: [
         ...formData.certifications,
         {
           id: generateId(),
-          title: newCertification.title.trim(),
-          institution: newCertification.institution.trim(),
-          startMonth: newCertification.startMonth,
-          startYear: newCertification.startYear.trim(),
-          name: newCertification.title.trim(),
-          issuer: newCertification.institution.trim(),
+          title: "",
+          institution: "",
+          startMonth: "",
+          startYear: "",
+          name: "",
+          issuer: "",
           date: "",
         },
       ],
     });
-    setNewCertification({ title: "", institution: "", startMonth: "", startYear: "" });
-    setShowCertificationForm(false);
-  };
-
-  const startCertificationEdit = (certification: Certification) => {
-    setEditingCertificationId(certification.id);
-    setEditingCertificationSnapshot(JSON.parse(JSON.stringify(certification)) as Certification);
-  };
-
-  const cancelCertificationEdit = () => {
-    if (!editingCertificationSnapshot || !editingCertificationId) {
-      setEditingCertificationId(null);
-      setEditingCertificationSnapshot(null);
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      certifications: prev.certifications.map((item) =>
-        item.id === editingCertificationId ? editingCertificationSnapshot : item,
-      ),
-    }));
-
-    setEditingCertificationId(null);
-    setEditingCertificationSnapshot(null);
   };
 
   const updateCertification = (id: string, field: keyof Certification, value: string) => {
-    setFormData((prev) => {
-      const nextCertifications = prev.certifications.map((item) =>
+    const index = formData.certifications.findIndex((item) => item.id === id);
+    updateFormData({
+      certifications: formData.certifications.map((item) =>
         item.id === id
           ? {
               ...item,
@@ -404,11 +355,8 @@ export default function AdminNewCVPage() {
               ...(field === "institution" ? { issuer: value } : {}),
             }
           : item,
-      );
-      const nextState = { ...prev, certifications: nextCertifications };
-      validateRealtime(nextState);
-      return nextState;
-    });
+      ),
+    }, index >= 0 ? `certifications.${index}.${String(field)}` : undefined);
   };
 
   const removeCertification = (id: string) => {
@@ -418,17 +366,21 @@ export default function AdminNewCVPage() {
   };
 
   const removeLanguage = (id: string) => {
+    const nextLanguages = formData.languages.filter((l) => l.id !== id);
     updateFormData({
-      languages: formData.languages.filter((l) => l.id !== id),
+      languages: nextLanguages.length > 0
+        ? nextLanguages
+        : [{ id: generateId(), language: "", level: "" }],
     });
   };
 
   const updateLanguage = (id: string, field: string, value: string) => {
+    const index = formData.languages.findIndex((language) => language.id === id);
     updateFormData({
       languages: formData.languages.map((l) =>
         l.id === id ? { ...l, [field]: value } : l,
       ),
-    });
+    }, index >= 0 ? `languages.${index}.${field}` : undefined);
   };
 
   const handleDataExtracted = useCallback((data: ExtractedCVData) => {
@@ -1173,181 +1125,118 @@ export default function AdminNewCVPage() {
                     <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <BookOpen className="h-5 w-5 text-primary" />
                       <CardTitle>Cursos y certificaciones</CardTitle>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="ml-auto"
+                        onClick={addCertification}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar
+                      </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between gap-4">
-                        {!showCertificationForm ? (
-                          <Button type="button" variant="outline" size="sm" onClick={() => setShowCertificationForm(true)} className="w-full">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Agregar
-                          </Button>
-                        ) : null}
-                      </div>
-
-                      {showCertificationForm ? (
-                        <div className="grid gap-3 rounded-md border p-4">
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div>
-                              <Label>Título del curso</Label>
-                              <Input
-                                data-field-id="certifications.new.title"
-                                value={newCertification.title}
-                                onChange={(e) =>
-                                  setNewCertification((prev) => ({
-                                    ...prev,
-                                    title: e.target.value,
-                                  }))
-                                }
-                                placeholder="Ej: Excel avanzado"
-                              />
-                            </div>
-                            <div>
-                              <Label>Institución</Label>
-                              <Input
-                                data-field-id="certifications.new.institution"
-                                value={newCertification.institution}
-                                onChange={(e) =>
-                                  setNewCertification((prev) => ({
-                                    ...prev,
-                                    institution: e.target.value,
-                                  }))
-                                }
-                                placeholder="Ej: Universidad X"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div>
-                              <Label>Mes de inicio</Label>
-                              <Select
-                                data-field-id="certifications.new.startMonth"
-                                value={newCertification.startMonth}
-                                onChange={(e) =>
-                                  setNewCertification((prev) => ({
-                                    ...prev,
-                                    startMonth: e.target.value,
-                                  }))
-                                }
-                                options={monthSelectOptions}
-                                placeholder="Seleccionar mes"
-                              />
-                            </div>
-                            <div>
-                              <Label>Año de inicio</Label>
-                              <Select
-                                data-field-id="certifications.new.startYear"
-                                value={newCertification.startYear}
-                                onChange={(e) =>
-                                  setNewCertification((prev) => ({
-                                    ...prev,
-                                    startYear: e.target.value,
-                                  }))
-                                }
-                                options={yearSelectOptions}
-                                placeholder="Seleccionar año"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button type="button" onClick={addCertification}>
-                              <Plus className="h-4 w-4 mr-1" />
-                              Agregar
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setShowCertificationForm(false);
-                                setNewCertification({
-                                  title: "",
-                                  institution: "",
-                                  startMonth: "",
-                                  startYear: "",
-                                });
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                          </div>
-                        </div>
-                      ) : null}
-
                       {formData.certifications.length > 0 ? (
                         <div className="space-y-3">
-                          {formData.certifications.map((course) => (
+                          {formData.certifications.map((course, index) => (
                             <div key={course.id} className="rounded-md border p-3 space-y-3">
-                              {editingCertificationId === course.id ? (
-                                <div className="space-y-3">
-                                  <div className="grid gap-3 md:grid-cols-2">
-                                    <div>
-                                      <Label>Título del curso</Label>
-                                      <Input
-                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.title`}
-                                        value={course.title ?? ""}
-                                        onChange={(e) => updateCertification(course.id, "title", e.target.value)}
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label>Institución</Label>
-                                      <Input
-                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.institution`}
-                                        value={course.institution ?? ""}
-                                        onChange={(e) => updateCertification(course.id, "institution", e.target.value)}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="grid gap-3 md:grid-cols-2">
-                                    <div>
-                                      <Label>Mes de inicio</Label>
-                                      <Select
-                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.startMonth`}
-                                        value={course.startMonth ?? ""}
-                                        onChange={(e) => updateCertification(course.id, "startMonth", e.target.value)}
-                                        options={monthSelectOptions}
-                                        placeholder="Seleccionar mes"
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label>Año de inicio</Label>
-                                      <Select
-                                        data-field-id={`certifications.${formData.certifications.findIndex((item) => item.id === course.id)}.startYear`}
-                                        value={course.startYear ?? ""}
-                                        onChange={(e) => updateCertification(course.id, "startYear", e.target.value)}
-                                        options={yearSelectOptions}
-                                        placeholder="Seleccionar año"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button type="button" onClick={() => setEditingCertificationId(null)}>
-                                      Guardar
-                                    </Button>
-                                    <Button type="button" variant="outline" onClick={cancelCertificationEdit}>
-                                      Cancelar
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-start justify-between gap-3">
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeCertification(course.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="space-y-3">
+                                <div className="grid gap-3 md:grid-cols-2">
                                   <div>
-                                    <p className="font-medium">{course.title || course.name || "Sin título"}</p>
-                                    {course.institution || course.issuer ? (
-                                      <p className="text-sm text-muted-foreground">{course.institution || course.issuer}</p>
-                                    ) : null}
-                                    <p className="text-xs text-muted-foreground">
-                                      {[course.startMonth, course.startYear].filter(Boolean).join("/") || "Sin fecha"}
-                                    </p>
+                                    <Label>Título del curso</Label>
+                                    <Input
+                                      data-field-id={`certifications.${index}.title`}
+                                      value={course.title ?? ""}
+                                      onChange={(e) =>
+                                        updateCertification(course.id, "title", e.target.value)
+                                      }
+                                      className={cn(
+                                        getFieldError(`certifications.${index}.title`) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
+                                    />
+                                    {getFieldError(`certifications.${index}.title`) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(`certifications.${index}.title`)}
+                                      </p>
+                                    )}
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => startCertificationEdit(course)}>
-                                      <Sparkles className="h-4 w-4" />
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
-                                      <X className="h-4 w-4" />
-                                    </Button>
+                                  <div>
+                                    <Label>Institución</Label>
+                                    <Input
+                                      data-field-id={`certifications.${index}.institution`}
+                                      value={course.institution ?? ""}
+                                      onChange={(e) =>
+                                        updateCertification(course.id, "institution", e.target.value)
+                                      }
+                                      className={cn(
+                                        getFieldError(`certifications.${index}.institution`) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
+                                    />
+                                    {getFieldError(`certifications.${index}.institution`) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(`certifications.${index}.institution`)}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
-                              )}
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  <div>
+                                    <Label>Mes de inicio</Label>
+                                    <Select
+                                      data-field-id={`certifications.${index}.startMonth`}
+                                      value={course.startMonth ?? ""}
+                                      onChange={(e) =>
+                                        updateCertification(course.id, "startMonth", e.target.value)
+                                      }
+                                      options={monthSelectOptions}
+                                      placeholder="Seleccionar mes"
+                                      className={cn(
+                                        getFieldError(`certifications.${index}.startMonth`) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
+                                    />
+                                    {getFieldError(`certifications.${index}.startMonth`) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(`certifications.${index}.startMonth`)}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <Label>Año de inicio</Label>
+                                    <Select
+                                      data-field-id={`certifications.${index}.startYear`}
+                                      value={course.startYear ?? ""}
+                                      onChange={(e) =>
+                                        updateCertification(course.id, "startYear", e.target.value)
+                                      }
+                                      options={yearSelectOptions}
+                                      placeholder="Seleccionar año"
+                                      className={cn(
+                                        getFieldError(`certifications.${index}.startYear`) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
+                                    />
+                                    {getFieldError(`certifications.${index}.startYear`) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(`certifications.${index}.startYear`)}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1429,9 +1318,10 @@ export default function AdminNewCVPage() {
                         Agregar idioma
                       </Button>
                       <div className="space-y-3">
-                        {formData.languages.map((lang) => (
+                        {formData.languages.map((lang, index) => (
                           <div key={lang.id} className="flex gap-2 items-center rounded-md border bg-background p-3">
                             <Select
+                              data-field-id={`languages.${index}.language`}
                               value={lang.language}
                               onChange={(e) =>
                                 updateLanguage(
@@ -1442,14 +1332,17 @@ export default function AdminNewCVPage() {
                               }
                               options={languageSelectOptions}
                               className="flex-1"
+                              placeholder="Idioma"
                             />
                             <Select
+                              data-field-id={`languages.${index}.level`}
                               value={lang.level}
                               onChange={(e) =>
                                 updateLanguage(lang.id, "level", e.target.value)
                               }
                               options={levelSelectOptions}
                               className="w-24"
+                              placeholder="Nivel"
                             />
                             <Button
                               variant="ghost"

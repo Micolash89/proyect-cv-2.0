@@ -71,6 +71,8 @@ import {
 import {
   availabilityOptions,
   layoutOptions,
+  languageSelectOptions,
+  levelSelectOptions,
   monthSelectOptions,
   yearSelectOptions,
   EDUCATION_STATUS_OPTIONS,
@@ -127,14 +129,7 @@ export default function AdminCVPage() {
     {},
   );
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [showCertificationForm, setShowCertificationForm] = useState(false);
   const [showLicenseInput, setShowLicenseInput] = useState(false);
-  const [newCertification, setNewCertification] = useState({
-    title: "",
-    institution: "",
-    startMonth: "",
-    startYear: "",
-  });
 
   const normalizeTemplateSettings = useCallback(
     (
@@ -201,6 +196,10 @@ export default function AdminCVPage() {
       const { user: fetchedUser } = await getCV(params.id as string);
       const hydratedUser = {
         ...fetchedUser,
+        languages:
+          fetchedUser.languages && fetchedUser.languages.length > 0
+            ? fetchedUser.languages
+            : [{ id: generateId(), language: "", level: "" }],
         templateSettings: normalizeTemplateSettings(
           fetchedUser.selectedTemplate,
           fetchedUser.templateSettings,
@@ -486,26 +485,18 @@ export default function AdminCVPage() {
   const addCertification = () => {
     if (!user) return;
 
-    if (
-      !newCertification.title.trim() ||
-      !newCertification.institution.trim()
-    ) {
-      toast.error("Completá el título y la institución");
-      return;
-    }
-
     const nextUser = {
       ...user,
       certifications: [
         ...(user.certifications || []),
         {
           id: generateId(),
-          title: newCertification.title.trim(),
-          institution: newCertification.institution.trim(),
-          startMonth: newCertification.startMonth,
-          startYear: newCertification.startYear.trim(),
-          name: newCertification.title.trim(),
-          issuer: newCertification.institution.trim(),
+          title: "",
+          institution: "",
+          startMonth: "",
+          startYear: "",
+          name: "",
+          issuer: "",
           date: "",
         },
       ],
@@ -513,13 +504,6 @@ export default function AdminCVPage() {
 
     setUser(nextUser);
     validateRealtime(nextUser);
-    setShowCertificationForm(false);
-    setNewCertification({
-      title: "",
-      institution: "",
-      startMonth: "",
-      startYear: "",
-    });
   };
 
   const removeCertification = (id: string) => {
@@ -840,28 +824,42 @@ export default function AdminCVPage() {
   };
 
   // Language functions
-  const addLanguage = (language: string, level: string) => {
-    if (!user || !language.trim()) return;
-    const newLang = { id: generateId(), language: language.trim(), level };
-    setUser({ ...user, languages: [...user.languages, newLang] });
+  const addLanguage = () => {
+    if (!user) return;
+    setUser({
+      ...user,
+      languages: [...user.languages, { id: generateId(), language: "", level: "" }],
+    });
   };
 
   const removeLanguage = (id: string) => {
     if (!user) return;
+    const nextLanguages = user.languages.filter((l: any) => l.id !== id);
     setUser({
       ...user,
-      languages: user.languages.filter((l: any) => l.id !== id),
+      languages:
+        nextLanguages.length > 0
+          ? nextLanguages
+          : [{ id: generateId(), language: "", level: "" }],
     });
   };
 
   const updateLanguage = (id: string, field: string, value: string) => {
     if (!user) return;
+    const index = user.languages.findIndex((language: any) => language.id === id);
     setUser({
       ...user,
       languages: user.languages.map((l: any) =>
         l.id === id ? { ...l, [field]: value } : l,
       ),
     });
+
+    if (index >= 0) {
+      setTouchedFields((prev) => ({
+        ...prev,
+        [`languages.${index}.${field}`]: true,
+      }));
+    }
   };
 
   if (loading) {
@@ -1239,112 +1237,22 @@ export default function AdminCVPage() {
             <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
               <BookOpen className="h-5 w-5 text-primary" />
               <CardTitle>Cursos y certificaciones</CardTitle>
-              {!showCertificationForm ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="ml-auto"
-                  onClick={() => setShowCertificationForm(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar
-                </Button>
-              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                onClick={addCertification}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!showCertificationForm ? (
-                <div className="text-sm text-muted-foreground">
-                  Completá tus cursos y certificaciones para destacarlos en el
-                  CV.
-                </div>
-              ) : (
-                <div className="grid gap-3 rounded-md border p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <Label>Título del curso</Label>
-                      <Input
-                        data-field-id="certifications.new.title"
-                        value={newCertification.title}
-                        onChange={(e) =>
-                          setNewCertification((prev) => ({
-                            ...prev,
-                            title: e.target.value,
-                          }))
-                        }
-                        placeholder="Ej: Excel avanzado"
-                      />
-                    </div>
-                    <div>
-                      <Label>Institución</Label>
-                      <Input
-                        data-field-id="certifications.new.institution"
-                        value={newCertification.institution}
-                        onChange={(e) =>
-                          setNewCertification((prev) => ({
-                            ...prev,
-                            institution: e.target.value,
-                          }))
-                        }
-                        placeholder="Ej: Universidad X"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <Label>Mes de inicio</Label>
-                      <Select
-                        data-field-id="certifications.new.startMonth"
-                        value={newCertification.startMonth}
-                        onChange={(e) =>
-                          setNewCertification((prev) => ({
-                            ...prev,
-                            startMonth: e.target.value,
-                          }))
-                        }
-                        options={monthSelectOptions}
-                        placeholder="Seleccionar mes"
-                      />
-                    </div>
-                    <div>
-                      <Label>Año de inicio</Label>
-                      <Select
-                        data-field-id="certifications.new.startYear"
-                        value={newCertification.startYear}
-                        onChange={(e) =>
-                          setNewCertification((prev) => ({
-                            ...prev,
-                            startYear: e.target.value,
-                          }))
-                        }
-                        options={yearSelectOptions}
-                        placeholder="Seleccionar año"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button type="button" onClick={addCertification}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Agregar
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowCertificationForm(false);
-                        setNewCertification({
-                          title: "",
-                          institution: "",
-                          startMonth: "",
-                          startYear: "",
-                        });
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <div className="text-sm text-muted-foreground">
+                Completá tus cursos y certificaciones para destacarlos en el
+                CV.
+              </div>
 
               <div className="space-y-3">
                 {(user.certifications || []).length > 0 ? (
@@ -1836,75 +1744,36 @@ export default function AdminCVPage() {
               <CardTitle>Idiomas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex w-full min-w-0 flex-col gap-2 md:flex-row">
-                <Input
-                  placeholder="Idioma (ej: Inglés)"
-                  id="newLanguage"
-                  className="w-full md:flex-1"
-                />
-                <select
-                  id="newLanguageLevel"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-                >
-                  <option
-                    value=""
-                    hidden
-                    defaultChecked
-                    className="text-muted-foreground"
-                  >
-                    Nivel
-                  </option>
-                  <option value="Básico">Básico</option>
-                  <option value="Intermedio">Intermedio</option>
-                  <option value="Avanzado">Avanzado</option>
-                  <option value="Nativo">Nativo</option>
-                </select>
-                <Button
-                  type="button"
-                  className="w-full md:w-auto"
-                  onClick={() => {
-                    const input = document.getElementById(
-                      "newLanguage",
-                    ) as HTMLInputElement;
-                    const select = document.getElementById(
-                      "newLanguageLevel",
-                    ) as HTMLSelectElement;
-                    addLanguage(input.value, select.value);
-                    input.value = "";
-                    select.value = "Básico";
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button type="button" variant="outline" onClick={addLanguage}>
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar idioma
+              </Button>
               <div className="space-y-2">
-                {user.languages.map((lang: any) => (
+                {user.languages.map((lang: any, index: number) => (
                   <div
                     key={lang.id}
                     className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center"
                   >
-                    <Input
+                    <Select
+                      data-field-id={`languages.${index}.language`}
                       value={lang.language || ""}
                       onChange={(e) =>
                         updateLanguage(lang.id, "language", e.target.value)
                       }
+                      options={languageSelectOptions}
+                      placeholder="Idioma"
                       className="w-full md:flex-1"
                     />
-                    <select
-                      value={lang.level || "Básico"}
+                    <Select
+                      data-field-id={`languages.${index}.level`}
+                      value={lang.level || ""}
                       onChange={(e) =>
                         updateLanguage(lang.id, "level", e.target.value)
                       }
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-                    >
-                      <option value="" disabled hidden>
-                        Nivel
-                      </option>
-                      <option value="Básico">Básico</option>
-                      <option value="Intermedio">Intermedio</option>
-                      <option value="Avanzado">Avanzado</option>
-                      <option value="Nativo">Nativo</option>
-                    </select>
+                      options={levelSelectOptions}
+                      placeholder="Nivel"
+                      className="w-full md:w-40"
+                    />
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1913,6 +1782,16 @@ export default function AdminCVPage() {
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
+                    {getFieldError(`languages.${index}.language`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
+                        {getFieldError(`languages.${index}.language`)}
+                      </p>
+                    )}
+                    {getFieldError(`languages.${index}.level`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
+                        {getFieldError(`languages.${index}.level`)}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
