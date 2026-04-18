@@ -292,15 +292,48 @@ const educationSchema = z
     }
   });
 
-const languageSchema = z.object({
-  id: z.string().min(1, "Idioma: ID inválido"),
-  language: optionalTextField("Idioma", 2, 30),
-  level: z
-    .string()
-    .trim()
-    .min(2, "Nivel: es obligatorio")
-    .max(20, "Nivel: puede contener hasta 20 caracteres"),
-});
+const languageSchema = z
+  .object({
+    id: z.string().min(1, "Idioma: ID inválido"),
+    language: optionalTextField("Idioma", 2, 30),
+    level: optionalTextField("Nivel", 2, 20),
+  })
+  .superRefine((value, ctx) => {
+    const hasLanguage = hasValue(value.language);
+    const hasLevel = hasValue(value.level);
+
+    if (!hasLanguage && !hasLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["language"],
+        message: "Idioma: completá idioma y nivel o eliminá esta fila",
+      });
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["level"],
+        message: "Nivel: completá idioma y nivel o eliminá esta fila",
+      });
+
+      return;
+    }
+
+    if (hasLanguage && !hasLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["level"],
+        message: "Nivel: seleccioná un nivel para el idioma ingresado",
+      });
+    }
+
+    if (!hasLanguage && hasLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["language"],
+        message: "Idioma: seleccioná un idioma para el nivel ingresado",
+      });
+    }
+  });
 
 const certificationSchema = z
   .object({

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,6 +66,17 @@ import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validatio
 import { validateImageFile } from "@/lib/validations/files";
 
 const ADMIN_NEW_IA_SESSION_KEY = "admin-new-cv-ia-data";
+const STEP_ERROR_PREFIXES: Record<number, string[]> = {
+  1: ["name", "lastName", "phone", "email", "dni", "fechaNacimiento", "location", "links"],
+  2: ["photo"],
+  3: ["experience"],
+  4: ["education"],
+  5: ["certifications"],
+  6: ["skills", "languages"],
+  7: ["summary", "targetJob", "licencia", "movilidad", "incorporacionInmediata", "disponibilidad", "office"],
+  8: ["selectedTemplate", "templateSettings"],
+  9: [],
+};
 
 export default function AdminNewCVPage() {
   const router = useRouter();
@@ -95,7 +106,7 @@ export default function AdminNewCVPage() {
     experience: [] as Experience[],
     education: [] as Education[],
     skills: [] as string[],
-    languages: [{ id: generateId(), language: "", level: "" }] as Language[],
+    languages: [] as Language[],
     certifications: [] as Certification[],
     selectedTemplate: "harvard" as TemplateType,
     templateSettings: ADMIN_NEW_DEFAULT_TEMPLATE_SETTINGS,
@@ -133,6 +144,26 @@ export default function AdminNewCVPage() {
 
     return fieldErrors[path] ?? "";
   }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const visibleErrorKeys = useMemo(() => {
+    const errorKeys = Object.keys(fieldErrors);
+    if (submitAttempted) {
+      return errorKeys;
+    }
+
+    return errorKeys.filter((key) => touchedFields[key]);
+  }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const stepHasVisibleError = useCallback((stepId: number) => {
+    const prefixes = STEP_ERROR_PREFIXES[stepId] ?? [];
+    if (prefixes.length === 0) {
+      return false;
+    }
+
+    return visibleErrorKeys.some((errorPath) =>
+      prefixes.some((prefix) => errorPath === prefix || errorPath.startsWith(`${prefix}.`)),
+    );
+  }, [visibleErrorKeys]);
 
   const scrollToField = useCallback((fieldPath: string) => {
     if (typeof document === "undefined") {
@@ -368,9 +399,7 @@ export default function AdminNewCVPage() {
   const removeLanguage = (id: string) => {
     const nextLanguages = formData.languages.filter((l) => l.id !== id);
     updateFormData({
-      languages: nextLanguages.length > 0
-        ? nextLanguages
-        : [{ id: generateId(), language: "", level: "" }],
+      languages: nextLanguages,
     });
   };
 
@@ -530,7 +559,10 @@ export default function AdminNewCVPage() {
 
         <div className="hidden md:flex justify-center mb-8 overflow-x-auto pb-2">
           <div className="flex items-center gap-2">
-            {registroSteps.map((step, index) => (
+            {registroSteps.map((step, index) => {
+              const hasStepError = stepHasVisibleError(step.id);
+
+              return (
               <div key={step.id} className="flex items-center">
                 <button
                   type="button"
@@ -539,11 +571,15 @@ export default function AdminNewCVPage() {
                   aria-label={`Paso ${step.id}: ${step.title}`}
                   className={cn(
                     "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
-                    currentStep === step.id
-                      ? "bg-foreground text-background"
-                      : step.id < currentStep
-                        ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
-                        : "bg-muted/50 text-muted-foreground cursor-not-allowed",
+                    hasStepError
+                      ? currentStep === step.id
+                        ? "bg-red-600 text-white"
+                        : "bg-red-100 text-red-700"
+                      : currentStep === step.id
+                        ? "bg-foreground text-background"
+                        : step.id < currentStep
+                          ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
+                          : "bg-muted/50 text-muted-foreground cursor-not-allowed",
                   )}
                   disabled={step.id > currentStep}
                 >
@@ -553,7 +589,8 @@ export default function AdminNewCVPage() {
                   <div className="w-8 h-0.5 bg-border mx-2" />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -1319,7 +1356,7 @@ export default function AdminNewCVPage() {
                       </Button>
                       <div className="space-y-3">
                         {formData.languages.map((lang, index) => (
-                          <div key={lang.id} className="flex gap-2 items-center rounded-md border bg-background p-3">
+                          <div key={lang.id} className="flex flex-col gap-2 rounded-md border bg-background p-3 sm:flex-row sm:items-center">
                             <Select
                               data-field-id={`languages.${index}.language`}
                               value={lang.language}
@@ -1331,7 +1368,10 @@ export default function AdminNewCVPage() {
                                 )
                               }
                               options={languageSelectOptions}
-                              className="flex-1"
+                              className={cn(
+                                "flex-1",
+                                getFieldError(`languages.${index}.language`) && "border-red-500 focus-visible:ring-red-500",
+                              )}
                               placeholder="Idioma"
                             />
                             <Select
@@ -1341,7 +1381,10 @@ export default function AdminNewCVPage() {
                                 updateLanguage(lang.id, "level", e.target.value)
                               }
                               options={levelSelectOptions}
-                              className="w-24"
+                              className={cn(
+                                "sm:w-24",
+                                getFieldError(`languages.${index}.level`) && "border-red-500 focus-visible:ring-red-500",
+                              )}
                               placeholder="Nivel"
                             />
                             <Button
@@ -1351,6 +1394,16 @@ export default function AdminNewCVPage() {
                             >
                               <X className="h-4 w-4" />
                             </Button>
+                            {getFieldError(`languages.${index}.language`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 sm:col-span-3">
+                                {getFieldError(`languages.${index}.language`)}
+                              </p>
+                            )}
+                            {getFieldError(`languages.${index}.level`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 sm:col-span-3">
+                                {getFieldError(`languages.${index}.level`)}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>

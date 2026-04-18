@@ -9,6 +9,71 @@ export interface ErrorSummaryProps {
   onErrorClick: (fieldPath: string) => void;
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: "Nombre",
+  lastName: "Apellido",
+  fullName: "Nombre completo",
+  phone: "Teléfono",
+  email: "Email",
+  dni: "DNI",
+  fechaNacimiento: "Fecha de nacimiento",
+  location: "Ubicación",
+  links: "Links",
+  summary: "Resumen",
+  targetJob: "Puesto objetivo",
+  selectedTemplate: "Plantilla",
+  templateSettings: "Configuración de plantilla",
+  company: "Empresa",
+  position: "Puesto",
+  startDate: "Fecha desde",
+  endDate: "Fecha hasta",
+  description: "Descripción",
+  institution: "Institución",
+  degree: "Título/Carrera",
+  status: "Estado",
+  title: "Título del curso",
+  startMonth: "Mes de inicio",
+  startYear: "Año de inicio",
+  language: "Idioma",
+  level: "Nivel",
+};
+
+const SECTION_LABELS: Record<string, string> = {
+  experience: "Experiencia",
+  education: "Educación",
+  certifications: "Cursos/Certificaciones",
+  languages: "Idiomas",
+  skills: "Habilidades",
+};
+
+function formatFieldPath(fieldPath: string): string {
+  const [section, secondPart, ...rest] = fieldPath.split(".");
+
+  if (!secondPart) {
+    return FIELD_LABELS[section] ?? section;
+  }
+
+  const sectionLabel = SECTION_LABELS[section] ?? FIELD_LABELS[section] ?? section;
+  const isIndexedField = /^\d+$/.test(secondPart);
+
+  if (isIndexedField) {
+    const indexLabel = `#${Number(secondPart) + 1}`;
+    const nestedField = rest[0] ?? "";
+    const nestedLabel = FIELD_LABELS[nestedField] ?? nestedField;
+
+    return nestedLabel
+      ? `${sectionLabel} ${indexLabel} - ${nestedLabel}`
+      : `${sectionLabel} ${indexLabel}`;
+  }
+
+  const nestedPath = [secondPart, ...rest].join(".");
+  const nestedLabel = FIELD_LABELS[nestedPath] ?? FIELD_LABELS[secondPart] ?? nestedPath;
+
+  return nestedLabel
+    ? `${sectionLabel} - ${nestedLabel}`
+    : sectionLabel;
+}
+
 export function ErrorSummary({ errors, onErrorClick }: ErrorSummaryProps) {
   const entries = Object.entries(errors);
 
@@ -31,7 +96,7 @@ export function ErrorSummary({ errors, onErrorClick }: ErrorSummaryProps) {
             className="h-auto w-full justify-start whitespace-normal border border-red-200 bg-white px-3 py-2 text-left text-sm text-red-700 hover:bg-red-100"
             onClick={() => onErrorClick(fieldPath)}
           >
-            <span className="font-medium">{fieldPath}</span>
+            <span className="font-medium">{formatFieldPath(fieldPath)}</span>
             <span className="mx-2 text-red-300">·</span>
             <span>{message}</span>
           </Button>

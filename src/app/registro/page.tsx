@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -72,15 +72,24 @@ import {
 import { buildTemplateSettingsDefaults } from "@/lib/constants/cv";
 import { validateImageFile } from "@/lib/validations/files";
 
+const STEP_ERROR_PREFIXES: Record<number, string[]> = {
+  1: ["name", "lastName", "phone", "email", "dni", "fechaNacimiento", "location", "links"],
+  2: ["photo"],
+  3: ["experience"],
+  4: ["education"],
+  5: ["certifications"],
+  6: ["skills", "languages"],
+  7: ["summary", "targetJob", "licencia", "movilidad", "incorporacionInmediata", "disponibilidad", "office"],
+  8: ["selectedTemplate", "templateSettings"],
+  9: [],
+};
+
 function RegistroPageContent() {
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CVFormDraft>({
     ...REGISTRO_DEFAULT_FORM_DATA,
-    languages:
-      REGISTRO_DEFAULT_FORM_DATA.languages.length > 0
-        ? REGISTRO_DEFAULT_FORM_DATA.languages
-        : [{ id: generateId(), language: "", level: "" }],
+    languages: REGISTRO_DEFAULT_FORM_DATA.languages,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -120,6 +129,26 @@ function RegistroPageContent() {
 
     return fieldErrors[path] ?? "";
   }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const visibleErrorKeys = useMemo(() => {
+    const errorKeys = Object.keys(fieldErrors);
+    if (submitAttempted) {
+      return errorKeys;
+    }
+
+    return errorKeys.filter((key) => touchedFields[key]);
+  }, [fieldErrors, submitAttempted, touchedFields]);
+
+  const stepHasVisibleError = useCallback((stepId: number) => {
+    const prefixes = STEP_ERROR_PREFIXES[stepId] ?? [];
+    if (prefixes.length === 0) {
+      return false;
+    }
+
+    return visibleErrorKeys.some((errorPath) =>
+      prefixes.some((prefix) => errorPath === prefix || errorPath.startsWith(`${prefix}.`)),
+    );
+  }, [visibleErrorKeys]);
 
   const scrollToField = useCallback((fieldPath: string) => {
     if (typeof document === "undefined") {
@@ -403,10 +432,7 @@ function RegistroPageContent() {
     const nextLanguages = formData.languages.filter((lang) => lang.id !== id);
     setFormData((prev) => ({
       ...prev,
-      languages:
-        nextLanguages.length > 0
-          ? nextLanguages
-          : [{ id: generateId(), language: "", level: "" }],
+      languages: nextLanguages,
     }));
   };
 
@@ -519,7 +545,10 @@ function RegistroPageContent() {
 
         <div className="hidden md:flex justify-center mb-8 overflow-x-auto pb-2">
           <div className="flex items-center gap-2">
-            {registroSteps.map((step, index) => (
+            {registroSteps.map((step, index) => {
+              const hasStepError = stepHasVisibleError(step.id);
+
+              return (
               <div key={step.id} className="flex items-center">
                 <button
                   onClick={() =>
@@ -529,11 +558,15 @@ function RegistroPageContent() {
                   aria-label={`Paso ${step.id}: ${step.title}`}
                   className={cn(
                     "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
-                    currentStep === step.id
-                      ? "bg-foreground text-background"
-                      : step.id < currentStep
-                        ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
-                        : "bg-muted/50 text-muted-foreground cursor-not-allowed",
+                    hasStepError
+                      ? currentStep === step.id
+                        ? "bg-red-600 text-white"
+                        : "bg-red-100 text-red-700"
+                      : currentStep === step.id
+                        ? "bg-foreground text-background"
+                        : step.id < currentStep
+                          ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
+                          : "bg-muted/50 text-muted-foreground cursor-not-allowed",
                   )}
                   disabled={step.id > currentStep}
                 >
@@ -543,7 +576,8 @@ function RegistroPageContent() {
                   <div className="w-8 h-0.5 bg-border mx-2" />
                 )}
               </div>
-            ))}
+              );
+            })}
             </div>
             </div>
 
@@ -1291,7 +1325,10 @@ function RegistroPageContent() {
                               placeholder="Idioma"
                               onChange={(e) => updateLanguage(lang.id, "language", e.target.value)}
                               options={languageSelectOptions}
-                              className="flex-1"
+                              className={cn(
+                                "flex-1",
+                                getFieldError(`languages.${index}.language`) && "border-red-500 focus-visible:ring-red-500",
+                              )}
                             />
                             <Select
                               data-field-id={`languages.${index}.level`}
@@ -1299,7 +1336,10 @@ function RegistroPageContent() {
                               placeholder="Nivel"
                               onChange={(e) => updateLanguage(lang.id, "level", e.target.value)}
                               options={levelSelectOptions}
-                              className="sm:w-32"
+                              className={cn(
+                                "sm:w-32",
+                                getFieldError(`languages.${index}.level`) && "border-red-500 focus-visible:ring-red-500",
+                              )}
                             />
                             <Button
                               type="button"

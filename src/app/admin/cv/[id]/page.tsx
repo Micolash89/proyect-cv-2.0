@@ -196,10 +196,7 @@ export default function AdminCVPage() {
       const { user: fetchedUser } = await getCV(params.id as string);
       const hydratedUser = {
         ...fetchedUser,
-        languages:
-          fetchedUser.languages && fetchedUser.languages.length > 0
-            ? fetchedUser.languages
-            : [{ id: generateId(), language: "", level: "" }],
+        languages: fetchedUser.languages ?? [],
         templateSettings: normalizeTemplateSettings(
           fetchedUser.selectedTemplate,
           fetchedUser.templateSettings,
@@ -837,10 +834,7 @@ export default function AdminCVPage() {
     const nextLanguages = user.languages.filter((l: any) => l.id !== id);
     setUser({
       ...user,
-      languages:
-        nextLanguages.length > 0
-          ? nextLanguages
-          : [{ id: generateId(), language: "", level: "" }],
+      languages: nextLanguages,
     });
   };
 
