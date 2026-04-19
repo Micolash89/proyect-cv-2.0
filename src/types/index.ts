@@ -31,7 +31,7 @@ export interface Experience {
   id: string;
   company: string;
   position: string;
-  startDate: string;
+  startDate?: string;
   endDate?: string;
   current: boolean;
   description: string;
@@ -44,7 +44,7 @@ export interface Education {
   id: string;
   institution: string;
   degree: string;
-  startDate: string;
+  startDate?: string;
   endDate?: string;
   status: EducationStatus;
   provincia?: string;
@@ -62,8 +62,8 @@ export interface Certification {
   id: string;
   title: string;
   institution?: string;
-  startMonth: string;
-  startYear: string;
+  startMonth?: string;
+  startYear?: string;
   name?: string;
   issuer?: string;
   date?: string;

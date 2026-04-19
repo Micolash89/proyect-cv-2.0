@@ -45,7 +45,7 @@ const MONTH_LABELS: Record<string, string> = {
   "12": "Diciembre",
 };
 
-function toDate(value: string): Date | null {
+function toDate(value?: string): Date | null {
   if (!value) {
     return null;
   }
@@ -58,7 +58,7 @@ function toDate(value: string): Date | null {
   return parsed;
 }
 
-function isFutureDate(value: string): boolean {
+function isFutureDate(value?: string): boolean {
   const date = toDate(value);
   if (!date) {
     return false;
@@ -168,7 +168,7 @@ const experienceSchema = z
     id: z.string().min(1, "Experiencia: ID inválido"),
     company: optionalTextField("Empresa", 2, 80),
     position: optionalTextField("Puesto", 2, 80),
-    startDate: z.string().trim(),
+    startDate: z.string().trim().optional(),
     endDate: z.string().trim().optional(),
     current: z.boolean().default(false),
     description: optionalTextField("Descripción", 10, 1000),
@@ -192,14 +192,6 @@ const experienceSchema = z
         code: z.ZodIssueCode.custom,
         path: ["position"],
         message: "Puesto: es obligatorio si agregás experiencia",
-      });
-    }
-
-    if (!hasValue(value.startDate)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["startDate"],
-        message: "Fecha desde: es obligatoria",
       });
     }
 
@@ -239,7 +231,7 @@ const educationSchema = z
     status: z.enum(EDUCATION_STATUS_VALUES, {
       message: "Estado de estudio: es obligatorio",
     }),
-    startDate: z.string().trim(),
+    startDate: z.string().trim().optional(),
     endDate: z.string().trim().optional(),
     provincia: optionalTextField("Provincia", 2, 40).optional(),
     municipio: optionalTextField("Municipio", 2, 40).optional(),
@@ -261,14 +253,6 @@ const educationSchema = z
         code: z.ZodIssueCode.custom,
         path: ["degree"],
         message: "Título/Carrera: es obligatorio si agregás educación",
-      });
-    }
-
-    if (!hasValue(value.startDate)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["startDate"],
-        message: "Fecha desde: es obligatoria",
       });
     }
 

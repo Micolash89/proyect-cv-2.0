@@ -160,8 +160,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
                     {formatCertificationInstitution(course)}
                   </Text>
                   <Text style={styles.leftMetaText}>
-                    {course.startMonth + course.startMonth &&
-                      "/" + course.startYear}
+                    {formatCertificationDate(course)}
                   </Text>
                 </View>
               </View>
