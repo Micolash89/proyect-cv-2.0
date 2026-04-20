@@ -428,7 +428,7 @@ export const cvFormValidationSchema = z
       .regex(phoneRegex, "Teléfono: solo se permiten números, espacios y +"),
     email: z.union([
       z.literal(""),
-      z.string().trim().email("Email: debe ser válido").max(80),
+      z.string().trim().email("Email: debe ser válido").max(80).transform((val) => val.toLowerCase()),
     ]),
     dni: z
       .string()
