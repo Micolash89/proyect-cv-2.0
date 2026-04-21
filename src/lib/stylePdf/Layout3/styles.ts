@@ -56,20 +56,20 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
     },
     bodyContainer: {
       flexDirection: "row",
-      paddingHorizontal: bodyPaddingX,
+      paddingHorizontal: bodyPaddingX-8,
       paddingTop: bodyPaddingY-2,
       paddingBottom: 0,
       marginBottom:0,
     },
     leftColumn: {
       width: "35%",
-      paddingRight: 14,
+      paddingRight: 10,
       borderRightWidth: 1.5,
       borderRightColor: "#D4D8E0",
     },
     rightColumn: {
       width: "65%",
-      paddingLeft: 20,
+      paddingLeft: 10,
     },
     section: {
       marginBottom: 14,
@@ -87,6 +87,7 @@ export const createLayout3Styles = (opts: OptionsPDF) => {
       color: "#5B6576",
       fontSize: opts.bodyFontSize + 1,
       lineHeight: 1.35,
+
     },
     leftInfoMeta: {
       color: "#7B8698",

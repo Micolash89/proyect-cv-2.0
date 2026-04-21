@@ -59,7 +59,7 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   const additionalInfoLines = buildAdditionalInfoLines(user);
 
   const experienceEntries = user.experience.map((exp, index) => (
-    <View key={index} style={styles.entryContainer}>
+    <View key={index} style={styles.entryContainer} wrap={false}>
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{exp.company}</Text>
         <Text style={styles.location}>
@@ -86,7 +86,7 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
   ));
 
   const educationEntries = user.education.map((edu, index) => (
-    <View key={index} style={styles.entryContainer}>
+    <View key={index} style={styles.entryContainer} wrap={false}>
       <View style={styles.entryHeader}>
         <Text style={styles.institution}>{edu.institution}</Text>
         <Text style={styles.location}>
@@ -122,7 +122,7 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const certificationEntries = (user.certifications || []).map(
     (cert, index) => (
-      <View key={index} style={styles.certificationItem}>
+      <View key={index} style={styles.certificationItem} wrap={false}>
         <View style={styles.certificationItemHeader}>
           <Text style={styles.certificationTitle}>
             {formatCertificationTitle(cert)}
@@ -146,7 +146,9 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
       {options.showSummary && user.summary && (
         <View style={[styles.section, { paddingHorizontal: 8 }]}>
           <View>
-            <Text style={styles.summary}>{user.summary}</Text>
+            <Text style={styles.summary} hyphenationCallback={(word) => [word]}>
+              {user.summary}
+            </Text>
           </View>
         </View>
       )}
@@ -199,7 +201,9 @@ export const Layout0Body: React.FC<BodyProps> = ({ user, options }) => {
             {user.skills.map((skill, index) => (
               <View key={index} style={styles.bulletItem}>
                 <Text style={styles.bulletDot}>•</Text>
-                <Text style={styles.bulletText}>{skill}</Text>
+                <Text style={styles.bulletText} hyphenationCallback={(word) => [word]}>
+                  {skill}
+                </Text>
               </View>
             ))}
           </View>

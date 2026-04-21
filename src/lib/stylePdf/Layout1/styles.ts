@@ -22,7 +22,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     sidebar: {
       width: "29%",
       color: "#FFFFFF",
-      paddingHorizontal: sidebarPaddingX,
+      paddingHorizontal: sidebarPaddingX- 4,
       paddingTop: sidebarPaddingY,
       paddingBottom: sidebarPaddingY,
       backgroundColor: sidebarBackground,
@@ -112,13 +112,11 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
     companyName: {
       fontSize: opts.bodyFontSize + 1,
       fontWeight: "bold",
-      // color: "#24364A",
       color: opts.primaryColor === "#f6aad1"?"#000000": "#24364A",
     },
     jobTitle: {
       fontSize: opts.bodyFontSize,
       fontWeight: "bold",
-      // color: "#31475C",
       color: opts.primaryColor === "#f6aad1"?"#8a7e7e": "#31475C",
       marginBottom: 1,
     },
@@ -146,6 +144,7 @@ export const createLayout1Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize + 1,
       color: "#3F4B5A",
       lineHeight: 1.4,
+      textAlign: "justify",
     },
     additionalInfo: {
       color: "#FFFFFF",

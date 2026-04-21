@@ -84,7 +84,7 @@ export const createLayout2Styles = (opts: OptionsPDF) => {
     },
     skillPill: {
       alignSelf: "flex-start",
-      backgroundColor: colorOptionColor,
+      backgroundColor: sidebarBackground==="#F3F2E3" ? "black" : "#6f6f6f",
       color:  "#ffffff",
       borderRadius: 9,
       fontSize: opts.bodyFontSize - 2,

@@ -150,7 +150,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
               CURSOS Y CERTIFICACIONES
             </Text>
             {orderedCourses.map((course, index) => (
-              <View key={index} style={styles.courseItem}>
+              <View key={index} style={styles.courseItem} wrap={false}>
                 <Text style={styles.leftText}>
                   {formatCertificationTitle(course)}
                 </Text>
@@ -193,7 +193,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
               });
 
               return (
-                <View key={index} style={styles.entryContainer}>
+                <View key={index} style={styles.entryContainer} wrap={false}>
                   <View style={styles.conteinerExperienceHeader}>
                     <View style={styles.entryHeader}>
                       <Text style={styles.entryTitle}>{exp.position}</Text>
@@ -215,7 +215,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
                   {toBulletLines(exp.description).map((line, lineIndex) => (
                     <View key={lineIndex} style={styles.bulletItem}>
                       <Text style={styles.bulletDot}>•</Text>
-                      <Text style={styles.bulletText}>{line}</Text>
+                      <Text style={styles.bulletText} hyphenationCallback={(word) => [word]}>{line}</Text>
                     </View>
                   ))}
                 </View>
@@ -234,9 +234,9 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
               });
 
               return (
-                <View key={index} style={styles.entryContainer}>
+                <View key={index} style={styles.entryContainer} wrap={false}>
                   <View style={[styles.entryHeader, { marginBottom: 2 }]}>
-                    <Text style={styles.entryTitle}>
+                    <Text style={styles.entryTitle} hyphenationCallback={(word) => [word]}>
                       {formatEducationDegreeWithoutStatus(edu.degree)}
                     </Text>
                     <Text style={styles.entryMeta}>
@@ -248,7 +248,7 @@ export const Layout5Body: React.FC<BodyProps> = ({ user, options }) => {
                     </Text>
                   </View>
                   <View style={[styles.entryHeader, { marginBottom: 2 }]}>
-                    <Text style={styles.entryCompany}>
+                    <Text style={[styles.entryCompany, { maxWidth: `${location ? "85%" : "100%"}` }]} hyphenationCallback={(word) => [word]}>
                       {edu.institution +
                         "(" +
                         formatEducationStatusLabel(edu.status) +

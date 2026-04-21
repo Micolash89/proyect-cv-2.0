@@ -88,7 +88,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
               });
 
               return (
-                <View key={index} style={styles.timelineEntry}>
+                <View key={index} style={styles.timelineEntry} wrap={false}>
                   <View style={styles.timelineLeft}>
                     <Text
                       style={styles.timelineSideTitle}
@@ -142,7 +142,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
       {orderedEducation.length > 0 && (
         <View style={[styles.section, { marginTop: 0, marginBottom: 5 }]}>
           <Text style={styles.sectionTitle}>Educación</Text>
-          <View style={styles.educationTimeline}>
+          <View style={styles.educationTimeline} >
             {orderedEducation.map((edu, index) => {
               const location = formatPdfLocation({
                 localidad: edu.localidad,
@@ -151,7 +151,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
               });
 
               return (
-                <View key={index} style={styles.educationTimelineEntry}>
+                <View key={index} style={styles.educationTimelineEntry} wrap={false}>
                   <View style={styles.educationTimelineLeft}>
                     <Text style={styles.educationDate}>
                       {formatDateRange(
@@ -201,7 +201,7 @@ export const Layout6Body: React.FC<BodyProps> = ({ user, options }) => {
           <View style={styles.timelineContainer}>
             {orderedCourses.map((course, index) => {
               return (
-                <View key={index} style={styles.timelineEntry}>
+                <View key={index} style={styles.timelineEntry} wrap={false}>
                   <View style={styles.timelineLeft}>
                     <Text
                       style={styles.timelineSideTitle}

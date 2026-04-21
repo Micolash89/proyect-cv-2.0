@@ -165,7 +165,7 @@ function RegistroPageContent() {
   const handleMainLocationChange = useCallback(
     (locationData: { provincia: string; municipio: string; localidad: string }) => {
       const nextLocation = [
-        locationData.municipio,
+        locationData.localidad || locationData.municipio,
         locationData.provincia,
       ]
         .filter(Boolean)

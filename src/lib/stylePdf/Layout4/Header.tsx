@@ -89,7 +89,7 @@ export const Layout4Header: React.FC<HeaderProps> = ({ user, options }) => {
             CURSOS Y CERTIFICACIONES
           </Text>
           {orderedCourses.map((course, index) => (
-            <View key={index} style={styles.leftItemGroup}>
+            <View key={index} style={styles.leftItemGroup} wrap={false}>
               <Text
                 style={styles.leftItemTitle}
                 hyphenationCallback={(word) => [word]}

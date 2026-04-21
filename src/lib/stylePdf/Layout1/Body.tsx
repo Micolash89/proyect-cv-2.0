@@ -46,7 +46,7 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
   const styles = createLayout1Styles(options);
 
   const experienceEntries = user.experience.map((exp, index) => (
-    <View key={index} style={styles.entryContainer}>
+    <View key={index} style={styles.entryContainer} wrap={false}>
       <Text style={styles.companyName}>{exp.company}</Text>
       <Text style={styles.jobTitle}>{exp.position}</Text>
       <Text style={styles.dateLocation}>
@@ -72,7 +72,7 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
   ));
 
   const educationEntries = user.education.map((edu, index) => (
-    <View key={index} style={styles.entryContainer}>
+    <View key={index} style={styles.entryContainer} wrap={false}>
       <Text style={styles.companyName}>{edu.institution}</Text>
       <Text style={styles.jobTitle}>
         {formatEducationDegreeWithStatus(edu.degree, edu.status)}
@@ -100,7 +100,7 @@ export const Layout1Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const certificationEntries = (user.certifications || []).map(
     (cert, index) => (
-      <View key={index} style={styles.certificationItem}>
+      <View key={index} style={styles.certificationItem} wrap={false}>
         <Text style={styles.certificationName}>
           {formatCertificationTitle(cert)}
         </Text>

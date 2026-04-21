@@ -1,6 +1,11 @@
 const BASE_URL_V1 = "https://apis.datos.gob.ar/georef/api";
 const BASE_URL_V2 = "https://apis.datos.gob.ar/georef/api/v2.0";
 
+const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
+const CATALOG_CACHE_TTL_MS = 1000 * 60 * 30;
+const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
+
 export interface Provincia {
   id: string;
   nombre: string;
@@ -36,15 +41,122 @@ interface GeorefV2Response<T> {
   [key: string]: T[] | number | Record<string, string>;
 }
 
-async function fetchJson<T>(url: string, resource: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
+class HttpError extends Error {
+  status: number;
 
-  if (!response.ok) {
-    const statusText = response.statusText || `HTTP ${response.status}`;
-    throw new Error(`Error fetching ${resource}: ${statusText}`);
+  constructor(resource: string, status: number, statusText: string) {
+    super(`Error fetching ${resource}: ${statusText || `HTTP ${status}`}`);
+    this.name = "HttpError";
+    this.status = status;
+  }
+}
+
+interface CacheEntry {
+  data: unknown;
+  expiresAt: number;
+}
+
+const responseCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+function getCachedResponse<T>(cacheKey: string): T | null {
+  const cached = responseCache.get(cacheKey);
+  if (!cached) {
+    return null;
   }
 
-  return (await response.json()) as T;
+  if (Date.now() > cached.expiresAt) {
+    responseCache.delete(cacheKey);
+    return null;
+  }
+
+  return cached.data as T;
+}
+
+function setCachedResponse<T>(cacheKey: string, data: T, ttlMs: number): void {
+  responseCache.set(cacheKey, {
+    data,
+    expiresAt: Date.now() + ttlMs,
+  });
+}
+
+function getBackoffDelayMs(attempt: number): number {
+  const baseDelay = 400 * (2 ** attempt);
+  const jitter = Math.floor(Math.random() * 200);
+  return baseDelay + jitter;
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof HttpError) {
+    return RETRYABLE_STATUS_CODES.has(error.status);
+  }
+
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return true;
+  }
+
+  return error instanceof TypeError;
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      cache: "force-cache",
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
+}
+
+async function fetchJson<T>(url: string, resource: string): Promise<T> {
+  const cached = getCachedResponse<T>(url);
+  if (cached) {
+    return cached;
+  }
+
+  const pendingRequest = inFlightRequests.get(url);
+  if (pendingRequest) {
+    return pendingRequest as Promise<T>;
+  }
+
+  const requestPromise = (async () => {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+      try {
+        const response = await fetchWithTimeout(url, REQUEST_TIMEOUT_MS);
+
+        if (!response.ok) {
+          throw new HttpError(resource, response.status, response.statusText);
+        }
+
+        const payload = (await response.json()) as T;
+        setCachedResponse(url, payload, CATALOG_CACHE_TTL_MS);
+        return payload;
+      } catch (error) {
+        const canRetry = attempt < MAX_RETRIES && isRetryableError(error);
+        if (!canRetry) {
+          throw error;
+        }
+
+        await sleep(getBackoffDelayMs(attempt));
+      }
+    }
+
+    throw new Error(`Error fetching ${resource}: retry limit reached`);
+  })();
+
+  inFlightRequests.set(url, requestPromise as Promise<unknown>);
+
+  try {
+    return await requestPromise;
+  } finally {
+    inFlightRequests.delete(url);
+  }
 }
 
 async function fetchGeorefV1<T>(endpoint: string, params: Record<string, string> = {}): Promise<T[]> {

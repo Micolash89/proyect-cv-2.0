@@ -153,6 +153,7 @@ export const createLayout5Styles = (opts: OptionsPDF) => {
       fontSize: opts.bodyFontSize + 4,
       fontWeight: "bold",
       color: "#0A1019",
+      maxWidth: "85%",
     },
     entryCompany: {
       fontSize: opts.bodyFontSize + 1,

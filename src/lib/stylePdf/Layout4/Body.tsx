@@ -92,7 +92,7 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
             });
 
             return (
-              <View key={index} style={styles.entryContainer}>
+              <View key={index} style={styles.entryContainer} wrap={false}>
                 <Text style={styles.entryTitle}>{exp.company}</Text>
                 <Text style={styles.entrySubtitle}>{exp.position}</Text>
                 <Text style={styles.entryMeta}>
@@ -127,7 +127,7 @@ export const Layout4Body: React.FC<BodyProps> = ({ user, options }) => {
             });
 
             return (
-              <View key={index} style={styles.entryContainer}>
+              <View key={index} style={styles.entryContainer} wrap={false}>
                 <Text style={styles.entryTitle}>{edu.institution}</Text>
                 <Text style={styles.entrySubtitle}>
                   {formatEducationDegreeWithStatus(edu.degree, edu.status)}

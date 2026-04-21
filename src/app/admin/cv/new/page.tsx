@@ -760,7 +760,7 @@ export default function AdminNewCVPage() {
                                 }
                                 onChange={(locationData) => {
                                   const nextLocation = [
-                                    locationData.municipio,
+                                    locationData.localidad || locationData.municipio,
                                     locationData.provincia,
                                   ]
                                     .filter(Boolean)

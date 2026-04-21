@@ -84,7 +84,7 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
     });
 
     return (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{exp.company}</Text>
           <Text style={styles.dates}>
@@ -96,7 +96,7 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
         {toBulletLines(exp.description).map((line, lineIndex) => (
           <View key={lineIndex} style={styles.bulletItem}>
             <Text style={styles.bulletDot}>·</Text>
-            <Text style={styles.bulletText}>{line}</Text>
+            <Text style={styles.bulletText} hyphenationCallback={(word) => [word]}>{line}</Text>
           </View>
         ))}
       </View>
@@ -111,7 +111,7 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
     });
 
     return (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{edu.institution}</Text>
           <Text style={styles.dates}>
@@ -125,14 +125,14 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
         <Text style={styles.degree}>
           {formatEducationDegreeWithStatus(edu.degree, edu.status)}
         </Text>
-        {location ? <Text style={styles.location}>{location}</Text> : null}
+        {location && <Text style={styles.location}>{location}</Text>}
       </View>
     );
   });
 
   const certificationEntries = (user.certifications || []).map(
     (cert, index) => (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <Text style={styles.institution}>{formatCertificationTitle(cert)}</Text>
         <Text style={styles.certificationMeta}>
           {formatCertificationInstitution(cert)}
@@ -161,7 +161,11 @@ export const Layout3Body: React.FC<BodyProps> = ({ user, options }) => {
           <View style={styles.section}>
             <Text style={styles.leftSectionTitle}>INFORMACIÓN</Text>
             {infoItems.map((item, index) => (
-              <Text key={index} style={styles.leftInfoItem}>
+              <Text
+                key={index}
+                style={styles.leftInfoItem}
+                hyphenationCallback={(word) => [word]}
+              >
                 {item}
               </Text>
             ))}

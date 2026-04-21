@@ -60,7 +60,7 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
     });
 
     return (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{exp.company}</Text>
           <View style={styles.entryMeta}>
@@ -98,7 +98,7 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
     });
 
     return (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>{edu.institution}</Text>
           <View style={styles.entryMeta}>
@@ -125,7 +125,7 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
 
   const certificationEntries = (user.certifications || []).map(
     (cert, index) => (
-      <View key={index} style={styles.entryContainer}>
+      <View key={index} style={styles.entryContainer} wrap={false}>
         <View style={styles.entryHeader}>
           <Text style={styles.institution}>
             {formatCertificationTitle(cert)}
@@ -170,7 +170,7 @@ export const Layout2Body: React.FC<BodyProps> = ({ user, options }) => {
       )}
 
       {user.education.length > 0 && (
-        <View style={styles.section}>
+        <View style={styles.section} wrap={false}>
           <Text style={styles.sectionTitle}>Educación</Text>
           {orderedEducation}
         </View>

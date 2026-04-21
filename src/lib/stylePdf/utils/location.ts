@@ -32,6 +32,10 @@ export const formatPdfLocation = ({
     return safeProvincia;
   }
 
+  if (safeLocalidad) {
+    return safeLocalidad;
+  }
+
   if (safeMunicipio) {
     return safeMunicipio;
   }

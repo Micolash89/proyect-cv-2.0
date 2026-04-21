@@ -133,6 +133,15 @@ export function LocationSelector({
     initRef.current = { provincia: true, municipio: true };
 
     if (onChange) {
+      if (isCabaSelected) {
+        onChange({
+          provincia: selectedProvinciaNombre,
+          municipio: "",
+          localidad: nombreMunicipio,
+        });
+        return;
+      }
+
       onChange({
         provincia: selectedProvinciaNombre,
         municipio: nombreMunicipio,
@@ -143,10 +152,10 @@ export function LocationSelector({
 
   const secondLevelLabel = showLabels
     ? isCabaSelected
-      ? "Localidad"
+      ? "Barrio"
       : "Municipio"
     : isCabaSelected
-      ? "Seleccioná una localidad"
+      ? "Seleccioná un barrio"
       : "Seleccioná un municipio";
 
   return (
