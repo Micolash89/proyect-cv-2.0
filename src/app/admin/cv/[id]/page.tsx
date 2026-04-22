@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorSummary } from "@/components/admin/cv/ErrorSummary";
+import { ExpandableSectionCard } from "@/components/admin/cv/ExpandableSectionCard";
 import { AdminCVPageSkeleton } from "@/components/admin/cv/AdminCVPageSkeleton";
 import {
   ArrowLeft,
@@ -24,9 +25,7 @@ import {
   Sparkles,
   Eye,
   CheckCircle,
-  // Clock,
   Upload,
-  // FileText,
   Loader2,
   Wand2,
   ShieldCheck,
@@ -39,7 +38,11 @@ import {
   FileText,
   Settings2,
   Camera,
+  CarFront,
+  BadgeCheck,
+  Zap,
 } from "lucide-react";
+import { SiLibreofficewriter } from "@icons-pack/react-simple-icons";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
   FontSize,
@@ -48,8 +51,6 @@ import type {
   UserCV,
   Experience,
   Certification,
-  // Education,
-  // Language,
 } from "@/types";
 import { EducationLocationSelector } from "@/components/admin/cv/EducationLocationSelector";
 import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLocationSelector";
@@ -57,7 +58,6 @@ import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import { getCV, updateCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
 import {
-  // extractCVAction,
   improveTextAction,
   generateProfileAction,
 } from "@/app/actions/ia";
@@ -114,7 +114,6 @@ export default function AdminCVPage() {
   const [saving, setSaving] = useState(false);
   const [generatingProfile, setGeneratingProfile] = useState(false);
   const [improvingText, setImprovingText] = useState<string | null>(null);
-  // const [uploadingCV, setUploadingCV] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
@@ -125,11 +124,15 @@ export default function AdminCVPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [nameFields, setNameFields] = useState({ name: "", lastName: "" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [showLicenseInput, setShowLicenseInput] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    experience: true,
+    education: true,
+    certifications: true,
+    languages: true,
+  });
 
   const normalizeTemplateSettings = useCallback(
     (
@@ -157,19 +160,13 @@ export default function AdminCVPage() {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - previewPosition.x,
-      y: e.clientY - previewPosition.y,
-    });
+    setDragOffset({ x: e.clientX - previewPosition.x, y: e.clientY - previewPosition.y });
   };
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (isDragging) {
-        setPreviewPosition({
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y,
-        });
+        setPreviewPosition({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
       }
     },
     [dragOffset.x, dragOffset.y, isDragging],
@@ -204,6 +201,8 @@ export default function AdminCVPage() {
       };
 
       setUser(hydratedUser);
+      setNameFields(splitFullName(hydratedUser.fullName));
+      setOriginalUser(JSON.parse(JSON.stringify(hydratedUser)));
       setNameFields(splitFullName(hydratedUser.fullName));
       setOriginalUser(JSON.parse(JSON.stringify(hydratedUser)));
     } catch (error) {
@@ -242,6 +241,38 @@ export default function AdminCVPage() {
     },
     [fieldErrors, submitAttempted, touchedFields],
   );
+
+  const getSectionForFieldPath = useCallback((fieldPath: string) => {
+    const fieldPrefix = fieldPath.split(".")[0];
+
+    if (fieldPrefix === "experience") return "experience";
+    if (fieldPrefix === "education") return "education";
+    if (fieldPrefix === "certifications") return "certifications";
+    if (fieldPrefix === "languages") return "languages";
+
+    return "";
+  }, []);
+
+  const handleErrorClick = (fieldPath: string) => {
+    const sectionId = getSectionForFieldPath(fieldPath);
+    if (sectionId) {
+      setExpandedSections((prev) => ({
+        ...prev,
+        [sectionId]: true,
+      }));
+    }
+
+    window.requestAnimationFrame(() => {
+      scrollToField(fieldPath);
+    });
+  };
+
+  const toggleExpandedSection = useCallback((sectionId: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  }, []);
 
   const scrollToField = useCallback((fieldPath: string) => {
     if (typeof document === "undefined") {
@@ -312,7 +343,7 @@ export default function AdminCVPage() {
     setFieldErrors(validation.success ? {} : validation.errors);
 
     if (!validation.success) {
-      scrollToField(Object.keys(validation.errors)[0] ?? "");
+      handleErrorClick(Object.keys(validation.errors)[0] ?? "");
       toast.error("Revisá los campos marcados en rojo");
       return;
     }
@@ -972,7 +1003,7 @@ export default function AdminCVPage() {
 
       {submitAttempted && Object.keys(fieldErrors).length > 0 ? (
         <div className="mb-6">
-          <ErrorSummary errors={fieldErrors} onErrorClick={scrollToField} />
+          <ErrorSummary errors={fieldErrors} onErrorClick={handleErrorClick} />
         </div>
       ) : null}
 
@@ -1157,6 +1188,61 @@ export default function AdminCVPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <FileText className="h-5 w-5 text-primary" />
+              <CardTitle>Perfil / Resumen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2 mb-2 lg:flex-row lg:items-center lg:justify-between">
+                <Input
+                  placeholder="Puesto aspirado (para generar perfil ATS)"
+                  value={user.targetJob || ""}
+                  onChange={(e) => updateField("targetJob", e.target.value)}
+                  className={cn(
+                    "flex-1",
+                    getFieldError("targetJob") &&
+                      "border-red-500 focus-visible:ring-red-500",
+                  )}
+                />
+                <Button
+                  variant="outline"
+                  onClick={generateProfileWithAI}
+                  disabled={generatingProfile || user.experience.length === 0}
+                  title="Generar perfil con IA"
+                  className="w-full lg:w-auto"
+                >
+                  {generatingProfile ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  <span className="hidden md:block">Generar perfil con IA</span>
+                </Button>
+              </div>
+              <Textarea
+                value={user.summary || ""}
+                onChange={(e) => updateField("summary", e.target.value)}
+                placeholder="Resumen del perfil profesional..."
+                className={cn(
+                  "min-h-25",
+                  getFieldError("summary") &&
+                    "border-red-500 focus-visible:ring-red-500",
+                )}
+              />
+              {getFieldError("targetJob") && (
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                  {getFieldError("targetJob")}
+                </p>
+              )}
+              {getFieldError("summary") && (
+                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                  {getFieldError("summary")}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
               <ShieldCheck className="h-5 w-5 text-primary" />
               <CardTitle>Información adicional</CardTitle>
             </CardHeader>
@@ -1174,6 +1260,7 @@ export default function AdminCVPage() {
                       }
                     }}
                   />
+                  <BadgeCheck className="h-4 w-4 text-primary" />
                   <span className="text-sm">Licencia</span>
                 </label>
                 <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
@@ -1182,6 +1269,7 @@ export default function AdminCVPage() {
                     checked={!!user.movilidad}
                     onChange={(e) => updateField("movilidad", e.target.checked)}
                   />
+                  <CarFront className="h-4 w-4 text-primary" />
                   <span className="text-sm">Movilidad propia</span>
                 </label>
                 <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
@@ -1192,6 +1280,7 @@ export default function AdminCVPage() {
                       updateField("incorporacionInmediata", e.target.checked)
                     }
                   />
+                  <Zap className="h-4 w-4 text-primary" />
                   <span className="text-sm">Incorporación inmediata</span>
                 </label>
                 <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
@@ -1200,6 +1289,7 @@ export default function AdminCVPage() {
                     checked={!!user.office}
                     onChange={(e) => updateField("office", e.target.checked)}
                   />
+                  <SiLibreofficewriter className="h-4 w-4" />
                   <span className="text-sm">Microsoft Office</span>
                 </label>
               </div>
@@ -1262,7 +1352,7 @@ export default function AdminCVPage() {
                           size="icon"
                           onClick={() => removeCertification(course.id)}
                         >
-                          <X className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                       <div className="space-y-3">
@@ -1384,297 +1474,318 @@ export default function AdminCVPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-              <Briefcase className="h-5 w-5 text-primary" />
-              <CardTitle>Experiencia Laboral</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {user.experience.map((exp: any, index: number) => (
-                <motion.div
-                  key={exp.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 border rounded-lg space-y-3"
-                >
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div className="flex-1 space-y-2 min-w-0">
-                      <Input
-                        placeholder="Empresa"
-                        value={exp.company}
-                        onChange={(e) =>
-                          updateExperience(exp.id, "company", e.target.value)
-                        }
-                        className={cn(
-                          "w-full ",
-                          getFieldError(`experience.${index}.company`) &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                      />
-                      {getFieldError(`experience.${index}.company`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                          {getFieldError(`experience.${index}.company`)}
-                        </p>
-                      )}
-                      <Input
-                        placeholder="Puesto"
-                        value={exp.position}
-                        onChange={(e) =>
-                          updateExperience(exp.id, "position", e.target.value)
-                        }
-                        className={cn(
-                          getFieldError(`experience.${index}.position`) &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                      />
-                      {getFieldError(`experience.${index}.position`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                          {getFieldError(`experience.${index}.position`)}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="self-end sm:self-start shrink-0"
-                      onClick={() => removeExperience(exp.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                  <ExperienceLocationSelector
-                    experienciaId={exp.id}
-                    initialProvincia={exp.provincia}
-                    initialMunicipio={exp.municipio}
-                    initialLocalidad={exp.localidad}
-                    onChange={updateExperienceLocation}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Input
-                      type="date"
-                      value={exp.startDate}
-                      onChange={(e) =>
-                        updateExperience(exp.id, "startDate", e.target.value)
-                      }
-                      className={cn(
-                        getFieldError(`experience.${index}.startDate`) &&
-                          "border-red-500 focus-visible:ring-red-500",
-                      )}
-                    />
-                    <Input
-                      type="date"
-                      value={exp.endDate}
-                      onChange={(e) =>
-                        updateExperience(exp.id, "endDate", e.target.value)
-                      }
-                      disabled={exp.current}
-                      className={cn(
-                        getFieldError(`experience.${index}.endDate`) &&
-                          "border-red-500 focus-visible:ring-red-500",
-                      )}
-                    />
-                  </div>
-                  {getFieldError(`experience.${index}.startDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`experience.${index}.startDate`)}
-                    </p>
-                  )}
-                  {getFieldError(`experience.${index}.endDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`experience.${index}.endDate`)}
-                    </p>
-                  )}
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={exp.current}
-                        onChange={(e) =>
-                          updateExperience(exp.id, "current", e.target.checked)
-                        }
-                      />
-                      <span className="text-sm">Trabajo actual</span>
-                    </label>
-
-                    <Button
-                      variant="outline"
-                      size="default"
-                      onClick={() => improveDescription(exp.id)}
-                      disabled={improvingText === exp.id}
-                      title="Mejorar descripción con IA"
-                      className="flex w-full gap-2 sm:w-auto"
-                    >
-                      {improvingText === exp.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Wand2 className="h-4 w-4" />
-                      )}
-
-                      <span className="hidden md:block">
-                        Mejorar descripción con IA
-                      </span>
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Funciones y logros"
-                      value={exp.description}
-                      onChange={(e) =>
-                        updateExperience(exp.id, "description", e.target.value)
-                      }
-                      className="flex-1"
-                    />
-                  </div>
-                </motion.div>
-              ))}
-              <Button variant="outline" onClick={addExperience}>
+          <ExpandableSectionCard
+            title="Experiencia Laboral"
+            icon={<Briefcase className="h-5 w-5" />}
+            summary={
+              user.experience.length > 0
+                ? `${user.experience.length} experiencia${user.experience.length === 1 ? "" : "s"} cargada${user.experience.length === 1 ? "" : "s"}`
+                : "Sin experiencias agregadas"
+            }
+            open={expandedSections.experience}
+            onToggle={() => toggleExpandedSection("experience")}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                onClick={addExperience}
+              >
                 <Plus className="h-4 w-4 mr-2" />
-                Agregar experiencia
+                Agregar
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              <CardTitle>Educación</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {user.education.map((edu: any, index: number) => (
-                <motion.div
-                  key={index + "educacion"}
-                  className="p-4 border rounded-lg space-y-3"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div className="flex-1 space-y-2 min-w-0">
-                      <Input
-                        placeholder="Institución"
-                        value={edu.institution}
-                        onChange={(e) =>
-                          updateEducation(edu.id, "institution", e.target.value)
-                        }
-                        className={cn(
-                          "w-full",
-                          getFieldError(`education.${index}.institution`) &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                      />
-                        {getFieldError(`education.${index}.institution`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                          {getFieldError(`education.${index}.institution`)}
-                        </p>
-                      )}
-
-                      <Input
-                        placeholder="Título / Carrera"
-                        value={edu.degree}
-                        onChange={(e) =>
-                          updateEducation(edu.id, "degree", e.target.value)
-                        }
-                        className={cn(
-                          getFieldError(`education.${index}.degree`) &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                      />
-
-                       {getFieldError(`education.${index}.degree`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                          {getFieldError(`education.${index}.degree`)}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="self-end sm:self-start shrink-0"
-                      onClick={() => removeEducation(edu.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-
-                  {getFieldError(`education.${index}.institution`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`education.${index}.institution`)}
-                    </p>
-                  )}
-                  {getFieldError(`education.${index}.degree`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`education.${index}.degree`)}
-                    </p>
-                  )}
-                  <EducationLocationSelector
-                    educacionId={edu.id}
-                    initialProvincia={edu.provincia}
-                    initialMunicipio={edu.municipio}
-                    initialLocalidad={edu.localidad}
-                    onChange={updateEducationLocation}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            }
+            className="border-border/70"
+            contentClassName="space-y-4"
+          >
+            {user.experience.map((exp: any, index: number) => (
+              <motion.div
+                key={exp.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 border rounded-lg space-y-3"
+              >
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div className="flex-1 space-y-2 min-w-0">
                     <Input
-                      type="date"
-                      value={edu.startDate}
+                      placeholder="Empresa"
+                      value={exp.company}
                       onChange={(e) =>
-                        updateEducation(edu.id, "startDate", e.target.value)
+                        updateExperience(exp.id, "company", e.target.value)
                       }
                       className={cn(
-                        getFieldError(`education.${index}.startDate`) &&
+                        "w-full ",
+                        getFieldError(`experience.${index}.company`) &&
                           "border-red-500 focus-visible:ring-red-500",
                       )}
                     />
-                    <Input
-                      type="date"
-                      value={edu.endDate}
-                      onChange={(e) =>
-                        updateEducation(edu.id, "endDate", e.target.value)
-                      }
-                      disabled={edu.status === "in_progress"}
-                      className={cn(
-                        getFieldError(`education.${index}.endDate`) &&
-                          "border-red-500 focus-visible:ring-red-500",
-                      )}
-                    />
-                  </div>
-                  {getFieldError(`education.${index}.startDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`education.${index}.startDate`)}
-                    </p>
-                  )}
-                  {getFieldError(`education.${index}.endDate`) && (
-                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                      {getFieldError(`education.${index}.endDate`)}
-                    </p>
-                  )}
-                  <div>
-                    <Label>Estado del estudio *</Label>
-                    <Select
-                      value={edu.status}
-                      onChange={(e) =>
-                        updateEducation(edu.id, "status", e.target.value)
-                      }
-                      options={EDUCATION_STATUS_OPTIONS}
-                      className={cn(
-                        getFieldError(`education.${index}.status`) &&
-                          "border-red-500 focus-visible:ring-red-500",
-                      )}
-                    />
-                    {getFieldError(`education.${index}.status`) && (
+                    {getFieldError(`experience.${index}.company`) && (
                       <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                        {getFieldError(`education.${index}.status`)}
+                        {getFieldError(`experience.${index}.company`)}
+                      </p>
+                    )}
+                    <Input
+                      placeholder="Puesto"
+                      value={exp.position}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "position", e.target.value)
+                      }
+                      className={cn(
+                        getFieldError(`experience.${index}.position`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
+                    />
+                    {getFieldError(`experience.${index}.position`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                        {getFieldError(`experience.${index}.position`)}
                       </p>
                     )}
                   </div>
-                </motion.div>
-              ))}
-              <Button variant="outline" onClick={addEducation}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="self-end sm:self-start shrink-0"
+                    onClick={() => removeExperience(exp.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                <ExperienceLocationSelector
+                  experienciaId={exp.id}
+                  initialProvincia={exp.provincia}
+                  initialMunicipio={exp.municipio}
+                  initialLocalidad={exp.localidad}
+                  onChange={updateExperienceLocation}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    value={exp.startDate}
+                    onChange={(e) =>
+                      updateExperience(exp.id, "startDate", e.target.value)
+                    }
+                    className={cn(
+                      getFieldError(`experience.${index}.startDate`) &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                  />
+                  <Input
+                    type="date"
+                    value={exp.endDate}
+                    onChange={(e) =>
+                      updateExperience(exp.id, "endDate", e.target.value)
+                    }
+                    disabled={exp.current}
+                    className={cn(
+                      getFieldError(`experience.${index}.endDate`) &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                  />
+                </div>
+                {getFieldError(`experience.${index}.startDate`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`experience.${index}.startDate`)}
+                  </p>
+                )}
+                {getFieldError(`experience.${index}.endDate`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`experience.${index}.endDate`)}
+                  </p>
+                )}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={exp.current}
+                      onChange={(e) =>
+                        updateExperience(exp.id, "current", e.target.checked)
+                      }
+                    />
+                    <span className="text-sm">Trabajo actual</span>
+                  </label>
+
+                  <Button
+                    variant="outline"
+                    size="default"
+                    onClick={() => improveDescription(exp.id)}
+                    disabled={improvingText === exp.id}
+                    title="Mejorar descripción con IA"
+                    className="flex w-full gap-2 sm:w-auto"
+                  >
+                    {improvingText === exp.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4" />
+                    )}
+
+                    <span className="hidden md:block">
+                      Mejorar descripción con IA
+                    </span>
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Textarea
+                    placeholder="Funciones y logros"
+                    value={exp.description}
+                    onChange={(e) =>
+                      updateExperience(exp.id, "description", e.target.value)
+                    }
+                    className="flex-1"
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </ExpandableSectionCard>
+
+          <ExpandableSectionCard
+            title="Educación"
+            icon={<GraduationCap className="h-5 w-5" />}
+            summary={
+              user.education.length > 0
+                ? `${user.education.length} educación cargada`
+                : "Sin educación agregada"
+            }
+            open={expandedSections.education}
+            onToggle={() => toggleExpandedSection("education")}
+            action={
+              <Button variant="outline" size="sm" className="ml-auto" onClick={addEducation}>
                 <Plus className="h-4 w-4 mr-2" />
-                Agregar educación
+                Agregar
               </Button>
-            </CardContent>
-          </Card>
+            }
+            className="border-border/70"
+            contentClassName="space-y-4"
+          >
+            {user.education.map((edu: any, index: number) => (
+              <motion.div
+                key={index + "educacion"}
+                className="p-4 border rounded-lg space-y-3"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <Input
+                      placeholder="Institución"
+                      value={edu.institution}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "institution", e.target.value)
+                      }
+                      className={cn(
+                        "w-full",
+                        getFieldError(`education.${index}.institution`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
+                    />
+                    {getFieldError(`education.${index}.institution`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                        {getFieldError(`education.${index}.institution`)}
+                      </p>
+                    )}
+
+                    <Input
+                      placeholder="Título / Carrera"
+                      value={edu.degree}
+                      onChange={(e) =>
+                        updateEducation(edu.id, "degree", e.target.value)
+                      }
+                      className={cn(
+                        getFieldError(`education.${index}.degree`) &&
+                          "border-red-500 focus-visible:ring-red-500",
+                      )}
+                    />
+
+                    {getFieldError(`education.${index}.degree`) && (
+                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                        {getFieldError(`education.${index}.degree`)}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="self-end sm:self-start shrink-0"
+                    onClick={() => removeEducation(edu.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+
+                {getFieldError(`education.${index}.institution`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`education.${index}.institution`)}
+                  </p>
+                )}
+                {getFieldError(`education.${index}.degree`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`education.${index}.degree`)}
+                  </p>
+                )}
+                <EducationLocationSelector
+                  educacionId={edu.id}
+                  initialProvincia={edu.provincia}
+                  initialMunicipio={edu.municipio}
+                  initialLocalidad={edu.localidad}
+                  onChange={updateEducationLocation}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    value={edu.startDate}
+                    onChange={(e) =>
+                      updateEducation(edu.id, "startDate", e.target.value)
+                    }
+                    className={cn(
+                      getFieldError(`education.${index}.startDate`) &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                  />
+                  <Input
+                    type="date"
+                    value={edu.endDate}
+                    onChange={(e) =>
+                      updateEducation(edu.id, "endDate", e.target.value)
+                    }
+                    disabled={edu.status === "in_progress"}
+                    className={cn(
+                      getFieldError(`education.${index}.endDate`) &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                  />
+                </div>
+                {getFieldError(`education.${index}.startDate`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`education.${index}.startDate`)}
+                  </p>
+                )}
+                {getFieldError(`education.${index}.endDate`) && (
+                  <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                    {getFieldError(`education.${index}.endDate`)}
+                  </p>
+                )}
+                <div>
+                  <Label>Estado del estudio *</Label>
+                  <Select
+                    value={edu.status}
+                    onChange={(e) =>
+                      updateEducation(edu.id, "status", e.target.value)
+                    }
+                    options={EDUCATION_STATUS_OPTIONS}
+                    className={cn(
+                      getFieldError(`education.${index}.status`) &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                  />
+                  {getFieldError(`education.${index}.status`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                      {getFieldError(`education.${index}.status`)}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </ExpandableSectionCard>
 
           <Card>
             <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
@@ -1732,120 +1843,74 @@ export default function AdminCVPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-              <Languages className="h-5 w-5 text-primary" />
-              <CardTitle>Idiomas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button type="button" variant="outline" onClick={addLanguage}>
+          <ExpandableSectionCard
+            title="Idiomas"
+            icon={<Languages className="h-5 w-5" />}
+            summary={
+              user.languages.length > 0
+                ? `${user.languages.length} idioma${user.languages.length === 1 ? "" : "s"} cargado${user.languages.length === 1 ? "" : "s"}`
+                : "Sin idiomas agregados"
+            }
+            open={expandedSections.languages}
+            onToggle={() => toggleExpandedSection("languages")}
+            action={
+              <Button type="button" variant="outline" size="sm" className="ml-auto" onClick={addLanguage}>
                 <Plus className="h-4 w-4 mr-2" />
-                Agregar idioma
+                Agregar
               </Button>
-              <div className="space-y-2">
-                {user.languages.map((lang: any, index: number) => (
-                  <div
-                    key={lang.id}
-                    className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center"
-                  >
-                    <Select
-                      data-field-id={`languages.${index}.language`}
-                      value={lang.language || ""}
-                      onChange={(e) =>
-                        updateLanguage(lang.id, "language", e.target.value)
-                      }
-                      options={languageSelectOptions}
-                      placeholder="Idioma"
-                      className="w-full md:flex-1"
-                    />
-                    <Select
-                      data-field-id={`languages.${index}.level`}
-                      value={lang.level || ""}
-                      onChange={(e) =>
-                        updateLanguage(lang.id, "level", e.target.value)
-                      }
-                      options={levelSelectOptions}
-                      placeholder="Nivel"
-                      className="w-full md:w-40"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="self-end md:self-auto"
-                      onClick={() => removeLanguage(lang.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    {getFieldError(`languages.${index}.language`) && (
-                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
-                        {getFieldError(`languages.${index}.language`)}
-                      </p>
-                    )}
-                    {getFieldError(`languages.${index}.level`) && (
-                      <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
-                        {getFieldError(`languages.${index}.level`)}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-              <FileText className="h-5 w-5 text-primary" />
-              <CardTitle>Perfil / Resumen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-2 mb-2 lg:flex-row lg:items-center lg:justify-between">
-                <Input
-                  placeholder="Puesto aspirado (para generar perfil ATS)"
-                  value={user.targetJob || ""}
-                  onChange={(e) => updateField("targetJob", e.target.value)}
-                  className={cn(
-                    "flex-1",
-                    getFieldError("targetJob") &&
-                      "border-red-500 focus-visible:ring-red-500",
-                  )}
-                />
-                <Button
-                  variant="outline"
-                  onClick={generateProfileWithAI}
-                  disabled={generatingProfile || user.experience.length === 0}
-                  title="Generar perfil con IA"
-                  className="w-full lg:w-auto"
+            }
+            className="border-border/70"
+            contentClassName="space-y-4"
+          >
+            <div className="space-y-2">
+              {user.languages.map((lang: any, index: number) => (
+                <div
+                  key={lang.id}
+                  className="flex w-full min-w-0 flex-col gap-2 rounded border p-2 md:flex-row md:items-center"
                 >
-                  {generatingProfile ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-2" />
+                  <Select
+                    data-field-id={`languages.${index}.language`}
+                    value={lang.language || ""}
+                    onChange={(e) =>
+                      updateLanguage(lang.id, "language", e.target.value)
+                    }
+                    options={languageSelectOptions}
+                    placeholder="Idioma"
+                    className="w-full md:flex-1"
+                  />
+                  <Select
+                    data-field-id={`languages.${index}.level`}
+                    value={lang.level || ""}
+                    onChange={(e) =>
+                      updateLanguage(lang.id, "level", e.target.value)
+                    }
+                    options={levelSelectOptions}
+                    placeholder="Nivel"
+                    className="w-full md:w-40"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="self-end md:self-auto"
+                    onClick={() => removeLanguage(lang.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                  {getFieldError(`languages.${index}.language`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
+                      {getFieldError(`languages.${index}.language`)}
+                    </p>
                   )}
-                  <span className="hidden md:block">Generar perfil con IA</span>
-                </Button>
-              </div>
-              <Textarea
-                value={user.summary || ""}
-                onChange={(e) => updateField("summary", e.target.value)}
-                placeholder="Resumen del perfil profesional..."
-                className={cn(
-                  "min-h-25",
-                  getFieldError("summary") &&
-                    "border-red-500 focus-visible:ring-red-500",
-                )}
-              />
-              {getFieldError("targetJob") && (
-                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                  {getFieldError("targetJob")}
-                </p>
-              )}
-              {getFieldError("summary") && (
-                <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-                  {getFieldError("summary")}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  {getFieldError(`languages.${index}.level`) && (
+                    <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 md:col-span-3">
+                      {getFieldError(`languages.${index}.level`)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ExpandableSectionCard>
+
         </div>
 
         <div className="space-y-6">

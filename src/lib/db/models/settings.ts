@@ -1,4 +1,5 @@
 import { getDatabase } from "@/lib/db/mongodb";
+import { WHATSAPP_NUMBER } from "@/lib/constants/whatsapp";
 import type { Settings, IAType } from "@/types";
 import { DEFAULT_SETTINGS } from "@/types/definitionsMongoDB";
 
@@ -23,6 +24,7 @@ export async function getSettings(): Promise<Settings> {
   return {
     ...defaultSettings,
     ...result,
+    whatsappNumber: (result.whatsappNumber as string) || WHATSAPP_NUMBER,
     activeIA: (result.activeIA as IAType) || "groq",
   };
 }
@@ -51,7 +53,7 @@ export async function setSettings(settings: Partial<Settings>): Promise<void> {
 }
 
 export async function getWhatsAppNumber(): Promise<string> {
-  return (await getSetting("whatsappNumber")) || "";
+  return (await getSetting("whatsappNumber")) || WHATSAPP_NUMBER;
 }
 
 export async function getActiveIA(): Promise<IAType> {

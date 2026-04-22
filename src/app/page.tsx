@@ -4,6 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { TemplateCascadePreview } from "@/components/home/TemplateCascadePreview";
+import { getWhatsAppLink } from "@/lib/utils/cn";
+import { WHATSAPP_NUMBER } from "@/lib/constants/whatsapp";
 import {
   FileText,
   Download,
@@ -48,7 +50,7 @@ export default function HomePage() {
                   </Button>
                 </Link>
                 <a
-                  href="https://wa.me/5491135716832"
+                  href={getWhatsAppLink(WHATSAPP_NUMBER)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

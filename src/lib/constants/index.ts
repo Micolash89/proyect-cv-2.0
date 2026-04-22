@@ -3,3 +3,4 @@ export * from "./templates";
 export * from "./auth";
 export * from "./files";
 export * from "./cv";
+export * from "./whatsapp";

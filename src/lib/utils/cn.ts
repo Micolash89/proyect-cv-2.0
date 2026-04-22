@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { normalizeWhatsAppNumber } from "@/lib/constants/whatsapp";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,7 +33,7 @@ export function formatPhone(phone: string): string {
 }
 
 export function getWhatsAppLink(phone: string, message?: string): string {
-  const cleaned = phone.replace(/\D/g, "");
+  const cleaned = normalizeWhatsAppNumber(phone);
   const base = `https://wa.me/${cleaned}`;
   if (message) {
     return `${base}?text=${encodeURIComponent(message)}`;

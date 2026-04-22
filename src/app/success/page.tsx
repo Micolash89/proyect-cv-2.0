@@ -6,26 +6,27 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, MessageCircle, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import { getWhatsAppLink } from "@/lib/utils/cn";
 import { getWhatsAppNumberAction } from "@/app/actions/settings";
+import { WHATSAPP_NUMBER } from "@/lib/constants/whatsapp";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const phone = searchParams.get("phone") || "";
   const name = searchParams.get("name") || "";
-  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState(WHATSAPP_NUMBER);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     getWhatsAppNumberAction().then((res) => {
       if (res.success) {
-        setWhatsappNumber(res.number || "5491112345678");
+        setWhatsappNumber(res.number || WHATSAPP_NUMBER);
       } else {
-        setWhatsappNumber("5491112345678");
+        setWhatsappNumber(WHATSAPP_NUMBER);
       }
     }).catch(() => {
-      setWhatsappNumber("5491112345678");
+      setWhatsappNumber(WHATSAPP_NUMBER);
     });
   }, []);
 

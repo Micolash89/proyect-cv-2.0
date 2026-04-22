@@ -43,7 +43,11 @@ import {
   Zap,
   Globe,
   Sparkles,
+  AlertTriangle,
+  CarFront,
+  BadgeCheck,
 } from "lucide-react";
+import { SiGithub, SiLinkerd, SiLibreofficewriter } from "@icons-pack/react-simple-icons";
 import { cn, generateId } from "@/lib/utils/cn";
 import { createCV } from "@/app/actions/cv";
 import { uploadImage } from "@/app/actions/upload";
@@ -52,8 +56,20 @@ import { ExperienceLocationSelector } from "@/components/admin/cv/ExperienceLoca
 import { LocationSelector } from "@/components/admin/cv/LocationSelector";
 import { TemplateCarousel } from "@/components/ui/template-carousel";
 import { ErrorSummary } from "@/components/admin/cv/ErrorSummary";
-import type { Experience, Education, Language, TemplateType, CVFormDraft, Certification } from "@/types";
-import { buildFullName, splitFullName, validateCVPayload } from "@/lib/validations";
+import { ExpandableSectionCard } from "@/components/admin/cv/ExpandableSectionCard";
+import type {
+  Experience,
+  Education,
+  Language,
+  TemplateType,
+  CVFormDraft,
+  Certification,
+} from "@/types";
+import {
+  buildFullName,
+  splitFullName,
+  validateCVPayload,
+} from "@/lib/validations";
 import {
   getTemplatePalette,
   sanitizeTemplatePrimaryColor,
@@ -73,13 +89,30 @@ import { buildTemplateSettingsDefaults } from "@/lib/constants/cv";
 import { validateImageFile } from "@/lib/validations/files";
 
 const STEP_ERROR_PREFIXES: Record<number, string[]> = {
-  1: ["name", "lastName", "phone", "email", "dni", "fechaNacimiento", "location", "links"],
+  1: [
+    "name",
+    "lastName",
+    "phone",
+    "email",
+    "dni",
+    "fechaNacimiento",
+    "location",
+    "links",
+  ],
   2: ["photo"],
   3: ["experience"],
   4: ["education"],
   5: ["certifications"],
   6: ["skills", "languages"],
-  7: ["summary", "targetJob", "licencia", "movilidad", "incorporacionInmediata", "disponibilidad", "office"],
+  7: [
+    "summary",
+    "targetJob",
+    "licencia",
+    "movilidad",
+    "incorporacionInmediata",
+    "disponibilidad",
+    "office",
+  ],
   8: ["selectedTemplate", "templateSettings"],
   9: [],
 };
@@ -98,6 +131,13 @@ function RegistroPageContent() {
   const [showLinks, setShowLinks] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [expandedReviewSections, setExpandedReviewSections] = useState<Record<string, boolean>>({
+    experience: false,
+    education: false,
+    certifications: false,
+    languages: false,
+    skills: false,
+  });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -109,26 +149,32 @@ function RegistroPageContent() {
     return validation.success;
   }, []);
 
-  const updateFormData = useCallback((data: Partial<CVFormDraft>, touchedPath?: string) => {
-    setFormData((prev) => {
-      const merged = { ...prev, ...data };
-      merged.fullName = buildFullName(merged.name, merged.lastName);
-      validateRealtime(merged);
-      return merged;
-    });
+  const updateFormData = useCallback(
+    (data: Partial<CVFormDraft>, touchedPath?: string) => {
+      setFormData((prev) => {
+        const merged = { ...prev, ...data };
+        merged.fullName = buildFullName(merged.name, merged.lastName);
+        validateRealtime(merged);
+        return merged;
+      });
 
-    if (touchedPath) {
-      setTouchedFields((prev) => ({ ...prev, [touchedPath]: true }));
-    }
-  }, [validateRealtime]);
+      if (touchedPath) {
+        setTouchedFields((prev) => ({ ...prev, [touchedPath]: true }));
+      }
+    },
+    [validateRealtime],
+  );
 
-  const getFieldError = useCallback((path: string) => {
-    if (!submitAttempted && !touchedFields[path]) {
-      return "";
-    }
+  const getFieldError = useCallback(
+    (path: string) => {
+      if (!submitAttempted && !touchedFields[path]) {
+        return "";
+      }
 
-    return fieldErrors[path] ?? "";
-  }, [fieldErrors, submitAttempted, touchedFields]);
+      return fieldErrors[path] ?? "";
+    },
+    [fieldErrors, submitAttempted, touchedFields],
+  );
 
   const visibleErrorKeys = useMemo(() => {
     const errorKeys = Object.keys(fieldErrors);
@@ -139,31 +185,76 @@ function RegistroPageContent() {
     return errorKeys.filter((key) => touchedFields[key]);
   }, [fieldErrors, submitAttempted, touchedFields]);
 
-  const stepHasVisibleError = useCallback((stepId: number) => {
-    const prefixes = STEP_ERROR_PREFIXES[stepId] ?? [];
-    if (prefixes.length === 0) {
-      return false;
+  const stepHasVisibleError = useCallback(
+    (stepId: number) => {
+      const prefixes = STEP_ERROR_PREFIXES[stepId] ?? [];
+      if (prefixes.length === 0) {
+        return false;
+      }
+
+      return visibleErrorKeys.some((errorPath) =>
+        prefixes.some(
+          (prefix) =>
+            errorPath === prefix || errorPath.startsWith(`${prefix}.`),
+        ),
+      );
+    },
+    [visibleErrorKeys],
+  );
+
+  const getStepForFieldPath = useCallback((fieldPath: string) => {
+    const fieldPrefix = fieldPath.split(".")[0];
+
+    for (const [stepId, prefixes] of Object.entries(STEP_ERROR_PREFIXES)) {
+      if (
+        prefixes.some(
+          (prefix) => prefix === fieldPrefix || fieldPath.startsWith(prefix),
+        )
+      ) {
+        return Number(stepId);
+      }
     }
 
-    return visibleErrorKeys.some((errorPath) =>
-      prefixes.some((prefix) => errorPath === prefix || errorPath.startsWith(`${prefix}.`)),
-    );
-  }, [visibleErrorKeys]);
+    return 1;
+  }, []);
+
+  const handleErrorClick = (fieldPath: string) => {
+    const stepId = getStepForFieldPath(fieldPath);
+    setCurrentStep(stepId);
+    window.requestAnimationFrame(() => {
+      scrollToField(fieldPath);
+    });
+  };
+
+  const toggleReviewSection = useCallback((sectionId: string) => {
+    setExpandedReviewSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  }, []);
 
   const scrollToField = useCallback((fieldPath: string) => {
     if (typeof document === "undefined") {
       return;
     }
 
-    const exactTarget = document.querySelector(`[data-field-id="${fieldPath}"]`) as HTMLElement | null;
-    const sectionTarget = document.querySelector(`[data-section-id="${fieldPath.split(".")[0]}"]`) as HTMLElement | null;
+    const exactTarget = document.querySelector(
+      `[data-field-id="${fieldPath}"]`,
+    ) as HTMLElement | null;
+    const sectionTarget = document.querySelector(
+      `[data-section-id="${fieldPath.split(".")[0]}"]`,
+    ) as HTMLElement | null;
     const target = exactTarget ?? sectionTarget;
 
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
 
   const handleMainLocationChange = useCallback(
-    (locationData: { provincia: string; municipio: string; localidad: string }) => {
+    (locationData: {
+      provincia: string;
+      municipio: string;
+      localidad: string;
+    }) => {
       const nextLocation = [
         locationData.localidad || locationData.municipio,
         locationData.provincia,
@@ -330,7 +421,9 @@ function RegistroPageContent() {
           ? {
               ...edu,
               [field]: value,
-              ...(field === "status" && value === "in_progress" ? { endDate: "" } : {}),
+              ...(field === "status" && value === "in_progress"
+                ? { endDate: "" }
+                : {}),
             }
           : edu,
       );
@@ -405,26 +498,37 @@ function RegistroPageContent() {
     }));
   };
 
-  const updateCertification = (id: string, field: keyof Certification, value: string) => {
-    const index = (formData.certifications || []).findIndex((item) => item.id === id);
-    updateFormData({
-      certifications: (formData.certifications || []).map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: value,
-              ...(field === "title" ? { name: value } : {}),
-              ...(field === "institution" ? { issuer: value } : {}),
-            }
-          : item,
-      ),
-    }, index >= 0 ? `certifications.${index}.${String(field)}` : undefined);
+  const updateCertification = (
+    id: string,
+    field: keyof Certification,
+    value: string,
+  ) => {
+    const index = (formData.certifications || []).findIndex(
+      (item) => item.id === id,
+    );
+    updateFormData(
+      {
+        certifications: (formData.certifications || []).map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                [field]: value,
+                ...(field === "title" ? { name: value } : {}),
+                ...(field === "institution" ? { issuer: value } : {}),
+              }
+            : item,
+        ),
+      },
+      index >= 0 ? `certifications.${index}.${String(field)}` : undefined,
+    );
   };
 
   const removeCertification = (id: string) => {
     setFormData((prev) => ({
       ...prev,
-      certifications: (prev.certifications || []).filter((item) => item.id !== id),
+      certifications: (prev.certifications || []).filter(
+        (item) => item.id !== id,
+      ),
     }));
   };
 
@@ -438,11 +542,14 @@ function RegistroPageContent() {
 
   const updateLanguage = (id: string, field: keyof Language, value: string) => {
     const index = formData.languages.findIndex((item) => item.id === id);
-    updateFormData({
-      languages: formData.languages.map((lang) =>
-        lang.id === id ? { ...lang, [field]: value } : lang,
-      ),
-    }, index >= 0 ? `languages.${index}.${String(field)}` : undefined);
+    updateFormData(
+      {
+        languages: formData.languages.map((lang) =>
+          lang.id === id ? { ...lang, [field]: value } : lang,
+        ),
+      },
+      index >= 0 ? `languages.${index}.${String(field)}` : undefined,
+    );
   };
 
   const handlePhotoUpload = (file: File) => {
@@ -486,7 +593,7 @@ function RegistroPageContent() {
     setFieldErrors(validation.success ? {} : validation.errors);
 
     if (!validation.success) {
-      scrollToField(Object.keys(validation.errors)[0] ?? "");
+      handleErrorClick(Object.keys(validation.errors)[0] ?? "");
       toast.error("Revisá los campos marcados en rojo");
       return;
     }
@@ -502,7 +609,9 @@ function RegistroPageContent() {
       await createCV({
         ...formData,
         fullName: buildFullName(formData.name, formData.lastName),
-        templateSettings: buildTemplateSettingsDefaults(formData.templateSettings.primaryColor || "#1e3a5f"),
+        templateSettings: buildTemplateSettingsDefaults(
+          formData.templateSettings.primaryColor || "#1e3a5f",
+        ),
         photo: photoUrl,
         email: formData.email || "",
       });
@@ -517,7 +626,14 @@ function RegistroPageContent() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return !fieldErrors.name && !fieldErrors.lastName && !fieldErrors.phone && !!formData.name && !!formData.lastName && !!formData.phone;
+        return (
+          !fieldErrors.name &&
+          !fieldErrors.lastName &&
+          !fieldErrors.phone &&
+          !!formData.name &&
+          !!formData.lastName &&
+          !!formData.phone
+        );
       default:
         return true;
     }
@@ -539,7 +655,7 @@ function RegistroPageContent() {
 
         {submitAttempted && Object.keys(fieldErrors).length > 0 ? (
           <div className="mb-6">
-            <ErrorSummary errors={fieldErrors} onErrorClick={scrollToField} />
+            <ErrorSummary errors={fieldErrors} onErrorClick={handleErrorClick} />
           </div>
         ) : null}
 
@@ -549,55 +665,55 @@ function RegistroPageContent() {
               const hasStepError = stepHasVisibleError(step.id);
 
               return (
-              <div key={step.id} className="flex items-center">
-                <button
-                  onClick={() =>
-                    step.id < currentStep && setCurrentStep(step.id)
-                  }
-                  title={step.title}
-                  aria-label={`Paso ${step.id}: ${step.title}`}
-                  className={cn(
-                    "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
-                    hasStepError
-                      ? currentStep === step.id
-                        ? "bg-red-600 text-white"
-                        : "bg-red-100 text-red-700"
-                      : currentStep === step.id
-                        ? "bg-foreground text-background"
-                        : step.id < currentStep
-                          ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
-                          : "bg-muted/50 text-muted-foreground cursor-not-allowed",
+                <div key={step.id} className="flex items-center">
+                  <button
+                    onClick={() =>
+                      step.id < currentStep && setCurrentStep(step.id)
+                    }
+                    title={step.title}
+                    aria-label={`Paso ${step.id}: ${step.title}`}
+                    className={cn(
+                      "flex items-center justify-center px-2 py-2 rounded-lg transition-all text-sm font-medium",
+                      hasStepError
+                        ? currentStep === step.id
+                          ? "bg-red-600 text-white"
+                          : "bg-red-100 text-red-700"
+                        : currentStep === step.id
+                          ? "bg-foreground text-background"
+                          : step.id < currentStep
+                            ? "bg-muted text-foreground cursor-pointer hover:bg-muted/80"
+                            : "bg-muted/50 text-muted-foreground cursor-not-allowed",
+                    )}
+                    disabled={step.id > currentStep}
+                  >
+                    <step.icon className="md:size-4 size-7" />
+                  </button>
+                  {index < registroSteps.length - 1 && (
+                    <div className="w-8 h-0.5 bg-border mx-2" />
                   )}
-                  disabled={step.id > currentStep}
-                >
-                  <step.icon className="md:size-4 size-7" />
-                </button>
-                {index < registroSteps.length - 1 && (
-                  <div className="w-8 h-0.5 bg-border mx-2" />
-                )}
-              </div>
+                </div>
               );
             })}
-            </div>
-            </div>
+          </div>
+        </div>
 
-            <Card>
-              <CardContent className="pt-6">
-                <AnimatePresence mode="wait">
-                  {currentStep === 1 && (
-                    <motion.div
-                      key="step1"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-4"
-                    >
-                      <Card data-section-id="personal">
-                        <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-                          <User className="h-5 w-5 text-primary" />
-                          <CardTitle>Datos personales</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+        <Card>
+          <CardContent className="pt-6">
+            <AnimatePresence mode="wait">
+              {currentStep === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-4"
+                >
+                  <Card data-section-id="personal">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <User className="h-5 w-5 text-primary" />
+                      <CardTitle>Datos personales</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       {/* <Button
                         type="button"
                         variant="outline"
@@ -641,10 +757,15 @@ function RegistroPageContent() {
                               updateFormData({ name: e.target.value }, "name")
                             }
                             placeholder="Juan"
-                            className={cn(getFieldError("name") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("name") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("name") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("name")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("name")}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -653,13 +774,21 @@ function RegistroPageContent() {
                             id="lastName"
                             value={formData.lastName}
                             onChange={(e) =>
-                              updateFormData({ lastName: e.target.value }, "lastName")
+                              updateFormData(
+                                { lastName: e.target.value },
+                                "lastName",
+                              )
                             }
                             placeholder="Pérez"
-                            className={cn(getFieldError("lastName") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("lastName") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("lastName") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("lastName")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("lastName")}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -675,10 +804,15 @@ function RegistroPageContent() {
                               updateFormData({ phone: e.target.value }, "phone")
                             }
                             placeholder="5491112345678"
-                            className={cn(getFieldError("phone") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("phone") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("phone") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("phone")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("phone")}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -690,26 +824,41 @@ function RegistroPageContent() {
                               updateFormData({ dni: e.target.value }, "dni")
                             }
                             placeholder="12.345.678"
-                            className={cn(getFieldError("dni") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("dni") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("dni") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("dni")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("dni")}
+                            </p>
                           )}
                         </div>
                         <div>
-                          <Label htmlFor="fechaNacimiento">Fecha de nacimiento (opcional)</Label>
+                          <Label htmlFor="fechaNacimiento">
+                            Fecha de nacimiento (opcional)
+                          </Label>
                           <Input
                             id="fechaNacimiento"
                             type="date"
                             value={formData.fechaNacimiento || ""}
                             onChange={(e) =>
-                              updateFormData({ fechaNacimiento: e.target.value }, "fechaNacimiento")
+                              updateFormData(
+                                { fechaNacimiento: e.target.value },
+                                "fechaNacimiento",
+                              )
                             }
                             max={new Date().toISOString().split("T")[0]}
-                            className={cn(getFieldError("fechaNacimiento") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("fechaNacimiento") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("fechaNacimiento") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("fechaNacimiento")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("fechaNacimiento")}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -722,10 +871,15 @@ function RegistroPageContent() {
                               updateFormData({ email: e.target.value }, "email")
                             }
                             placeholder="juan@email.com"
-                            className={cn(getFieldError("email") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("email") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("email") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("email")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("email")}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -762,11 +916,11 @@ function RegistroPageContent() {
                                   };
 
                             return (
-                          <LocationSelector
-                            value={parsedValue}
-                            onChange={handleMainLocationChange}
-                            showLabels={false}
-                          />
+                              <LocationSelector
+                                value={parsedValue}
+                                onChange={handleMainLocationChange}
+                                showLabels={false}
+                              />
                             );
                           })()}
                           <p className="text-xs text-muted-foreground">
@@ -794,14 +948,29 @@ function RegistroPageContent() {
                               updateFormData({ links: e.target.value }, "links")
                             }
                             placeholder="linkedin.com/in/tu-perfil, github.com/tu-usuario"
-                            className={cn(getFieldError("links") && "border-red-500 focus-visible:ring-red-500")}
+                            className={cn(
+                              getFieldError("links") &&
+                                "border-red-500 focus-visible:ring-red-500",
+                            )}
                           />
                           {getFieldError("links") && (
-                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("links")}</p>
+                            <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError("links")}
+                            </p>
                           )}
                           <p className="text-xs text-muted-foreground">
                             Separa varios links con comas
                           </p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <SiLinkerd className="h-3.5 w-3.5" />
+                              LinkedIn
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <SiGithub className="h-3.5 w-3.5" />
+                              GitHub
+                            </span>
+                          </div>
                           <Button
                             type="button"
                             variant="default"
@@ -812,25 +981,25 @@ function RegistroPageContent() {
                           </Button>
                         </div>
                       )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
 
-                  {currentStep === 2 && (
-                    <motion.div
-                      key="step2"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-4"
-                    >
-                      <Card data-section-id="photo">
-                        <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-                          <ImageIcon className="h-5 w-5 text-primary" />
-                          <CardTitle>Foto de perfil</CardTitle>
-                        </CardHeader>
-                        <CardContent>
+              {currentStep === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-4"
+                >
+                  <Card data-section-id="photo">
+                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <ImageIcon className="h-5 w-5 text-primary" />
+                      <CardTitle>Foto de perfil</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <div
                         className="flex flex-col items-center justify-center py-8 border-2 border-dashed rounded-lg"
                         onDragOver={(e) => e.preventDefault()}
@@ -865,7 +1034,9 @@ function RegistroPageContent() {
                         <Label htmlFor="photo" className="mt-4 cursor-pointer">
                           <div className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity">
                             <Upload className="h-4 w-4" />
-                            {uploadingPhoto ? "Subiendo..." : "Seleccionar foto"}
+                            {uploadingPhoto
+                              ? "Subiendo..."
+                              : "Seleccionar foto"}
                           </div>
                           <input
                             id="photo"
@@ -885,12 +1056,12 @@ function RegistroPageContent() {
                           PNG, JPG hasta 1MB
                         </p>
                       </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
 
-                  {currentStep === 3 && (
+              {currentStep === 3 && (
                 <motion.div
                   key="step3"
                   initial={{ opacity: 0, x: 20 }}
@@ -904,118 +1075,156 @@ function RegistroPageContent() {
                       <CardTitle>Experiencia laboral</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                  {formData.experience.map((exp, index) => (
-                    <div
-                      key={exp.id}
-                      className="p-4 border rounded-lg space-y-3"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium">Experiencia {index + 1}</h4>
-                        <button
-                          type="button"
-                          onClick={() => removeExperience(exp.id)}
-                          className="text-destructive hover:text-destructive/80"
+                      {formData.experience.map((exp, index) => (
+                        <div
+                          key={exp.id}
+                          className="p-4 border rounded-lg space-y-3"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <Input
-                          placeholder="Empresa"
-                          value={exp.company}
-                          onChange={(e) =>
-                            updateExperience(exp.id, "company", e.target.value)
-                          }
-                          className={cn(getFieldError(`experience.${index}.company`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        <Input
-                          placeholder="Puesto"
-                          value={exp.position}
-                          onChange={(e) =>
-                            updateExperience(exp.id, "position", e.target.value)
-                          }
-                          className={cn(getFieldError(`experience.${index}.position`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        {getFieldError(`experience.${index}.company`) && (
-                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.company`)}</p>
-                        )}
-                        {getFieldError(`experience.${index}.position`) && (
-                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.position`)}</p>
-                        )}
-                        <ExperienceLocationSelector
-                          experienciaId={exp.id}
-                          initialProvincia={exp.provincia}
-                          initialMunicipio={exp.municipio}
-                          initialLocalidad={exp.localidad}
-                          onChange={updateExperienceLocation}
-                        />
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <Input
-                          type="date"
-                          value={exp.startDate}
-                          onChange={(e) =>
-                            updateExperience(
-                              exp.id,
-                              "startDate",
-                              e.target.value,
-                            )
-                          }
-                          className={cn(getFieldError(`experience.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        <Input
-                          type="date"
-                          value={exp.endDate}
-                          onChange={(e) =>
-                            updateExperience(exp.id, "endDate", e.target.value)
-                          }
-                          disabled={exp.current}
-                          className={cn(getFieldError(`experience.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                      </div>
-                      {getFieldError(`experience.${index}.startDate`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.startDate`)}</p>
-                      )}
-                      {getFieldError(`experience.${index}.endDate`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`experience.${index}.endDate`)}</p>
-                      )}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={exp.current}
-                          onChange={(e) =>
-                            updateExperience(
-                              exp.id,
-                              "current",
-                              e.target.checked,
-                            )
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-sm">Trabajo actual</span>
-                      </label>
-                      <Textarea
-                        placeholder="¿Qué funciones realizabas? ¿Qué logros obtuviste?"
-                        value={exp.description}
-                        onChange={(e) =>
-                          updateExperience(
-                            exp.id,
-                            "description",
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addExperience}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar experiencia
-                  </Button>
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-medium">
+                              Experiencia {index + 1}
+                            </h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeExperience(exp.id)}
+                              className="text-destructive hover:text-destructive/80"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <Input
+                              placeholder="Empresa"
+                              value={exp.company}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "company",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`experience.${index}.company`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            <Input
+                              placeholder="Puesto"
+                              value={exp.position}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "position",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`experience.${index}.position`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(`experience.${index}.company`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`experience.${index}.company`)}
+                              </p>
+                            )}
+                            {getFieldError(`experience.${index}.position`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`experience.${index}.position`)}
+                              </p>
+                            )}
+                            <ExperienceLocationSelector
+                              experienciaId={exp.id}
+                              initialProvincia={exp.provincia}
+                              initialMunicipio={exp.municipio}
+                              initialLocalidad={exp.localidad}
+                              onChange={updateExperienceLocation}
+                            />
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <Input
+                              type="date"
+                              value={exp.startDate}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "startDate",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(
+                                  `experience.${index}.startDate`,
+                                ) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            <Input
+                              type="date"
+                              value={exp.endDate}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "endDate",
+                                  e.target.value,
+                                )
+                              }
+                              disabled={exp.current}
+                              className={cn(
+                                getFieldError(`experience.${index}.endDate`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                          </div>
+                          {getFieldError(`experience.${index}.startDate`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`experience.${index}.startDate`)}
+                            </p>
+                          )}
+                          {getFieldError(`experience.${index}.endDate`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`experience.${index}.endDate`)}
+                            </p>
+                          )}
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={exp.current}
+                              onChange={(e) =>
+                                updateExperience(
+                                  exp.id,
+                                  "current",
+                                  e.target.checked,
+                                )
+                              }
+                              className="rounded"
+                            />
+                            <span className="text-sm">Trabajo actual</span>
+                          </label>
+                          <Textarea
+                            placeholder="¿Qué funciones realizabas? ¿Qué logros obtuviste?"
+                            value={exp.description}
+                            onChange={(e) =>
+                              updateExperience(
+                                exp.id,
+                                "description",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addExperience}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar experiencia
+                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1035,106 +1244,153 @@ function RegistroPageContent() {
                       <CardTitle>Educación</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                  {formData.education.map((edu, index) => (
-                    <div
-                      key={edu.id}
-                      className="p-4 border rounded-lg space-y-3"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium">Educación {index + 1}</h4>
-                        <button
-                          type="button"
-                          onClick={() => removeEducation(edu.id)}
-                          className="text-destructive hover:text-destructive/80"
+                      {formData.education.map((edu, index) => (
+                        <div
+                          key={edu.id}
+                          className="p-4 border rounded-lg space-y-3"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <Input
-                          placeholder="Institución"
-                          value={edu.institution}
-                          onChange={(e) =>
-                            updateEducation(
-                              edu.id,
-                              "institution",
-                              e.target.value,
-                            )
-                          }
-                          className={cn(getFieldError(`education.${index}.institution`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        <Input
-                          placeholder="Título"
-                          value={edu.degree}
-                          onChange={(e) =>
-                            updateEducation(edu.id, "degree", e.target.value)
-                          }
-                          className={cn(getFieldError(`education.${index}.degree`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                      </div>
-                      {getFieldError(`education.${index}.institution`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.institution`)}</p>
-                      )}
-                      {getFieldError(`education.${index}.degree`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.degree`)}</p>
-                      )}
-                      <EducationLocationSelector
-                        educacionId={edu.id}
-                        initialProvincia={edu.provincia}
-                        initialMunicipio={edu.municipio}
-                        initialLocalidad={edu.localidad}
-                        onChange={updateEducationLocation}
-                      />
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <Input
-                          type="date"
-                          value={edu.startDate}
-                          onChange={(e) =>
-                            updateEducation(edu.id, "startDate", e.target.value)
-                          }
-                          className={cn(getFieldError(`education.${index}.startDate`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        <Input
-                          type="date"
-                          value={edu.endDate}
-                          onChange={(e) =>
-                            updateEducation(edu.id, "endDate", e.target.value)
-                          }
-                          disabled={edu.status === "in_progress"}
-                          className={cn(getFieldError(`education.${index}.endDate`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                      </div>
-                      {getFieldError(`education.${index}.startDate`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.startDate`)}</p>
-                      )}
-                      {getFieldError(`education.${index}.endDate`) && (
-                        <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.endDate`)}</p>
-                      )}
-                      <div>
-                        <Label>Estado del estudio *</Label>
-                        <Select
-                          value={edu.status}
-                          onChange={(e) =>
-                            updateEducation(edu.id, "status", e.target.value)
-                          }
-                          options={EDUCATION_STATUS_OPTIONS}
-                          className={cn(getFieldError(`education.${index}.status`) && "border-red-500 focus-visible:ring-red-500")}
-                        />
-                        {getFieldError(`education.${index}.status`) && (
-                          <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`education.${index}.status`)}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addEducation}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar educación
-                  </Button>
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-medium">
+                              Educación {index + 1}
+                            </h4>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              type="button"
+                              onClick={() => removeEducation(edu.id)}
+                              className="text-destructive hover:text-destructive/80"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <Input
+                              placeholder="Institución"
+                              value={edu.institution}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "institution",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(
+                                  `education.${index}.institution`,
+                                ) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            <Input
+                              placeholder="Título"
+                              value={edu.degree}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "degree",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`education.${index}.degree`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                          </div>
+                          {getFieldError(`education.${index}.institution`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`education.${index}.institution`)}
+                            </p>
+                          )}
+                          {getFieldError(`education.${index}.degree`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`education.${index}.degree`)}
+                            </p>
+                          )}
+                          <EducationLocationSelector
+                            educacionId={edu.id}
+                            initialProvincia={edu.provincia}
+                            initialMunicipio={edu.municipio}
+                            initialLocalidad={edu.localidad}
+                            onChange={updateEducationLocation}
+                          />
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <Input
+                              type="date"
+                              value={edu.startDate}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "startDate",
+                                  e.target.value,
+                                )
+                              }
+                              className={cn(
+                                getFieldError(`education.${index}.startDate`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            <Input
+                              type="date"
+                              value={edu.endDate}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "endDate",
+                                  e.target.value,
+                                )
+                              }
+                              disabled={edu.status === "in_progress"}
+                              className={cn(
+                                getFieldError(`education.${index}.endDate`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                          </div>
+                          {getFieldError(`education.${index}.startDate`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`education.${index}.startDate`)}
+                            </p>
+                          )}
+                          {getFieldError(`education.${index}.endDate`) && (
+                            <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                              {getFieldError(`education.${index}.endDate`)}
+                            </p>
+                          )}
+                          <div>
+                            <Label>Estado del estudio *</Label>
+                            <Select
+                              value={edu.status}
+                              onChange={(e) =>
+                                updateEducation(
+                                  edu.id,
+                                  "status",
+                                  e.target.value,
+                                )
+                              }
+                              options={EDUCATION_STATUS_OPTIONS}
+                              className={cn(
+                                getFieldError(`education.${index}.status`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
+                              )}
+                            />
+                            {getFieldError(`education.${index}.status`) && (
+                              <p className="rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                {getFieldError(`education.${index}.status`)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addEducation}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar educación
+                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1152,7 +1408,13 @@ function RegistroPageContent() {
                     <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
                       <BookOpen className="h-5 w-5 text-primary" />
                       <CardTitle>Cursos y certificaciones</CardTitle>
-                      <Button type="button" variant="outline" size="sm" onClick={addCertification} className="ml-auto">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addCertification}
+                        className="ml-auto"
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Agregar
                       </Button>
@@ -1161,9 +1423,21 @@ function RegistroPageContent() {
                       {certifications.length > 0 ? (
                         <div className="space-y-3">
                           {certifications.map((course, index) => (
-                            <div key={course.id} className="rounded-md border bg-background p-3 space-y-3">
-                              <div className="flex justify-end">
-                                <Button type="button" variant="ghost" size="icon" onClick={() => removeCertification(course.id)}>
+                            <div
+                              key={course.id}
+                              className="rounded-md border bg-background p-3 space-y-3"
+                            >
+                              <div className="flex justify-between items-center">
+                                 <h4 className="font-medium">
+                              curso {index + 1}
+                            </h4>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive/80"
+                                  onClick={() => removeCertification(course.id)}
+                                >
                                   <X className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -1174,11 +1448,28 @@ function RegistroPageContent() {
                                     <Input
                                       data-field-id={`certifications.${index}.title`}
                                       value={course.title ?? ""}
-                                      onChange={(e) => updateCertification(course.id, "title", e.target.value)}
-                                      className={cn(getFieldError(`certifications.${index}.title`) && "border-red-500 focus-visible:ring-red-500")}
+                                      onChange={(e) =>
+                                        updateCertification(
+                                          course.id,
+                                          "title",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className={cn(
+                                        getFieldError(
+                                          `certifications.${index}.title`,
+                                        ) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
                                     />
-                                    {getFieldError(`certifications.${index}.title`) && (
-                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`certifications.${index}.title`)}</p>
+                                    {getFieldError(
+                                      `certifications.${index}.title`,
+                                    ) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(
+                                          `certifications.${index}.title`,
+                                        )}
+                                      </p>
                                     )}
                                   </div>
                                   <div>
@@ -1186,11 +1477,28 @@ function RegistroPageContent() {
                                     <Input
                                       data-field-id={`certifications.${index}.institution`}
                                       value={course.institution ?? ""}
-                                      onChange={(e) => updateCertification(course.id, "institution", e.target.value)}
-                                      className={cn(getFieldError(`certifications.${index}.institution`) && "border-red-500 focus-visible:ring-red-500")}
+                                      onChange={(e) =>
+                                        updateCertification(
+                                          course.id,
+                                          "institution",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className={cn(
+                                        getFieldError(
+                                          `certifications.${index}.institution`,
+                                        ) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
                                     />
-                                    {getFieldError(`certifications.${index}.institution`) && (
-                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`certifications.${index}.institution`)}</p>
+                                    {getFieldError(
+                                      `certifications.${index}.institution`,
+                                    ) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(
+                                          `certifications.${index}.institution`,
+                                        )}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
@@ -1200,13 +1508,30 @@ function RegistroPageContent() {
                                     <Select
                                       data-field-id={`certifications.${index}.startMonth`}
                                       value={course.startMonth ?? ""}
-                                      onChange={(e) => updateCertification(course.id, "startMonth", e.target.value)}
+                                      onChange={(e) =>
+                                        updateCertification(
+                                          course.id,
+                                          "startMonth",
+                                          e.target.value,
+                                        )
+                                      }
                                       options={monthSelectOptions}
                                       placeholder="Seleccionar mes"
-                                      className={cn(getFieldError(`certifications.${index}.startMonth`) && "border-red-500 focus-visible:ring-red-500")}
+                                      className={cn(
+                                        getFieldError(
+                                          `certifications.${index}.startMonth`,
+                                        ) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
                                     />
-                                    {getFieldError(`certifications.${index}.startMonth`) && (
-                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`certifications.${index}.startMonth`)}</p>
+                                    {getFieldError(
+                                      `certifications.${index}.startMonth`,
+                                    ) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(
+                                          `certifications.${index}.startMonth`,
+                                        )}
+                                      </p>
                                     )}
                                   </div>
                                   <div>
@@ -1214,13 +1539,30 @@ function RegistroPageContent() {
                                     <Select
                                       data-field-id={`certifications.${index}.startYear`}
                                       value={course.startYear ?? ""}
-                                      onChange={(e) => updateCertification(course.id, "startYear", e.target.value)}
+                                      onChange={(e) =>
+                                        updateCertification(
+                                          course.id,
+                                          "startYear",
+                                          e.target.value,
+                                        )
+                                      }
                                       options={yearSelectOptions}
                                       placeholder="Seleccionar año"
-                                      className={cn(getFieldError(`certifications.${index}.startYear`) && "border-red-500 focus-visible:ring-red-500")}
+                                      className={cn(
+                                        getFieldError(
+                                          `certifications.${index}.startYear`,
+                                        ) &&
+                                          "border-red-500 focus-visible:ring-red-500",
+                                      )}
                                     />
-                                    {getFieldError(`certifications.${index}.startYear`) && (
-                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError(`certifications.${index}.startYear`)}</p>
+                                    {getFieldError(
+                                      `certifications.${index}.startYear`,
+                                    ) && (
+                                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                                        {getFieldError(
+                                          `certifications.${index}.startYear`,
+                                        )}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
@@ -1229,7 +1571,9 @@ function RegistroPageContent() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground">Aún no agregaste cursos ni certificaciones.</p>
+                        <p className="text-sm text-muted-foreground">
+                          Aún no agregaste cursos ni certificaciones.
+                        </p>
                       )}
                     </CardContent>
                   </Card>
@@ -1294,7 +1638,8 @@ function RegistroPageContent() {
                       </div>
                       {formData.skills.length === 0 && (
                         <p className="text-xs text-muted-foreground">
-                          Ej: Atención al cliente, Ventas, Manipulación de alimentos
+                          Ej: Atención al cliente, Ventas, Manipulación de
+                          alimentos
                         </p>
                       )}
                     </CardContent>
@@ -1318,27 +1663,40 @@ function RegistroPageContent() {
                       </Button>
                       <div className="space-y-3">
                         {formData.languages.map((lang, index) => (
-                          <div key={lang.id} className="flex flex-col sm:flex-row gap-2 rounded-md border bg-background p-3">
+                          <div
+                            key={lang.id}
+                            className="flex flex-col sm:flex-row gap-2 rounded-md border bg-background p-3"
+                          >
                             <Select
                               data-field-id={`languages.${index}.language`}
                               value={lang.language}
                               placeholder="Idioma"
-                              onChange={(e) => updateLanguage(lang.id, "language", e.target.value)}
+                              onChange={(e) =>
+                                updateLanguage(
+                                  lang.id,
+                                  "language",
+                                  e.target.value,
+                                )
+                              }
                               options={languageSelectOptions}
                               className={cn(
                                 "flex-1",
-                                getFieldError(`languages.${index}.language`) && "border-red-500 focus-visible:ring-red-500",
+                                getFieldError(`languages.${index}.language`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
                               )}
                             />
                             <Select
                               data-field-id={`languages.${index}.level`}
                               value={lang.level}
                               placeholder="Nivel"
-                              onChange={(e) => updateLanguage(lang.id, "level", e.target.value)}
+                              onChange={(e) =>
+                                updateLanguage(lang.id, "level", e.target.value)
+                              }
                               options={levelSelectOptions}
                               className={cn(
                                 "sm:w-32",
-                                getFieldError(`languages.${index}.level`) && "border-red-500 focus-visible:ring-red-500",
+                                getFieldError(`languages.${index}.level`) &&
+                                  "border-red-500 focus-visible:ring-red-500",
                               )}
                             />
                             <Button
@@ -1346,7 +1704,7 @@ function RegistroPageContent() {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeLanguage(lang.id)}
-                              className="self-end sm:self-auto"
+                              className="self-end sm:self-auto text-destructive hover:text-destructive/80"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -1364,7 +1722,9 @@ function RegistroPageContent() {
                         ))}
                       </div>
                       {formData.languages.length === 0 && (
-                        <p className="text-xs text-muted-foreground">Aún no agregaste idiomas.</p>
+                        <p className="text-xs text-muted-foreground">
+                          Aún no agregaste idiomas.
+                        </p>
                       )}
                     </CardContent>
                   </Card>
@@ -1399,33 +1759,54 @@ function RegistroPageContent() {
                             }}
                             className="rounded"
                           />
+                          <BadgeCheck className="h-4 w-4 text-primary" />
                           <span className="text-sm">Licencia</span>
                         </label>
                         <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                           <input
                             type="checkbox"
                             checked={!!formData.movilidad}
-                            onChange={(e) => updateFormData({ movilidad: e.target.checked }, "movilidad")}
+                            onChange={(e) =>
+                              updateFormData(
+                                { movilidad: e.target.checked },
+                                "movilidad",
+                              )
+                            }
                             className="rounded"
                           />
+                          <CarFront className="h-4 w-4 text-primary" />
                           <span className="text-sm">Movilidad propia</span>
                         </label>
                         <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                           <input
                             type="checkbox"
                             checked={!!formData.incorporacionInmediata}
-                            onChange={(e) => updateFormData({ incorporacionInmediata: e.target.checked }, "incorporacionInmediata")}
+                            onChange={(e) =>
+                              updateFormData(
+                                { incorporacionInmediata: e.target.checked },
+                                "incorporacionInmediata",
+                              )
+                            }
                             className="rounded"
                           />
-                          <span className="text-sm">Incorporación inmediata</span>
+                          <Zap className="h-4 w-4 text-primary" />
+                          <span className="text-sm">
+                            Incorporación inmediata
+                          </span>
                         </label>
                         <label className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
                           <input
                             type="checkbox"
                             checked={!!formData.office}
-                            onChange={(e) => updateFormData({ office: e.target.checked }, "office")}
+                            onChange={(e) =>
+                              updateFormData(
+                                { office: e.target.checked },
+                                "office",
+                              )
+                            }
                             className="rounded"
                           />
+                          <SiLibreofficewriter className="h-4 w-4" />
                           <span className="text-sm">Microsoft Office</span>
                         </label>
                       </div>
@@ -1435,7 +1816,12 @@ function RegistroPageContent() {
                           <Input
                             placeholder="Ej: B1, profesional, etc."
                             value={formData.licencia}
-                            onChange={(e) => updateFormData({ licencia: e.target.value }, "licencia")}
+                            onChange={(e) =>
+                              updateFormData(
+                                { licencia: e.target.value },
+                                "licencia",
+                              )
+                            }
                           />
                         </div>
                       )}
@@ -1444,7 +1830,16 @@ function RegistroPageContent() {
                         <Select
                           value={formData.disponibilidad || ""}
                           placeholder="Seleccionar disponibilidad"
-                          onChange={(e) => updateFormData({ disponibilidad: e.target.value as "fullTime" | "partTime" }, "disponibilidad")}
+                          onChange={(e) =>
+                            updateFormData(
+                              {
+                                disponibilidad: e.target.value as
+                                  | "fullTime"
+                                  | "partTime",
+                              },
+                              "disponibilidad",
+                            )
+                          }
                           options={availabilityOptions}
                         />
                       </div>
@@ -1457,32 +1852,35 @@ function RegistroPageContent() {
                       <CardTitle>Resumen breve</CardTitle>
                     </CardHeader>
                     <CardContent>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label>Descripción del perfil</Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowSummaryModal(true)}
-                      >
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        ¿Qué escribir?
-                      </Button>
-                    </div>
-                    <Textarea
-                      placeholder="Breve descripción de tu perfil profesional..."
-                      value={formData.summary}
-                      onChange={(e) =>
-                        updateFormData({ summary: e.target.value }, "summary")
-                      }
-                      className={cn(
-                        "h-20",
-                        getFieldError("summary") && "border-red-500 focus-visible:ring-red-500",
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Descripción del perfil</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowSummaryModal(true)}
+                        >
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          ¿Qué escribir?
+                        </Button>
+                      </div>
+                      <Textarea
+                        placeholder="Breve descripción de tu perfil profesional..."
+                        value={formData.summary}
+                        onChange={(e) =>
+                          updateFormData({ summary: e.target.value }, "summary")
+                        }
+                        className={cn(
+                          "h-20",
+                          getFieldError("summary") &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
+                      />
+                      {getFieldError("summary") && (
+                        <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
+                          {getFieldError("summary")}
+                        </p>
                       )}
-                    />
-                    {getFieldError("summary") && (
-                      <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{getFieldError("summary")}</p>
-                    )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1530,8 +1928,7 @@ function RegistroPageContent() {
                               }
                               className={cn(
                                 "h-10 w-10 rounded-full border-2 transition-all cursor-pointer",
-                                formData.templateSettings.primaryColor ===
-                                  color
+                                formData.templateSettings.primaryColor === color
                                   ? "border-foreground scale-110"
                                   : "border-transparent hover:scale-105",
                               )}
@@ -1560,74 +1957,97 @@ function RegistroPageContent() {
                       <CardTitle>Confirmar datos</CardTitle>
                     </CardHeader>
                     <CardContent>
-                  <div className="border-t pt-4">
-                    <h3 className="font-medium mb-4">Resumen de tus datos</h3>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Nombre:</span>
-                        <span>{buildFullName(formData.name, formData.lastName) || "No especificado"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Teléfono:</span>
-                        <span>{formData.phone}</span>
-                      </div>
-                      {formData.email && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Email:</span>
-                          <span>{formData.email}</span>
+                      <div className="border-t pt-4">
+                        <h3 className="font-medium mb-4">
+                          Resumen de tus datos
+                        </h3>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Nombre:
+                            </span>
+                            <span>
+                              {buildFullName(
+                                formData.name,
+                                formData.lastName,
+                              ) || "No especificado"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Teléfono:
+                            </span>
+                            <span>{formData.phone}</span>
+                          </div>
+                          {formData.email && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Email:
+                              </span>
+                              <span>{formData.email}</span>
+                            </div>
+                          )}
+                          {formData.location && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Ubicación:
+                              </span>
+                              <span>{formData.location}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Experiencias:
+                            </span>
+                            <span>{formData.experience.length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Educación:
+                            </span>
+                            <span>{formData.education.length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Habilidades:
+                            </span>
+                            <span>{formData.skills.length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Idiomas:
+                            </span>
+                            <span>{formData.languages.length}</span>
+                          </div>
+                          {(photoPreview || formData.photo) && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-muted-foreground">
+                                Foto:
+                              </span>
+                              <Image
+                                src={photoPreview || formData.photo || ""}
+                                alt="Foto"
+                                width={40}
+                                height={40}
+                                unoptimized
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {formData.location && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Ubicación:
-                          </span>
-                          <span>{formData.location}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Experiencias:
-                        </span>
-                        <span>{formData.experience.length}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Educación:
-                        </span>
-                        <span>{formData.education.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Habilidades:
-                        </span>
-                        <span>{formData.skills.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Idiomas:</span>
-                        <span>{formData.languages.length}</span>
-                      </div>
-                      {(photoPreview || formData.photo) && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-muted-foreground">Foto:</span>
-                          <Image
-                            src={photoPreview || formData.photo || ""}
-                            alt="Foto"
-                            width={40}
-                            height={40}
-                            unoptimized
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <AlertDescription className="text-amber-800 text-sm">
-                      Verifica que todos los datos estén correctos antes de enviar el formulario.
-                    </AlertDescription>
-                  </Alert>
+                      <Alert className="mt-4 bg-yellow-50 border-yellow-200">
+
+                        <AlertDescription className="text-black text-sm flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-black" />
+                          <span>
+
+                          Verifica que todos los datos estén correctos antes de
+                          enviar el formulario.
+                          </span>
+                        </AlertDescription>
+                      </Alert>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1649,7 +2069,9 @@ function RegistroPageContent() {
               {currentStep < registroSteps.length ? (
                 <Button
                   onClick={() =>
-                    setCurrentStep((prev) => Math.min(registroSteps.length, prev + 1))
+                    setCurrentStep((prev) =>
+                      Math.min(registroSteps.length, prev + 1),
+                    )
                   }
                   disabled={!canProceed()}
                   className="w-full sm:w-auto"
@@ -1678,10 +2100,10 @@ function RegistroPageContent() {
             <h3 className="font-bold mb-2">¿Qué escribir en el resumen?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               El resumen es una descripción breve (2-3 oraciones) de quién eres
-              y qué aportas. Ejemplo: &quot;Profesional con experiencia en atención
-              al cliente, orientado a la satisfacción del usuario y resolución
-              de problemas. Busco desarrollarme en el sector de ventas y
-              servicio al cliente.&quot;
+              y qué aportas. Ejemplo: &quot;Profesional con experiencia en
+              atención al cliente, orientado a la satisfacción del usuario y
+              resolución de problemas. Busco desarrollarme en el sector de
+              ventas y servicio al cliente.&quot;
             </p>
             <Button
               onClick={() => setShowSummaryModal(false)}
