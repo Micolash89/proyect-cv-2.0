@@ -14,15 +14,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   User,
-  Mail,
-  Phone,
   MapPin,
   Briefcase,
   GraduationCap,
@@ -35,14 +32,12 @@ import {
   FileText,
   Image as ImageIcon,
   Link2,
-  ExternalLink,
   CheckCircle,
   AlertCircle,
   ShieldCheck,
   BookOpen,
   Zap,
   Globe,
-  Sparkles,
   AlertTriangle,
   CarFront,
   BadgeCheck,

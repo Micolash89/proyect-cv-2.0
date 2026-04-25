@@ -45,7 +45,6 @@ import {
 import { SiLibreofficewriter } from "@icons-pack/react-simple-icons";
 import { generateId, cn } from "@/lib/utils/cn";
 import type {
-  FontSize,
   LayoutOrder,
   CVStatus,
   UserCV,

@@ -12,11 +12,17 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AdminDashboardTableSkeleton } from "@/components/admin/AdminDashboardTableSkeleton";
 import {
-  Search, Filter, Eye, CheckCircle, Clock, XCircle,
-  FileText, Users, Plus, ChevronLeft, ChevronRight
+  Search,
+  Eye,
+  CheckCircle,
+  Clock,
+  Users,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { formatDate, formatPhone, cn } from "@/lib/utils/cn";
-import type { UserCV, CVStatus } from "@/types";
+import type { UserCV } from "@/types";
 import { getCVs } from "@/app/actions/cv";
 import { statusConfig } from "@/lib/constants";
 
@@ -35,11 +41,11 @@ export default function AdminDashboard() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getCVs({ 
-        status: statusFilter, 
-        search: debouncedSearch, 
+      const result = await getCVs({
+        status: statusFilter,
+        search: debouncedSearch,
         page: currentPage,
-        limit 
+        limit,
       });
       setUsers(result.users as unknown as UserCV[]);
       setTotalPages(result.totalPages);
@@ -192,10 +198,16 @@ export default function AdminDashboard() {
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left p-4 font-medium">Nombre</th>
-                <th className="text-left p-4 font-medium hidden md:table-cell">Teléfono</th>
-                <th className="text-left p-4 font-medium hidden lg:table-cell">Email</th>
+                <th className="text-left p-4 font-medium hidden md:table-cell">
+                  Teléfono
+                </th>
+                <th className="text-left p-4 font-medium hidden lg:table-cell">
+                  Email
+                </th>
                 <th className="text-left p-4 font-medium">Estado</th>
-                <th className="text-left p-4 font-medium hidden sm:table-cell">Fecha</th>
+                <th className="text-left p-4 font-medium hidden sm:table-cell">
+                  Fecha
+                </th>
                 <th className="text-left p-4 font-medium">Acciones</th>
               </tr>
             </thead>
@@ -210,7 +222,10 @@ export default function AdminDashboard() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="p-8 text-center text-muted-foreground"
+                    >
                       No se encontraron registros
                     </td>
                   </motion.tr>
@@ -225,7 +240,7 @@ export default function AdminDashboard() {
                         transition={{ delay: index * 0.03 }}
                         className={cn(
                           "border-t hover:bg-muted/50 transition-colors",
-                          !user.viewed && "bg-primary/5"
+                          !user.viewed && "bg-primary/5",
                         )}
                       >
                         <td className="p-4">
@@ -242,7 +257,9 @@ export default function AdminDashboard() {
                             <div>
                               <p className="font-medium">{user.fullName}</p>
                               {!user.viewed && (
-                                <Badge variant="info" className="text-xs">Nuevo</Badge>
+                                <Badge variant="info" className="text-xs">
+                                  Nuevo
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -284,11 +301,12 @@ export default function AdminDashboard() {
             </AnimatePresence>
           </table>
         </div>
-        
+
         {totalPages > 1 && (
           <div className="flex items-center justify-between p-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Mostrando {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, total)} de {total} registros
+              Mostrando {(currentPage - 1) * limit + 1} -{" "}
+              {Math.min(currentPage * limit, total)} de {total} registros
             </p>
             <div className="flex items-center gap-2">
               <Button

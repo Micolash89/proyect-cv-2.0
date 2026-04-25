@@ -51,6 +51,7 @@ function buildGenerateProfilePrompt(
   return `
 Eres un experto en CVs ATS-optimizados siguiendo estándares Harvard University.
 Genera un perfil profesional breve, natural y humano, como una introducción de la persona, no como un listado de tareas ni como una oferta laboral.
+Usa una voz cercana y profesional; no fuerces la tercera persona impersonal.
 
 ${targetJob ? `Puesto aspirado: ${targetJob}` : ""}
 
@@ -95,7 +96,7 @@ El resultado debe:
 - Devolver SOLO el perfil (sin introducciones)
 - Usar lenguaje profesional y articulado
 - NO inventar métricas ni porcentajes
-- NO usar pronombres personales
+- Evitar la tercera persona impersonal; si una formulación directa o en primera persona aporta naturalidad, prioriza esa opción sin perder tono profesional
 - Ser específico, pero general en la introducción, sin sonar a lista de tareas
 `;
 }
