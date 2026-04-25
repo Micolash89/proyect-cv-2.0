@@ -75,17 +75,25 @@ PALABRAS CLAVE ATS (incluir naturalmente):
 - Términos técnicos si aplican
 - Competencias blandas: Leadership, Communication, Problem-solving, Collaboration, Adaptability, Strategic thinking
 
-ENFOQUE DE REDACCIÓN:
+FORMATO OBLIGATORIO - UN SOLO PÁRRAFO:
+⚠ El resultado DEBE ser UN ÚNICO PÁRRAFO, sin saltos de línea ni subtítulos.
+⚠ Extensión aproximada: 5 renglones (~250-350 caracteres).
+⚠ Sin viñetas, bullets, numeraciones ni secciones.
+⚠ Flujo contínuo y natural, como una presentación profesional.
+
+ENFOQUE DE REDACCIÓN - IDENTIDAD PROFESIONAL, NO HISTORIAL:
 - Escribir como una presentación profesional, no como una descripción de funciones
+- NO repetir detalles concretos de experiencia (empresas, fechas, tareas específicas)
 - Evitar frases impersonales o de tipo oferta: "Se ofrece", "Gestión administrativa", "Responsable de", "Se ha implementado", "Encargado de"
-- No enumerar tareas ni convertir el perfil en un resumen de puestos anteriores
+- No enumerar puestos anteriores ni convertir el perfil en un resumen de roles
 - Empezar con la identidad profesional, área o especialidad de la persona
-- Incluir experiencia, fortalezas y valor aportado de forma general y coherente
+- Integrar competencias y fortalezas generales de forma coherente
 
 Si TIENE experiencia clara:
 - Abrir con su perfil general: "Profesional de...", "Perfil orientado a...", "Especialista en..."
-- Mencionar experiencia y fortalezas de forma integrada, no como lista de tareas
+- Mencionar competencias y fortalezas de forma general e integrada, SIN enumerar empresas, fechas o tareas específicas
 - Usar verbos Harvard como Achieved, Directed, Managed, Coordinated cuando aporten naturalidad
+- Priorizar identidad profesional sobre listado de responsabilidades
 
 Si NO tiene experiencia o muy reciente:
 - Perfil orientado a "Profesional en búsqueda de primera oportunidad"
@@ -94,10 +102,12 @@ Si NO tiene experiencia o muy reciente:
 
 El resultado debe:
 - Devolver SOLO el perfil (sin introducciones)
+- Ser UN ÚNICO PÁRRAFO sin saltos de línea
 - Usar lenguaje profesional y articulado
 - NO inventar métricas ni porcentajes
+- NO repetir empresas, fechas ni tareas ya detalladas en la sección de experiencia
 - Evitar la tercera persona impersonal; si una formulación directa o en primera persona aporta naturalidad, prioriza esa opción sin perder tono profesional
-- Ser específico, pero general en la introducción, sin sonar a lista de tareas
+- Enfocarse en competencias generales, identidad profesional y valor general aportado
 `;
 }
 
