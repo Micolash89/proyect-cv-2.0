@@ -1,20 +1,22 @@
-# CV Generator Pro
+# 📄 CV Generator Pro
 
 Crea currículums vitae profesionales en PDF con 8 plantillas diseñadas para destacar tu perfil laboral.
 
-## Características
+![CV Generator Pro](./public/og-image.jpg)
 
-- Creación de CVs con 8 plantillas profesionales
-- Formulario de registro público
-- Panel de administración completo
-- Integración con Google OAuth (autocompletar datos desde tu cuenta Google)
-- Integración con APIs de IA (Gemini, Claude, Groq) para mejorar tu CV
-- Generación de PDF descargable de alta calidad
-- Integración con Georef API para ubicaciones de Argentina
-- Subida de fotos a Cloudinary
-- Personalización de colores, fuentes y diseño
+## ✨ Características
 
-## Tech Stack
+- 🎨 Creación de CVs con 8 plantillas profesionales
+- 📝 Formulario de registro público
+- 🛠️ Panel de administración completo
+- 🔐 Integración con Google OAuth (autocompletar datos desde tu cuenta Google)
+- 🤖 Integración con APIs de IA (Gemini, Claude, Groq) para mejorar tu CV
+- 📥 Generación de PDF descargable de alta calidad
+- 🗺️ Integración con Georef API para ubicaciones de Argentina
+- 🖼️ Subida de fotos a Cloudinary
+- 🎯 Personalización de colores, fuentes y diseño
+
+## 🔧 Tech Stack
 
 - **Frontend**: Next.js 16, React 19, Tailwind CSS 4
 - **Base de datos**: MongoDB
@@ -23,7 +25,7 @@ Crea currículums vitae profesionales en PDF con 8 plantillas diseñadas para de
 - **PDF**: @react-pdf/renderer
 - **Imágenes**: Cloudinary
 
-## Instalación
+## 🚀 Instalación
 
 ```bash
 # 1. Clonar el proyecto
@@ -41,7 +43,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-## Variables de entorno requeridas
+## 🔑 Variables de entorno requeridas
 
 ```env
 # MongoDB
@@ -75,7 +77,7 @@ GOOGLE_CLIENT_SECRET=tu_client_secret
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 ```
 
-## Comandos
+## 💻 Comandos
 
 ```bash
 pnpm dev        # Desarrollo
@@ -87,7 +89,7 @@ pnpm typecheck  # Verificar tipos
 
 ---
 
-## Autor
+## 👨‍💼 Autor
 
 <a href="https://www.linkedin.com/in/javier-espindola/" target="_blank">
   <img src="https://media.licdn.com/dms/image/v2/D4D35AQEbzgOBZNVnVw/profile-framedphoto-shrink_400_400/B4DZliqCu.H0Ag-/0/1758296812799?e=1777752000&v=beta&t=wNDzyuzfBIS7z8VBHRwF2T6VPyH3Lz72sr4pX0GNkb4" alt="Javier Espindola" width="150" style="border-radius: 50%;" />
