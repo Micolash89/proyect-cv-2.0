@@ -90,7 +90,7 @@ pnpm typecheck  # Verificar tipos
 ## Autor
 
 <a href="https://www.linkedin.com/in/javier-espindola/" target="_blank">
-  <img src="https://media.licdn.com/dms/image/v2/D4D35AQEbzgOBZNVnVw/profile-framedphoto-shrink_200_200/B4DZliqCu.H0Ac-/0/1758296812799?e=1773417600&v=beta&t=AON2JaTA2isR_LGWiIuPS2e9CaE4S6my7Tp149PWTe4" alt="Javier Espindola" width="150" style="border-radius: 50%;" />
+  <img src="https://media.licdn.com/dms/image/v2/D4D35AQEbzgOBZNVnVw/profile-framedphoto-shrink_400_400/B4DZliqCu.H0Ag-/0/1758296812799?e=1777752000&v=beta&t=wNDzyuzfBIS7z8VBHRwF2T6VPyH3Lz72sr4pX0GNkb4" alt="Javier Espindola" width="150" style="border-radius: 50%;" />
 </a>
 
 **Javier Espindola**
