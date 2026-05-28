@@ -250,13 +250,16 @@ function RegistroPageContent() {
       municipio: string;
       localidad: string;
     }) => {
-      const nextLocation = [
-        locationData.localidad || locationData.municipio,
+      // Construir la ubicación en el formato: localidad, municipio, provincia
+      // Si no hay localidad: municipio, provincia
+      // Si es CABA (sin municipio): barrio, provincia
+      const parts = [
+        locationData.localidad,
+        locationData.municipio,
         locationData.provincia,
-      ]
-        .filter(Boolean)
-        .join(", ");
+      ].filter(Boolean);
 
+      const nextLocation = parts.join(", ");
       updateFormData({ location: nextLocation }, "location");
     },
     [updateFormData],

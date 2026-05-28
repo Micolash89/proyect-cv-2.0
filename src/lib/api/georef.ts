@@ -31,7 +31,7 @@ interface GeorefV1Response<T> {
   total: number;
   inicio: number;
   parametros: Record<string, string>;
-  resultados: T[];
+  [key: string]: T[] | number | Record<string, string>;
 }
 
 interface GeorefV2Response<T> {
@@ -159,7 +159,7 @@ async function fetchJson<T>(url: string, resource: string): Promise<T> {
   }
 }
 
-async function fetchGeorefV1<T>(endpoint: string, params: Record<string, string> = {}): Promise<T[]> {
+async function fetchGeorefV1<T>(endpoint: string, resultKey: string, params: Record<string, string> = {}): Promise<T[]> {
   const url = new URL(`${BASE_URL_V1}${endpoint}`);
   
   Object.entries(params).forEach(([key, value]) => {
@@ -172,7 +172,7 @@ async function fetchGeorefV1<T>(endpoint: string, params: Record<string, string>
   url.searchParams.append("max", "2000");
 
   const data = await fetchJson<GeorefV1Response<T>>(url.toString(), endpoint);
-  return data.resultados || [];
+  return (data[resultKey] as T[]) || [];
 }
 
 async function fetchGeorefV2<T>(endpoint: string, key: string, params: Record<string, string> = {}): Promise<T[]> {
@@ -235,7 +235,7 @@ export const getLocalidadesByProvincia = async (
   if (!provinciaId) return [];
 
   try {
-    const data = await fetchGeorefV1<Localidad>("/localidades", {
+    const data = await fetchGeorefV1<Localidad>("/localidades", "localidades", {
       provincia: provinciaId,
     });
     return data.sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -255,7 +255,7 @@ export const getMunicipiosLocalidad = async (provinciaId: string, departamentoId
       departamento: departamentoId,
     };
 
-    const data = await fetchGeorefV1<Localidad>("/localidades", params);
+    const data = await fetchGeorefV1<Localidad>("/localidades", "localidades", params);
     return data.sort((a, b) => a.nombre.localeCompare(b.nombre));
   } catch (error) {
     console.warn("Error fetching localidades:", error);

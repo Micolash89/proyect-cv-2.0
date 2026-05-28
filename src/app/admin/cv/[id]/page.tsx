@@ -607,7 +607,8 @@ export default function AdminCVPage() {
   }) => {
     if (!user) return;
     const locationString = [
-      location.localidad || location.municipio,
+      location.localidad,
+      location.municipio,
       location.provincia,
     ]
       .filter(Boolean)
